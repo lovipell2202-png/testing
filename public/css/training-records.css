@@ -1,0 +1,321 @@
+/* Training Records Page Specific Styles */
+
+.sidebar-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 15px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.sidebar-menu-item:hover {
+  background: #f7f9fd;
+}
+
+.sidebar-menu-item.active {
+  background: #fef2f1;
+  border-left: 3px solid var(--red);
+  padding-left: 12px;
+  color: var(--red);
+}
+
+.page-header {
+  padding: 22px 32px;
+  border-bottom: 2px solid var(--border);
+}
+
+.page-header h2 {
+  margin: 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: 1px;
+}
+
+.filter-tabs {
+  display: flex;
+  background: #f7f9fd;
+  border-bottom: 2px solid var(--border);
+  padding: 0;
+}
+
+.filter-tab {
+  flex: 1;
+  padding: 16px 20px;
+  border: none;
+  background: transparent;
+  font-family: 'Barlow', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 3px solid transparent;
+}
+
+.filter-tab:hover {
+  background: #e8f0f8;
+  color: var(--navy);
+}
+
+.filter-tab.active {
+  color: var(--red);
+  border-bottom-color: var(--red);
+  background: white;
+}
+
+.search-bar {
+  padding: 18px 32px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  background: #f7f9fd;
+  border-bottom: 1px solid var(--border);
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 11px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 15px;
+  font-family: 'Barlow', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-bar input:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.1);
+}
+
+.search-bar select {
+  padding: 11px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 15px;
+  font-family: 'Barlow', sans-serif;
+  outline: none;
+  cursor: pointer;
+  background: white;
+}
+
+/* Increase table font size for training records - use !important to override styles.css */
+.table-section table {
+  font-size: 15px !important;
+}
+
+.table-section thead th {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px;
+  padding: 13px 16px !important;
+}
+
+.table-section tbody td {
+  font-size: 15px !important;
+  padding: 13px 16px !important;
+}
+
+.count-badge {
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 400;
+}
+
+.training-row {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.training-row:hover {
+  background: #f7f9fd;
+}
+
+.employee-name-cell {
+  font-weight: 600;
+}
+
+.course-cell {
+  text-align: left;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+}
+
+.empty-state-icon {
+  font-size: 64px;
+  margin-bottom: 15px;
+}
+
+.empty-state-text {
+  font-size: 17px;
+  margin-bottom: 8px;
+}
+
+.empty-state-subtext {
+  font-size: 15px;
+  color: #999;
+}
+
+/* Table header with rows per page */
+.table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table-header h3 {
+  font-size: 16px;
+  margin: 0;
+}
+
+.rows-per-page {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.rows-per-page select {
+  padding: 7px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 15px;
+  font-family: 'Barlow', sans-serif;
+  outline: none;
+  cursor: pointer;
+  background: white;
+}
+
+.rows-per-page select:focus {
+  border-color: var(--red);
+}
+
+/* Pagination */
+.pagination-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  background: #fafbfd;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pagination-info {
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.page-btn {
+  min-width: 38px;
+  height: 38px;
+  padding: 0 13px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  background: white;
+  font-size: 15px;
+  font-family: 'Barlow', sans-serif;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: #f0f4f8;
+  border-color: var(--navy);
+  color: var(--navy);
+}
+
+.page-btn.active {
+  background: var(--red);
+  border-color: var(--red);
+  color: white;
+  font-weight: 700;
+}
+
+.page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.nav-btn {
+  padding: 0 16px;
+  font-weight: 600;
+}
+
+.page-ellipsis {
+  padding: 0 4px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 38px;
+}
+
+/* Badge size override */
+.table-section .badge {
+  font-size: 13px !important;
+  padding: 4px 12px !important;
+}
+
+/* Action buttons in table */
+.table-section .btn-sm {
+  font-size: 13px !important;
+  padding: 6px 14px !important;
+}
+
+/* By Trainer View */
+.trainer-section {
+  margin: 20px 32px;
+}
+
+.trainer-card {
+  background: var(--white);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+
+.trainer-header {
+  background: var(--navy);
+  color: #fff;
+  padding: 16px 22px;
+  font-weight: 600;
+  font-size: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.trainer-count {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+}

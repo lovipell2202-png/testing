@@ -1,0 +1,364 @@
+================================================================================
+NSB ENGINEERING - EMPLOYEE TRAINING RECORD SYSTEM
+Configuration File
+================================================================================
+
+================================================================================
+SERVER CONFIGURATION
+================================================================================
+
+# Server Port
+SERVER_PORT=3000
+
+# Server Host
+SERVER_HOST=localhost
+
+# Environment
+NODE_ENV=development
+
+# CORS Settings
+CORS_ORIGIN=*
+
+================================================================================
+DATABASE CONFIGURATION
+================================================================================
+
+# Database Type
+DATABASE_TYPE=mssql
+
+# Database Server
+DATABASE_SERVER=localhost
+
+# Database Port
+DATABASE_PORT=1433
+
+# Database Name
+DATABASE_NAME=NSB_Training
+
+# Database User
+DATABASE_USER=sa
+
+# Database Password
+DATABASE_PASSWORD=YourPassword123!
+TRAINING123
+# Database Options
+DATABASE_ENCRYPT=false
+DATABASE_TRUST_SERVER_CERTIFICATE=true
+DATABASE_ENABLE_ARITH_ABORT=true
+
+# Connection Pool Settings
+DATABASE_POOL_MIN=1
+DATABASE_POOL_MAX=10
+DATABASE_CONNECTION_TIMEOUT=15000
+DATABASE_REQUEST_TIMEOUT=30000
+
+================================================================================
+DATABASE SCHEMA INFORMATION
+================================================================================
+
+# Database Version
+DATABASE_VERSION=2.0 (Enhanced)
+
+# Tables
+TABLES=Employees, TrainingRecords
+
+# Employees Table Fields
+EMPLOYEES_FIELDS=id, date, first_name, last_name, middle_name, employee_no, full_name, department, position, contact_no, email_address, date_of_birth, date_hired, date_resign, salary_type, rate_amount, monthly_salary, no_of_days_work, ot_percentage, ot_rate_amount, status, username, passwords, employee_pin, on_duty_time, off_duty_time, schedule_tag, regular_tag, groups, encode_by, store_id, machine_id, sync, created_at
+
+# TrainingRecords Table Fields
+TRAINING_FIELDS=id, employee_id, date_from, date_to, duration, course_title, training_provider, venue, trainer, type_tb, effectiveness_form, created_at
+
+# Sequence
+SEQUENCE_NAME=seq_employee_no
+SEQUENCE_START=1
+SEQUENCE_INCREMENT=1
+
+# Indexes
+INDEXES=idx_employee_id, idx_trainer, idx_type_tb, idx_date_from, idx_employee_no, idx_department, idx_status
+
+================================================================================
+API CONFIGURATION
+================================================================================
+
+# API Base URL
+API_BASE_URL=http://localhost:3000/api
+
+# Employee Endpoints
+API_EMPLOYEES=/api/employees
+API_EMPLOYEES_BY_ID=/api/employees/:id
+API_EMPLOYEES_SEARCH=/api/employees/search/:employee_no
+
+# Training Endpoints
+API_TRAININGS=/api/trainings
+API_TRAININGS_BY_ID=/api/trainings/:id
+
+# Request Timeout (ms)
+API_REQUEST_TIMEOUT=30000
+
+# Response Format
+API_RESPONSE_FORMAT=json
+
+================================================================================
+FRONTEND CONFIGURATION
+================================================================================
+
+# Frontend Port
+FRONTEND_PORT=3000
+
+# Frontend Host
+FRONTEND_HOST=localhost
+
+# Frontend URL
+FRONTEND_URL=http://localhost:3000
+
+# Static Files Path
+STATIC_FILES_PATH=./public
+
+# Print Settings
+PRINT_FORMAT=A4
+PRINT_ORIENTATION=landscape
+PRINT_MARGINS=10mm
+
+================================================================================
+SAMPLE DATA CONFIGURATION
+================================================================================
+
+# Sample Employees Count
+SAMPLE_EMPLOYEES=6
+
+# Sample Training Records Count
+SAMPLE_TRAINING_RECORDS=20
+
+# Employee Number Format
+EMPLOYEE_NO_FORMAT=6-digit zero-padded (000001, 000002, etc.)
+
+# Sample Employee Numbers
+SAMPLE_EMPLOYEE_NOS=000001, 000002, 000003, 000004, 000005, 000006
+
+================================================================================
+SECURITY CONFIGURATION
+================================================================================
+
+# Password Encryption
+PASSWORD_ENCRYPTION=recommended
+
+# SQL Injection Prevention
+SQL_INJECTION_PREVENTION=parameterized queries
+
+# CORS Enabled
+CORS_ENABLED=true
+
+# HTTPS
+HTTPS_ENABLED=false (set to true in production)
+
+# Session Timeout (minutes)
+SESSION_TIMEOUT=30
+
+================================================================================
+LOGGING CONFIGURATION
+================================================================================
+
+# Log Level
+LOG_LEVEL=info
+
+# Log Format
+LOG_FORMAT=combined
+
+# Log File Path
+LOG_FILE_PATH=./logs
+
+# Console Logging
+CONSOLE_LOGGING=true
+
+# File Logging
+FILE_LOGGING=false
+
+================================================================================
+BACKUP CONFIGURATION
+================================================================================
+
+# Backup Enabled
+BACKUP_ENABLED=true
+
+# Backup Frequency
+BACKUP_FREQUENCY=daily
+
+# Backup Time
+BACKUP_TIME=02:00 (2 AM)
+
+# Backup Path
+BACKUP_PATH=./backups
+
+# Backup Retention Days
+BACKUP_RETENTION_DAYS=30
+
+================================================================================
+PERFORMANCE CONFIGURATION
+================================================================================
+
+# Connection Pooling
+CONNECTION_POOLING=enabled
+
+# Query Timeout (ms)
+QUERY_TIMEOUT=30000
+
+# Cache Enabled
+CACHE_ENABLED=false
+
+# Cache TTL (seconds)
+CACHE_TTL=3600
+
+================================================================================
+FEATURE FLAGS
+================================================================================
+
+# Dashboard Enabled
+FEATURE_DASHBOARD=true
+
+# Employee Management Enabled
+FEATURE_EMPLOYEE_MANAGEMENT=true
+
+# Training Records Enabled
+FEATURE_TRAINING_RECORDS=true
+
+# Search Enabled
+FEATURE_SEARCH=true
+
+# Filter Enabled
+FEATURE_FILTER=true
+
+# Sort Enabled
+FEATURE_SORT=true
+
+# Print Enabled
+FEATURE_PRINT=true
+
+# Export Enabled
+FEATURE_EXPORT=true
+
+# Edit Enabled
+FEATURE_EDIT=true
+
+# Delete Enabled
+FEATURE_DELETE=true
+
+================================================================================
+COMPANY INFORMATION
+================================================================================
+
+# Company Name
+COMPANY_NAME=NSB Engineering
+
+# Company Logo
+COMPANY_LOGO=./public/images/nsb-logo.png
+
+# Company Address
+COMPANY_ADDRESS=NSB Engineering Design and Fabrication
+
+# System Name
+SYSTEM_NAME=Employee Training Record System
+
+# System Version
+SYSTEM_VERSION=2.0 (Enhanced)
+
+================================================================================
+CONTACT INFORMATION
+================================================================================
+
+# Support Email
+SUPPORT_EMAIL=hr@nsb-engineering.com
+
+# Support Phone
+SUPPORT_PHONE=[Contact Number]
+
+# Support Department
+SUPPORT_DEPARTMENT=Human Resources
+
+================================================================================
+QUICK REFERENCE - CONNECTION STRING
+================================================================================
+
+# MS SQL Server Connection String
+CONNECTION_STRING=Server=localhost;Database=NSB_Training;User Id=sa;Password=YourPassword123!;Encrypt=false;TrustServerCertificate=true;
+
+# Alternative Connection String (with port)
+CONNECTION_STRING_WITH_PORT=Server=localhost,1433;Database=NSB_Training;User Id=sa;Password=YourPassword123!;Encrypt=false;TrustServerCertificate=true;
+
+================================================================================
+QUICK REFERENCE - SETUP COMMANDS
+================================================================================
+
+# Install Dependencies
+npm install
+
+# Create Database
+node setup-database.js
+
+# Start Server
+npm start
+
+# Start with Development Mode
+npm run dev
+
+# Stop Server
+Ctrl+C
+
+================================================================================
+QUICK REFERENCE - DATABASE QUERIES
+================================================================================
+
+# Check Database
+SELECT name FROM sys.databases WHERE name = 'NSB_Training';
+
+# Check Employees
+SELECT COUNT(*) FROM Employees;
+
+# Check Training Records
+SELECT COUNT(*) FROM TrainingRecords;
+
+# View Employee Numbers
+SELECT id, employee_no, full_name FROM Employees;
+
+# View All Indexes
+SELECT name FROM sys.indexes WHERE object_id = OBJECT_ID('Employees');
+
+================================================================================
+TROUBLESHOOTING QUICK REFERENCE
+================================================================================
+
+# Connection Failed
+- Verify SQL Server is running
+- Check credentials (user: sa, password: YourPassword123!)
+- Ensure port 1433 is accessible
+
+# Port 3000 Already in Use
+- Run: lsof -i :3000
+- Kill process: kill -9 <PID>
+- Restart: npm start
+
+# Database Already Exists
+- Drop database: DROP DATABASE NSB_Training;
+- Run setup again: node setup-database.js
+
+# Module Not Found
+- Run: npm install
+- Check node_modules folder exists
+
+================================================================================
+IMPORTANT NOTES
+================================================================================
+
+1. Update DATABASE_PASSWORD before production deployment
+2. Enable HTTPS in production (set HTTPS_ENABLED=true)
+3. Change CORS_ORIGIN to specific domain in production
+4. Set up regular backups (BACKUP_ENABLED=true)
+5. Monitor logs regularly (LOG_LEVEL=info)
+6. Test all features after setup
+7. Keep documentation updated
+8. Train team on new features
+
+================================================================================
+LAST UPDATED: March 5, 2026
+VERSION: 2.0 (Enhanced)
+STATUS: Production Ready
+================================================================================

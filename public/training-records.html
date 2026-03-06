@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Training Records - NSB Engineering</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/styles.css"/>
+  <link rel="stylesheet" href="css/training-records.css"/>
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div style="padding: 20px; border-bottom: 2px solid var(--border);">
+        <h3 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: var(--navy);">MENU</h3>
+      </div>
+      
+      <div style="padding: 0;">
+        <a href="index.html" class="sidebar-menu-item">📊 Dashboard</a>
+      </div>
+
+      <div style="padding: 0;">
+        <a href="all-employees.html" class="sidebar-menu-item">👥 All Employees</a>
+      </div>
+
+      <div style="padding: 0;">
+        <a href="training-records.html" class="sidebar-menu-item active">📚 Training Records</a>
+      </div>
+
+      <div style="padding: 0;">
+        <a href="dropdown-manager.html" class="sidebar-menu-item">⚙️ Manage Dropdowns</a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="main">
+      <div class="page-header">
+        <h2>TRAINING RECORDS</h2>
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all" onclick="changeFilter('all')">
+          📋 All Records
+        </button>
+        <button class="filter-tab" data-filter="T" onclick="changeFilter('T')">
+          🔧 Technical (T)
+        </button>
+        <button class="filter-tab" data-filter="B" onclick="changeFilter('B')">
+          🎓 Behavioral (B)
+        </button>
+        <button class="filter-tab" data-filter="trainer" onclick="changeFilter('trainer')">
+          👨‍🏫 By Trainer
+        </button>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="search-bar">
+        <input type="text" id="trainingSearch" placeholder="Search by employee, course, provider, or trainer..." />
+        <select id="typeFilter">
+          <option value="all">All Types</option>
+          <option value="T">Technical (T)</option>
+          <option value="B">Behavioral (B)</option>
+        </select>
+      </div>
+
+      <!-- Training Records Content -->
+      <div id="trainingContent">
+        <div class="table-section">
+          <div class="table-header">
+            <h3>Training Records <span id="recordCount" class="count-badge">(0 records)</span></h3>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th onclick="sortTrainings('employee_name')" style="cursor: pointer; text-align: left;">Employee</th>
+                  <th onclick="sortTrainings('date_from')" style="cursor: pointer; text-align: left;">Date From</th>
+                  <th onclick="sortTrainings('date_to')" style="cursor: pointer; text-align: left;">Date To</th>
+                  <th onclick="sortTrainings('course_title')" style="cursor: pointer; text-align: left;">Course</th>
+                  <th onclick="sortTrainings('trainer')" style="cursor: pointer; text-align: left;">Trainer</th>
+                  <th onclick="sortTrainings('type_tb')" style="cursor: pointer; text-align: center;">Type</th>
+                  <th onclick="sortTrainings('training_provider')" style="cursor: pointer; text-align: left;">Provider</th>
+                  <th style="text-align: center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="trainingTableBody">
+                <tr>
+                  <td colspan="8" style="text-align: center; padding: 40px; color: var(--muted);">
+                    <div style="font-size: 48px; margin-bottom: 10px;">⏳</div>
+                    <p>Loading training records...</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODALS -->
+  <!-- View Training Modal -->
+  <div class="modal-overlay" id="viewTrainModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Training Record Details</h3>
+        <button class="modal-close" onclick="closeModal('viewTrain')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group"><label>Date From</label><div style="padding: 10px 12px; background: #f7f9fd; border-radius: 6px; font-size: 14px;" id="v_date_from"></div></div>
+          <div class="form-group"><label>Date To</label><div style="padding: 10px 12px; background: #f7f9fd; border-radius: 6px; font-size: 14px;" id="v_date_to"></div></div>
+          <div class="form-group"><label>Duration</label><div style="padding: 10px 12px; background: #f7f9fd; border-radius: 6px; font-size: 14px;" id="v_duration"></div></div>
+          <div class="form-group"><label>Type</label><div style="padding: 10px 12px; background: #f7f9fd; border-radius: 6px; font-size: 14px;" id="v_type_tb"></div></div>
+          <div class="form-group full"><label>Course</label><div style="padding: 10px 12px; background: #f7f9fd; border-radius: 6px; font-size: 14px;" id="v_course_title"></div></div>
+          <div class="form-group"><label>Provider</label><div style="padding: 10px 12px; background: #f7f9fd; border-radius: 6px; font-size: 14px;" id="v_training_provider"></div></div>
+          <div class="form-group"><label>Venue</label><div style="padding: 10px 12px; background: #f7f9fd; border-radius: 6px; font-size: 14px;" id="v_venue"></div></div>
+          <div class="form-group"><label>Trainer</label><div style="padding: 10px 12px; background: #f7f9fd; border-radius: 6px; font-size: 14px;" id="v_trainer"></div></div>
+          <div class="form-group"><label>Effectiveness Form</label><div style="padding: 10px 12px; background: #f7f9fd; border-radius: 6px; font-size: 14px;" id="v_effectiveness_form"></div></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline btn-secondary" onclick="closeModal('viewTrain')">Close</button>
+        <button class="btn btn-primary" onclick="convertViewToEdit()">Edit Record</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Training Modal -->
+  <div class="modal-overlay" id="trainModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="trainingModalTitle">Add Training Record</h3>
+        <button class="modal-close" onclick="closeModal('train')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full"><label>Employee</label><select id="t_employee_id"><option value="">Select Employee</option></select></div>
+          <div class="form-group"><label>Date From</label><input id="t_date_from" type="date" /></div>
+          <div class="form-group"><label>Date To</label><input id="t_date_to" type="date" /></div>
+          <div class="form-group"><label>Duration / No. of Hours</label><input id="t_duration" placeholder="e.g. 1 DAY, 30 MINS" /></div>
+          <div class="form-group"><label>Type (T/B)</label><select id="t_type_tb"><option value="T">T – Technical</option><option value="B">B – Behavioral</option></select></div>
+          <div class="form-group full"><label>Course / Title Description</label><input id="t_course_title" list="courseList" placeholder="Select or type course title" /><datalist id="courseList"></datalist></div>
+          <div class="form-group"><label>Training Provider</label><input id="t_training_provider" list="providerList" placeholder="Select or type provider name" /><datalist id="providerList"></datalist></div>
+          <div class="form-group"><label>Venue</label><input id="t_venue" list="venueList" placeholder="Select or type venue name" /><datalist id="venueList"></datalist></div>
+          <div class="form-group"><label>Trainer</label><input id="t_trainer" list="trainerList" placeholder="Select or type trainer name" /><datalist id="trainerList"></datalist></div>
+          <div class="form-group"><label>Training Effectiveness Form</label><select id="t_effectiveness_form"><option value="N/A">N/A</option><option value="W/EXAM">W/EXAM — With Examination</option><option value="W/TEEF">W/TEEF — With Training Effectiveness Evaluation Form</option></select></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline btn-secondary" onclick="closeModal('train')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveTraining()">Save Record</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Modal -->
+  <div class="modal-overlay" id="notificationModal">
+    <div class="modal notification-modal">
+      <div class="modal-head" id="notificationHead">
+        <h3 id="notificationTitle">Success</h3>
+        <button class="modal-close" onclick="closeNotification()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align: center; padding: 20px;">
+          <div id="notificationIcon" style="font-size: 48px; margin-bottom: 15px;">✅</div>
+          <p id="notificationMessage" style="font-size: 16px; color: var(--text); margin: 0; line-height: 1.5;"></p>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" onclick="closeNotification()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="src/app.js"></script>
+  <script src="src/training-records.js"></script>
+</body>
+</html>

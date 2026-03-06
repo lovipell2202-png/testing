@@ -1,0 +1,141 @@
+/* All Employees Page Specific Styles */
+
+.sidebar-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 15px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.sidebar-menu-item:hover {
+  background: #f7f9fd;
+}
+
+.sidebar-menu-item.active {
+  background: #fef2f1;
+  border-left: 3px solid var(--red);
+  padding-left: 12px;
+  color: var(--red);
+}
+
+.page-header {
+  padding: 20px 32px;
+  border-bottom: 2px solid var(--border);
+}
+
+.page-header h2 {
+  margin: 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: 1px;
+}
+
+.search-bar {
+  padding: 20px 32px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  background: #f7f9fd;
+  border-bottom: 1px solid var(--border);
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: 'Barlow', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-bar input:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.1);
+}
+
+.search-bar select {
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: 'Barlow', sans-serif;
+  outline: none;
+  cursor: pointer;
+  background: white;
+}
+
+.count-badge {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.training-count {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.training-count.has-trainings {
+  background: #e8f4fd;
+  color: #1a78c2;
+}
+
+.training-count.no-trainings {
+  background: #f0f0f0;
+  color: #999;
+}
+
+.employee-row {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.employee-row:hover {
+  background: #f7f9fd;
+}
+
+.employee-no {
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.employee-name {
+  font-weight: 600;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+}
+
+.empty-state-icon {
+  font-size: 64px;
+  margin-bottom: 15px;
+}
+
+.empty-state-text {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.empty-state-subtext {
+  font-size: 13px;
+  color: #999;
+}

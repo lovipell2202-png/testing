@@ -1,0 +1,103 @@
+<!-- DASHBOARD SECTION -->
+<div id="dashboardSection" style="display: none;">
+  <div style="padding: 20px 32px; border-bottom: 2px solid var(--border);">
+    <h2 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: var(--navy); letter-spacing: 1px;">TRAINING DASHBOARD</h2>
+  </div>
+  
+  <!-- STATS CARDS -->
+  <div style="padding: 20px 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+    <div class="stat-card">
+      <div class="stat-label">Total Employees</div>
+      <div class="stat-value" id="totalEmployees">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Training Records</div>
+      <div class="stat-value" id="totalTrainings">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Technical Trainings</div>
+      <div class="stat-value" id="technicalTrainings">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Behavioral Trainings</div>
+      <div class="stat-value" id="behavioralTrainings">0</div>
+    </div>
+  </div>
+
+  <!-- CHARTS SECTION -->
+  <div style="padding: 20px 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+    <div class="stat-card">
+      <div class="stat-label">Avg Trainings per Employee</div>
+      <div class="stat-value" id="avgTrainingsPerEmp">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Most Trained Employee</div>
+      <div class="stat-value" id="mostTrainedEmp" style="font-size: 14px;">-</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Top Training Provider</div>
+      <div class="stat-value" id="topProvider" style="font-size: 14px;">-</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Training Completion Rate</div>
+      <div class="stat-value" id="completionRate">100%</div>
+    </div>
+  </div>
+
+  <div style="padding: 20px 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <!-- Training Type Distribution -->
+    <div class="chart-card">
+      <h3 style="margin: 0 0 15px 0; font-size: 14px; font-weight: 700; color: var(--navy);">Training Type Distribution</h3>
+      <canvas id="typeChart" width="200" height="150"></canvas>
+    </div>
+
+    <!-- Top Trainers -->
+    <div class="chart-card">
+      <h3 style="margin: 0 0 15px 0; font-size: 14px; font-weight: 700; color: var(--navy);">Top 5 Trainers</h3>
+      <div id="topTrainers" style="font-size: 13px; max-height: 200px; overflow-y: auto;"></div>
+    </div>
+  </div>
+
+  <div style="padding: 20px 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <!-- Training by Department -->
+    <div class="chart-card">
+      <h3 style="margin: 0 0 15px 0; font-size: 14px; font-weight: 700; color: var(--navy);">Trainings by Department</h3>
+      <div id="deptTrainings" style="font-size: 13px; max-height: 200px; overflow-y: auto;"></div>
+    </div>
+
+    <!-- Training Providers -->
+    <div class="chart-card">
+      <h3 style="margin: 0 0 15px 0; font-size: 14px; font-weight: 700; color: var(--navy);">Top Training Providers</h3>
+      <div id="topProviders" style="font-size: 13px; max-height: 200px; overflow-y: auto;"></div>
+    </div>
+  </div>
+
+  <!-- RECENT TRAININGS -->
+  <div style="padding: 20px 32px;">
+    <div class="table-section">
+      <div class="table-header">
+        <h3>Recent Training Records (Last 10)</h3>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th>Date</th>
+              <th>Course</th>
+              <th>Trainer</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+          <tbody id="recentTrainingsBody">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- BACK BUTTON -->
+  <div style="padding: 20px 32px; text-align: center;">
+    <button class="btn btn-secondary" onclick="hideDashboard()">← Back to Records</button>
+  </div>
+</div>
