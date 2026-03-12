@@ -1,15 +1,9 @@
 // Use global employees and trainings from app.js (loaded via app.js)
 let filteredEmployees = [];
+let sortDirection = 1; // 1 for ascending, -1 for descending
+let currentSortColumn = '';
 
-// Format date helper
-const formatDate = (dateStr) => {
-  if (!dateStr) return '';
-  return new Date(dateStr).toLocaleDateString('en-US', { 
-    month: '2-digit', 
-    day: '2-digit', 
-    year: 'numeric' 
-  });
-};
+// Note: formatDate is now in ui-helpers.js to avoid duplication
 
 // Load employees and trainings
 async function loadDataForEmployeesPage() {
@@ -104,6 +98,44 @@ function filterEmployees() {
     const matchesDept = deptFilter === 'all' || emp.department === deptFilter;
     
     return matchesSearch && matchesDept;
+  });
+  
+  // Re-apply sort if active
+  if (currentSortColumn) {
+    sortEmployees(currentSortColumn, false);
+  } else {
+    renderEmployees();
+  }
+}
+
+// Sort employees
+function sortEmployees(column, toggle = true) {
+  if (toggle && currentSortColumn === column) {
+    sortDirection *= -1; // Toggle direction
+  } else {
+    sortDirection = 1; // Default ascending
+    currentSortColumn = column;
+  }
+  
+  filteredEmployees.sort((a, b) => {
+    let valA, valB;
+    
+    if (column === 'training_count') {
+      const countA = window.trainings.filter(t => t.employee_id == a.id).length;
+      const countB = window.trainings.filter(t => t.employee_id == b.id).length;
+      valA = countA;
+      valB = countB;
+    } else if (column === 'full_name') {
+      valA = (a.full_name || a.employee_name || '').toLowerCase();
+      valB = (b.full_name || b.employee_name || '').toLowerCase();
+    } else {
+      valA = (a[column] || '').toLowerCase();
+      valB = (b[column] || '').toLowerCase();
+    }
+    
+    if (valA < valB) return -1 * sortDirection;
+    if (valA > valB) return 1 * sortDirection;
+    return 0;
   });
   
   renderEmployees();

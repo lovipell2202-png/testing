@@ -1,0 +1,60 @@
+================================================================================
+EMPLOYEE NAME FIX - TRAINING RECORDS
+================================================================================
+
+PROBLEM:
+========
+Training Records table was showing "N/A" in the EMPLOYEE column instead of 
+the employee's full name.
+
+ROOT CAUSE:
+===========
+The /api/trainings endpoint in server.js was only fetching employee_id from 
+TrainingRecords table, but NOT joining with the Employees table to get the 
+full_name.
+
+SOLUTION:
+=========
+Updated the /api/trainings endpoint to:
+1. JOIN TrainingRecords with Employees table
+2. Fetch e.full_name from the Employees table
+3. Return full_name in the API response
+
+CHANGES MADE:
+=============
+
+FILE: server.js (Line 68-77)
+
+BEFORE:
+-------
+SELECT id, employee_id, date_from, date_to, duration, course_title, 
+training_provider, venue, trainer, type_tb FROM TrainingRecords 
+ORDER BY date_from DESC
+
+AFTER:
+------
+SELECT tr.id, tr.employee_id, e.full_name, tr.date_from, tr.date_to, 
+tr.duration, tr.course_title, tr.training_provider, tr.venue, tr.trainer, 
+tr.type_tb, tr.effectiveness_form, tr.eff_form_file 
+FROM TrainingRecords tr 
+LEFT JOIN Employees e ON tr.employee_id = e.id 
+ORDER BY tr.date_from DESC
+
+BENEFITS:
+=========
+✅ Employee names now display correctly in Training Records
+✅ Also fetches effectiveness_form and eff_form_file for better functionality
+✅ Uses LEFT JOIN to handle cases where employee_id might not exist
+✅ Maintains backward compatibility with existing code
+
+TESTING:
+========
+1. Restart the server
+2. Go to Training Records page
+3. Employee column should now show actual names instead of "N/A"
+4. All training records should display correctly
+
+RELATED FILES:
+==============
+- public/src/training-records.js (uses t.full_name from API response)
+- public/training-records.html (displays the data)

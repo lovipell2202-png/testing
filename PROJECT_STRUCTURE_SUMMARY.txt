@@ -1,0 +1,468 @@
+================================================================================
+NSB ENGINEERING HR TRAINING SYSTEM - COMPLETE PROJECT DOCUMENTATION
+================================================================================
+
+PROJECT OVERVIEW
+================================================================================
+This is a Human Resources Training Management System built for NSB Engineering.
+It tracks employees, training records, and exam results with 50+ exam types.
+
+TECHNOLOGY STACK
+================================================================================
+- Backend: Node.js + Express.js
+- Database: Microsoft SQL Server (mssql driver)
+- Frontend: Vanilla HTML, CSS, JavaScript
+- File Uploads: Multer
+
+================================================================================
+COMPLETE DIRECTORY STRUCTURE
+================================================================================
+
+HR-TRAINING/
+|
+|-- ROOT FILES
+|   |-- server.js                 # Main Express server entry point
+|   |-- exam-server.js            # Exam API module
+|   |-- package.json              # Dependencies
+|   |-- package-lock.json         # Locked dependencies
+|   |-- config.txt               # Configuration file
+|   |
+|-- public/ (Frontend)
+|   |
+|   |-- MAIN HTML PAGES
+|   |   |-- index.html                 # Main SPA entry
+|   |   |-- all-employees.html         # Employee list page
+|   |   |-- training-records.html      # Training records page
+|   |   |-- test-form.html            # Test form page
+|   |   |-- test-server-connection.html
+|   |   |-- dropdown-manager.html     # Manage dropdowns
+|   |
+|   |-- src/ (JavaScript Modules)
+|   |   |-- app.js                    # Main app logic & state (70KB)
+|   |   |-- all-employees.js          # Employee management
+|   |   |-- all-exams.js              # Exam management (63KB)
+|   |   |-- training-records.js       # Training records CRUD
+|   |   |-- test-form.js              # Test form logic
+|   |   |-- take-exam.js              # Take exam logic
+|   |   |-- course-exam.js            # Course exam handler
+|   |   |-- exam-form.js              # Exam form builder
+|   |   |-- dropdown-manager.js       # Dropdown management
+|   |
+|   |-- dashboard/
+|   |   |-- dashboard.html            # Dashboard page
+|   |   |-- dashboard.js              # Analytics & charts
+|   |   |-- dashboard.css             # Dashboard styles
+|   |
+|   |-- exams/ (Exam Pages - 55+ files)
+|   |   |-- exam-index.html           # Exam listing page
+|   |   |-- take-exam.html            # Take exam page
+|   |   |-- all-exams.html            # All exams view
+|   |   |-- course-exam-template.html # Template for exams
+|   |   |-- exam-index-backup.js      # Backup script
+|   |   |
+|   |   |-- EXAM HTML FILES (55+):
+|   |       |-- 5s-fod-examination-set-a.html
+|   |       |-- 7-qc-tools-exam-a.html
+|   |       |-- as9100-orientaton-examination-set-a.html
+|   |       |-- benchworking-exam.html
+|   |       |-- business-process-map-examination.html
+|   |       |-- cnc-edm-examination-final.html
+|   |       |-- cnc-lathe-exam-final.html
+|   |       |-- cnc-milling-exam-set-a.html
+|   |       |-- company-intro-exam.html
+|   |       |-- coordinate-measuring-machine-cmm-exam-a.html
+|   |       |-- counterfeit-parts-examination-set-a.html
+|   |       |-- cybersecurity-awareness-exam-rev-1.html
+|   |       |-- cybersecurity-awareness-module-2-examination.html
+|   |       |-- dimensional-metrology-training-exam-rev-1.html
+|   |       |-- document-control-and-management-training-exam.html
+|   |       |-- drawing-interpretation-examination-set-a.html
+|   |       |-- emergency-preparedness-exam-set-b.html
+|   |       |-- faro-arm-fa-exam-a.html
+|   |       |-- f-hrd62-1-training-examination-cutting-machine-exa.html
+|   |       |-- fair-pratical-exam-final.html
+|   |       |-- fair-written-exam-final.html
+|   |       |-- grinding-exam-final.html
+|   |       |-- ia-exam.html
+|   |       |-- inspection-standard-criteria-airbus.html
+|   |       |-- laser-marking-machine-examination-rev-o.html
+|   |       |-- m2831-exam-confidential-set-a.html
+|   |       |-- manual-lathe-examination-final.html
+|   |       |-- manual-milling-examination-final.html
+|   |       |-- material-identification-exam.html
+|   |       |-- preventive-corrective-maintenance-exam-set-a.html
+|   |       |-- product-safety-examination-set-a.html
+|   |       |-- profile-projector-user-training-exam-a.html
+|   |       |-- qcqa-procedure-traning-exam-1.html
+|   |       |-- quick-vision-qv-exam-a-doc.html
+|   |       |-- safety-training-exam-set-c.html
+|   |       |-- sharpening-machine-endmill-rev-o.html
+|   |       |-- sheet-metal-fabrication-polishing-set-a.html
+|   |       |-- technical-specification-exam-rev-1.html
+|   |       |-- tre-23-005-0-incoming-inspection-instruction-verif.html
+|   |       |-- tre-23-006-0-outgoing-inspection-instruction-train.html
+|   |       |-- tre-23-007-0-in-process-inspection-instruction.html
+|   |       |-- tre-23-008-0-packaging-requirements-for-aerospace-.html
+|   |       |-- tre-23-009-0-inspection-disposition-and-control-of.html
+|   |       |-- tre-23-011-0-final-inspection-instruction-training.html
+|   |       |-- vanta-xrf-exam-a.html
+|   |       |-- waste-management-exam-set-a.html
+|   |       |-- wire-cut-examination-final.html
+|   |
+|   |-- css/ (Stylesheets)
+|   |   |-- styles.css               # Main styles (26KB)
+|   |   |-- training-records.css
+|   |   |-- all-employees.css
+|   |   |-- all-exams.css
+|   |   |-- dropdown-manager.css
+|   |   |-- exam-form.css
+|   |   |-- take-exam.css
+|   |   |-- test-form.css
+|   |   |-- dashboard.css
+|   |
+|   |-- uploads/ (Uploaded Files)
+|   |   |-- CUTTING_MACHINE_EXAM.pdf
+|   |   |-- course-exams/
+|   |   |   |-- CUTTING_MACHINE_EXAM.docx
+|   |   |-- tests/
+|   |       |-- 1773105707571_5S_FOD_EXAMINATION_SET_A.docx
+|   |
+|   |-- NSB-LOGO.png                  # Company logo
+|
+|-- .vscode/                          # VS Code settings
+|-- nsb.png                          # Company image
+|-- All Employees - NSB Engineering.pdf
+|-- NSB Engineering — Employee Training Record.pdf
+
+================================================================================
+API ENDPOINTS
+================================================================================
+
+SERVER.JS (Main Server):
+------------------------
+GET    /api/courses                        - Fetch all courses
+GET    /api/exams                          - Fetch all exams
+GET    /api/exams/:id                      - Get exam with questions
+POST   /api/exams                          - Create new exam
+PUT    /api/exams/:id                      - Update exam
+DELETE /api/exams/:id                      - Delete exam
+POST   /api/exam-results                   - Save exam results
+GET    /api/exam-results/employee/:employee_id - Get employee exam results
+GET    /api/employees                      - Fetch employees
+GET    /api/trainings                      - Fetch training records
+GET    /                                   - Serve index.html
+
+EXAM-SERVER.JS (Exam Module Functions):
+--------------------------------------
+getExams()                  - Fetch all exams with question count
+getExamById()               - Get single exam + all questions
+createExam()                - Insert new exam + questions
+updateExam()                - Update exam details
+deleteExam()                - Remove exam
+saveExamResult()            - Save test results
+getEmployeeExamResults()    - Get employee's exam history
+
+================================================================================
+DATABASE SCHEMA
+================================================================================
+
+DATABASE: NSB_Training (SQL Server)
+
+MAIN TABLES:
+------------
+1. Employees
+   - id (BIGINT, PK) - Primary key
+   - employee_no (VARCHAR, UNIQUE) - Employee number
+   - first_name, last_name, middle_name
+   - full_name
+   - department
+   - position
+   - contact_no, email_address
+   - date_of_birth, date_hired, date_resign
+   - salary_type, rate_amount, monthly_salary
+   - status, username, passwords
+   - created_at
+
+2. TrainingRecords
+   - id (BIGINT, PK)
+   - employee_id (BIGINT, FK) - References Employees
+   - full_name (denormalized)
+   - date_from, date_to
+   - duration
+   - course_title
+   - training_provider
+   - venue
+   - trainer
+   - type_tb
+   - certificate
+   - created_at
+
+3. Courses
+   - id (BIGINT, PK)
+   - course_title
+   - description
+   - created_at
+
+4. Exams
+   - id (BIGINT, PK)
+   - course_title
+   - description
+   - created_at
+
+5. ExamQuestions
+   - id (BIGINT, PK)
+   - exam_id (BIGINT, FK) - References Exams
+   - course_id (BIGINT, FK) - References Courses
+   - question_number
+   - question_type (multiple_choice, enumeration, procedure)
+   - question_text
+   - option_a, option_b, option_c, option_d
+   - correct_answer
+   - points
+   - procedure_title, procedure_content, procedure_instructions
+   - enumeration_title, enumeration_instruction, enumeration_items
+   - enumeration_items_json, procedure_items_json
+   - created_at
+
+6. TestResults
+   - result_id (INT, PK)
+   - employee_id (BIGINT, FK) - References Employees
+   - employee_course (VARCHAR)
+   - test_date
+   - score
+   - total_points
+   - percentage
+   - passed (BIT)
+   - status
+   - answers (JSON)
+
+7. CourseTests
+   - test_id (INT, PK)
+   - course_title
+   - question_text
+   - question_type
+   - options
+   - correct_answer
+   - points
+   - created_at
+
+DATABASE INDEXES:
+-----------------
+- idx_employee_id (TrainingRecords)
+- idx_date_from (TrainingRecords)
+- idx_trainer (TrainingRecords)
+- idx_type_tb (TrainingRecords)
+- idx_employee_no (Employees)
+- idx_department (Employees)
+- idx_status (Employees)
+- idx_exam_course (Exams)
+- idx_exam_questions (ExamQuestions)
+- idx_question_type (ExamQuestions)
+
+================================================================================
+DATA FLOW
+================================================================================
+
+1. APPLICATION START:
+   server.js → startServer() → initializeDatabase() → app.listen(PORT)
+
+2. FRONTEND INITIALIZATION:
+   index.html → app.js (loads employees & trainings on load)
+   
+   - Uses window.employees and window.trainings for global state
+   - loadDropdownOptions() reads from localStorage
+   - Fetches data via fetch() API calls
+
+3. TAKING AN EXAM:
+   exam-index.html → select exam → take-exam.html →
+   load questions via GET /api/exams/:id →
+   user answers questions →
+   submit → POST /api/exam-results →
+   save to TestResults table
+
+4. DASHBOARD ANALYTICS:
+   showDashboard() → uses window.employees & window.trainings →
+   renderDashboard() → Chart.js renders charts
+
+5. EMPLOYEE MANAGEMENT:
+   all-employees.html → all-employees.js →
+   CRUD operations via API endpoints
+
+6. TRAINING RECORDS:
+   training-records.html → training-records.js →
+   CRUD operations via API endpoints
+
+================================================================================
+FILE STATISTICS
+================================================================================
+
+| Category        | Count   | Description              |
+|-----------------|---------|--------------------------|
+| Main HTML Pages | 6       | index, employees, etc.   |
+| Exam HTML Files | 55+     | Individual exam pages    |
+| JavaScript      | 9       | Frontend logic           |
+| CSS Files       | 9       | Stylesheets              |
+| Upload Files    | 3       | PDFs, DOCX               |
+| PDF Documents   | 2       | Reports                  |
+
+================================================================================
+KEY FILES & PURPOSES
+================================================================================
+
+SERVER FILES:
+-------------
+- server.js (2,911 bytes) - Main Express server, handles all API routes
+- exam-server.js (15,760 bytes) - Exam-related API logic module
+- package.json - Node.js dependencies (express, mssql, cors, multer)
+
+FRONTEND MAIN FILES:
+--------------------
+- public/index.html (23,849 bytes) - Main SPA entry point
+- public/src/app.js (70,392 bytes) - Main app logic & global state
+- public/src/all-exams.js (63,633 bytes) - Exam management (largest file)
+
+DASHBOARD:
+----------
+- public/dashboard/dashboard.js (15,015 bytes) - Analytics & charts
+- public/dashboard/dashboard.html (7,667 bytes) - Dashboard UI
+
+STYLES:
+-------
+- public/css/styles.css (26,320 bytes) - Main stylesheet
+
+DATABASE:
+---------
+- complete-database-setup.sql (17,691 bytes) - Full database schema
+- database-setup.sql (7,755 bytes) - Initial setup
+
+================================================================================
+BEST PRACTICES FOR EFFICIENT CODE & STRUCTURE
+================================================================================
+
+1. MODULARIZE BACKEND
+   Current: All endpoints in server.js
+   Better: Separate into routes/
+     - routes/employees.js
+     - routes/exams.js
+     - routes/courses.js
+     - routes/trainings.js
+
+2. USE ENVIRONMENT VARIABLES
+   Current: Hardcoded credentials in server.js lines 12-23
+   Better: Use dotenv package
+     require('dotenv').config();
+     const dbConfig = {
+       user: process.env.DB_USER,
+       password: process.env.DB_PASSWORD,
+       server: process.env.DB_SERVER,
+       database: process.env.DB_NAME
+     };
+
+3. FRONTEND - USE A FRAMEWORK
+   Current: Vanilla JS with global state (window.employees)
+   Better: React, Vue, or Angular
+   - Better state management
+   - Component-based architecture
+   - Easier maintenance
+
+4. CENTRALIZE API CALLS
+   Current: Duplicate fetch calls across files
+   Better: Create public/js/api/client.js
+     const API_BASE = '';
+     async function getEmployees() {
+       const res = await fetch(`${API_BASE}/api/employees`);
+       return res.json();
+     }
+
+5. STATE MANAGEMENT
+   Current: window.employees, window.trainings (global pollution)
+   Better: Use React Context, Vuex, or ES6 Modules
+
+6. ERROR HANDLING
+   Current: Minimal error handling
+   Better: Add try-catch with proper error responses
+
+7. INPUT VALIDATION
+   Current: All API inputs accepted as-is
+   Better: Add validation using joi or express-validator
+
+8. ADD AUTHENTICATION
+   Current: No authentication
+   Better: Add JWT or session-based auth
+
+9. CACHING
+   Current: Every page load fetches all data
+   Better: Implement localStorage caching, pagination
+
+10. CODE ORGANIZATION
+    Current: All JS in public/src/
+    Better: Separate by feature
+      - /api (fetch calls)
+      - /components (UI)
+      - /utils (helpers)
+      - /stores (state)
+
+================================================================================
+QUICK START
+================================================================================
+
+# Install dependencies
+npm install
+
+# Configure database (edit server.js lines 12-23)
+# Update database credentials:
+#   - user: 'sa'
+#   - password: 'YourPassword123!'
+#   - server: 'localhost'
+#   - port: 1433
+#   - database: 'NSB_Training'
+
+# Run database setup (in SQL Server Management Studio)
+# Execute: complete-database-setup.sql
+
+# Start server
+npm start
+
+# Access the app
+http://localhost:3001
+
+================================================================================
+CURRENT ISSUES TO ADDRESS
+================================================================================
+
+1. Global State Pollution
+   - window.employees, window.trainings cause memory leaks
+
+2. No Input Validation
+   - Security vulnerability
+
+3. No Authentication
+   - Anyone can access all endpoints
+
+4. Hardcoded Credentials
+   - Database passwords in source code
+
+5. Monolithic Frontend
+   - Large files (app.js 70KB, all-exams.js 63KB)
+
+6. No Caching
+   - Every page load fetches all data
+
+7. Duplicate Code
+   - Similar patterns repeated across files
+
+8. No Error Boundaries
+   - JavaScript errors crash entire app
+
+9. No Loading States
+   - Users don't see feedback during API calls
+
+10. Large Bundle Size
+    - No build/bundling process
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================
+Generated: 2026-03-12
+Project: NSB Engineering HR Training System
+Version: 4-FINAL

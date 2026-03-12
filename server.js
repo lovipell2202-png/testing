@@ -2,13 +2,35 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const sql = require('mssql');
+const multer = require('multer');
+const fs = require('fs');
+const examServer = require('./exam-server');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Database Configuration
+// Setup multer for file uploads
+const uploadDir = path.join(__dirname, 'public', 'uploads', 'tests');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const timestamp = Date.now();
+    const ext = path.extname(file.originalname);
+    const name = path.basename(file.originalname, ext);
+    cb(null, `${name}-${timestamp}${ext}`);
+  }
+});
+
+const upload = multer({ storage });
+
 const dbConfig = {
   user: 'sa',
   password: 'YourPassword123!',
@@ -24,243 +46,242 @@ const dbConfig = {
 
 let pool;
 
-// Initialize database connection
 async function initializeDatabase() {
   try {
     pool = await sql.connect(dbConfig);
-    console.log('✅ Connected to MS SQL Server database');
+    console.log('✅ Connected to database');
+    examServer.setPool(pool);
     return true;
   } catch (err) {
-    console.error('❌ Database connection failed:', err.message);
+    console.error('❌ Database error:', err.message);
     return false;
   }
 }
 
-// GET all employees
+app.get('/api/courses', async (req, res) => {
+  try {
+    const result = await pool.request()
+      .query('SELECT id, course_title, description, created_at FROM Courses ORDER BY course_title');
+    res.json({ success: true, data: result.recordset });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Upload test file endpoint
+app.post('/api/tests/upload', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    const { employee_id, course_title, document_type } = req.body;
+    
+    if (!employee_id || !course_title || !document_type) {
+      return res.status(400).json({ success: false, message: 'Missing required fields' });
+    }
+
+    // Save file path to database
+    const fileUrl = `/uploads/tests/${req.file.filename}`;
+    
+    console.log('Uploading file for:', { employee_id, course_title, document_type, fileUrl });
+    
+    // Update the training record with the file
+    const result = await pool.request()
+      .input('employee_id', sql.BigInt, parseInt(employee_id))
+      .input('course_title', sql.VarChar, course_title)
+      .input('eff_form_file', sql.VarChar, fileUrl)
+      .input('effectiveness_form', sql.VarChar, document_type)
+      .query(`
+        UPDATE TrainingRecords 
+        SET eff_form_file = @eff_form_file, effectiveness_form = @effectiveness_form
+        WHERE employee_id = @employee_id AND course_title = @course_title
+      `);
+
+    console.log('Update result:', result.rowsAffected);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ success: false, message: 'Training record not found for this employee and course' });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'File uploaded successfully',
+      file_url: fileUrl,
+      file_name: req.file.originalname,
+      rows_updated: result.rowsAffected[0]
+    });
+  } catch (err) {
+    console.error('Upload error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.get('/api/exams', examServer.getExams);
+app.get('/api/exams/:id', examServer.getExamById);
+app.post('/api/exams', examServer.createExam);
+app.put('/api/exams/:id', examServer.updateExam);
+app.delete('/api/exams/:id', examServer.deleteExam);
+
+app.post('/api/exam-results', examServer.saveExamResult);
+app.get('/api/exam-results/employee/:employee_id', examServer.getEmployeeExamResults);
+
 app.get('/api/employees', async (req, res) => {
   try {
     const result = await pool.request()
-      .query('SELECT id, employee_no, first_name, last_name, full_name, department, position, contact_no, email_address, date_hired, date_of_birth, status FROM Employees ORDER BY id');
+      .query('SELECT id, employee_no, first_name, last_name, full_name, department, position, date_hired FROM Employees ORDER BY id');
     res.json({ success: true, data: result.recordset });
   } catch (err) {
-    console.error('Error fetching employees:', err.message);
-    res.status(500).json({ success: false, message: 'Error fetching employees' });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// GET employee by ID with training records
-app.get('/api/employees/:id', async (req, res) => {
+app.get('/api/trainings', async (req, res) => {
   try {
-    const empResult = await pool.request()
-      .input('id', sql.BigInt, req.params.id)
-      .query('SELECT id, employee_no, first_name, last_name, full_name, department, position, contact_no, email_address, date_hired, date_of_birth, status FROM Employees WHERE id = @id');
-    
-    if (empResult.recordset.length === 0) {
-      return res.status(404).json({ success: false, message: 'Employee not found' });
-    }
-
-    const emp = empResult.recordset[0];
-    const trainResult = await pool.request()
-      .input('employee_id', sql.BigInt, emp.id)
-      .query('SELECT id, employee_id, date_from, date_to, duration, course_title, training_provider, venue, trainer, type_tb, effectiveness_form FROM TrainingRecords WHERE employee_id = @employee_id ORDER BY date_from DESC');
-    
-    res.json({ success: true, employee: emp, trainings: trainResult.recordset });
-  } catch (err) {
-    console.error('Error fetching employee:', err.message);
-    res.status(500).json({ success: false, message: 'Error fetching employee' });
-  }
-});
-
-// GET employee by employee_no
-app.get('/api/employees/search/:employee_no', async (req, res) => {
-  try {
-    const empResult = await pool.request()
-      .input('employee_no', sql.VarChar, req.params.employee_no)
-      .query('SELECT id, employee_no, first_name, last_name, full_name, department, position, contact_no, email_address, date_hired, date_of_birth, status FROM Employees WHERE employee_no = @employee_no');
-    
-    if (empResult.recordset.length === 0) {
-      return res.status(404).json({ success: false, message: 'Employee not found' });
-    }
-
-    const emp = empResult.recordset[0];
-    const trainResult = await pool.request()
-      .input('employee_id', sql.BigInt, emp.id)
-      .query('SELECT id, employee_id, date_from, date_to, duration, course_title, training_provider, venue, trainer, type_tb, effectiveness_form FROM TrainingRecords WHERE employee_id = @employee_id ORDER BY date_from DESC');
-    
-    res.json({ success: true, employee: emp, trainings: trainResult.recordset });
-  } catch (err) {
-    console.error('Error searching employee:', err.message);
-    res.status(500).json({ success: false, message: 'Error searching employee' });
-  }
-});
-
-// POST create employee
-app.post('/api/employees', async (req, res) => {
-  try {
-    const { first_name, last_name, full_name, department, position, contact_no, email_address, date_hired, date_of_birth, status } = req.body;
-    
-    if (!first_name || !last_name || !full_name || !department || !position || !date_hired) {
-      return res.status(400).json({ success: false, message: 'Required fields missing' });
-    }
-
     const result = await pool.request()
-      .input('first_name', sql.VarChar, first_name)
-      .input('last_name', sql.VarChar, last_name)
-      .input('full_name', sql.VarChar, full_name)
-      .input('department', sql.VarChar, department)
-      .input('position', sql.VarChar, position)
-      .input('contact_no', sql.VarChar, contact_no || null)
-      .input('email_address', sql.VarChar, email_address || null)
-      .input('date_hired', sql.DateTime, date_hired)
-      .input('date_of_birth', sql.DateTime, date_of_birth || null)
-      .input('status', sql.Char, status || '1')
-      .query(`INSERT INTO Employees (first_name, last_name, full_name, department, position, contact_no, email_address, date_hired, date_of_birth, status) 
-              VALUES (@first_name, @last_name, @full_name, @department, @position, @contact_no, @email_address, @date_hired, @date_of_birth, @status);
-              SELECT SCOPE_IDENTITY() as id`);
-    
-    res.status(201).json({ success: true, id: result.recordset[0].id });
+      .query(`SELECT 
+        tr.id, 
+        tr.employee_id, 
+        tr.date_from, 
+        tr.date_to, 
+        tr.duration, 
+        tr.course_title, 
+        tr.training_provider, 
+        tr.venue, 
+        tr.trainer, 
+        tr.type_tb,
+        tr.effectiveness_form,
+        tr.eff_form_file,
+        e.full_name 
+      FROM TrainingRecords tr
+      LEFT JOIN Employees e ON tr.employee_id = e.id
+      ORDER BY tr.date_from DESC`);
+    res.json({ success: true, data: result.recordset });
   } catch (err) {
-    console.error('Error creating employee:', err.message);
-    res.status(500).json({ success: false, message: 'Error creating employee' });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// PUT update employee
-app.put('/api/employees/:id', async (req, res) => {
+// Get training records by employee and course
+app.get('/api/trainings/employee/:employee_id/course/:course_title', async (req, res) => {
   try {
-    const { first_name, last_name, full_name, department, position, contact_no, email_address, date_hired, date_of_birth, status } = req.body;
-    
     const result = await pool.request()
-      .input('id', sql.BigInt, req.params.id)
-      .input('first_name', sql.VarChar, first_name)
-      .input('last_name', sql.VarChar, last_name)
-      .input('full_name', sql.VarChar, full_name)
-      .input('department', sql.VarChar, department)
-      .input('position', sql.VarChar, position)
-      .input('contact_no', sql.VarChar, contact_no || null)
-      .input('email_address', sql.VarChar, email_address || null)
-      .input('date_hired', sql.DateTime, date_hired)
-      .input('date_of_birth', sql.DateTime, date_of_birth || null)
-      .input('status', sql.Char, status || '1')
-      .query(`UPDATE Employees SET first_name = @first_name, last_name = @last_name, full_name = @full_name, 
-              department = @department, position = @position, contact_no = @contact_no, email_address = @email_address,
-              date_hired = @date_hired, date_of_birth = @date_of_birth, status = @status WHERE id = @id`);
-    
-    if (result.rowsAffected[0] === 0) {
-      return res.status(404).json({ success: false, message: 'Employee not found' });
-    }
-    
-    res.json({ success: true });
+      .input('employee_id', sql.BigInt, req.params.employee_id)
+      .input('course_title', sql.VarChar, req.params.course_title)
+      .query(`SELECT * FROM TrainingRecords 
+              WHERE employee_id = @employee_id AND course_title = @course_title`);
+    res.json({ success: true, data: result.recordset });
   } catch (err) {
-    console.error('Error updating employee:', err.message);
-    res.status(500).json({ success: false, message: 'Error updating employee' });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// DELETE employee
-app.delete('/api/employees/:id', async (req, res) => {
+// Get single training record by ID
+app.get('/api/trainings/:id', async (req, res) => {
   try {
     const result = await pool.request()
       .input('id', sql.BigInt, req.params.id)
-      .query('DELETE FROM Employees WHERE id = @id');
+      .query(`SELECT 
+        tr.id, 
+        tr.employee_id, 
+        tr.date_from, 
+        tr.date_to, 
+        tr.duration, 
+        tr.course_title, 
+        tr.training_provider, 
+        tr.venue, 
+        tr.trainer, 
+        tr.type_tb,
+        tr.effectiveness_form,
+        tr.eff_form_file,
+        e.full_name 
+      FROM TrainingRecords tr
+      LEFT JOIN Employees e ON tr.employee_id = e.id
+      WHERE tr.id = @id`);
     
-    if (result.rowsAffected[0] === 0) {
-      return res.status(404).json({ success: false, message: 'Employee not found' });
-    }
-    
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Error deleting employee:', err.message);
-    res.status(500).json({ success: false, message: 'Error deleting employee' });
-  }
-});
-
-// POST add training record
-app.post('/api/trainings', async (req, res) => {
-  try {
-    const { employee_id, date_from, date_to, duration, course_title, training_provider, venue, trainer, type_tb, effectiveness_form } = req.body;
-    
-    if (!employee_id || !date_from || !date_to || !duration || !course_title || !training_provider || !venue || !trainer || !type_tb) {
-      return res.status(400).json({ success: false, message: 'Required fields missing' });
-    }
-
-    const result = await pool.request()
-      .input('employee_id', sql.BigInt, employee_id)
-      .input('date_from', sql.Date, date_from)
-      .input('date_to', sql.Date, date_to)
-      .input('duration', sql.VarChar, duration)
-      .input('course_title', sql.VarChar, course_title)
-      .input('training_provider', sql.VarChar, training_provider)
-      .input('venue', sql.VarChar, venue)
-      .input('trainer', sql.VarChar, trainer)
-      .input('type_tb', sql.Char, type_tb)
-      .input('effectiveness_form', sql.VarChar, effectiveness_form || 'N/A')
-      .query(`INSERT INTO TrainingRecords (employee_id, date_from, date_to, duration, course_title, training_provider, venue, trainer, type_tb, effectiveness_form)
-              VALUES (@employee_id, @date_from, @date_to, @duration, @course_title, @training_provider, @venue, @trainer, @type_tb, @effectiveness_form);
-              SELECT SCOPE_IDENTITY() as id`);
-    
-    res.status(201).json({ success: true, id: result.recordset[0].id });
-  } catch (err) {
-    console.error('Error creating training record:', err.message);
-    res.status(500).json({ success: false, message: 'Error creating training record' });
-  }
-});
-
-// PUT update training record
-app.put('/api/trainings/:id', async (req, res) => {
-  try {
-    const { date_from, date_to, duration, course_title, training_provider, venue, trainer, type_tb, effectiveness_form } = req.body;
-    
-    const result = await pool.request()
-      .input('id', sql.BigInt, req.params.id)
-      .input('date_from', sql.Date, date_from)
-      .input('date_to', sql.Date, date_to)
-      .input('duration', sql.VarChar, duration)
-      .input('course_title', sql.VarChar, course_title)
-      .input('training_provider', sql.VarChar, training_provider)
-      .input('venue', sql.VarChar, venue)
-      .input('trainer', sql.VarChar, trainer)
-      .input('type_tb', sql.Char, type_tb)
-      .input('effectiveness_form', sql.VarChar, effectiveness_form || 'N/A')
-      .query(`UPDATE TrainingRecords SET date_from = @date_from, date_to = @date_to, duration = @duration,
-              course_title = @course_title, training_provider = @training_provider, venue = @venue,
-              trainer = @trainer, type_tb = @type_tb, effectiveness_form = @effectiveness_form WHERE id = @id`);
-    
-    if (result.rowsAffected[0] === 0) {
+    if (result.recordset.length === 0) {
       return res.status(404).json({ success: false, message: 'Training record not found' });
     }
-    
-    res.json({ success: true });
+    res.json({ success: true, data: result.recordset[0] });
   } catch (err) {
-    console.error('Error updating training record:', err.message);
-    res.status(500).json({ success: false, message: 'Error updating training record' });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// DELETE training record
+// Create new training record
+app.post('/api/trainings', async (req, res) => {
+  try {
+    const { employee_id, date_from, date_to, duration, course_title, training_provider, venue, trainer, type_tb, effectiveness_form, eff_form_file } = req.body;
+    
+    const result = await pool.request()
+      .input('employee_id', sql.BigInt, employee_id)
+      .input('date_from', sql.DateTime, date_from)
+      .input('date_to', sql.DateTime, date_to)
+      .input('duration', sql.VarChar, duration)
+      .input('course_title', sql.VarChar, course_title)
+      .input('training_provider', sql.VarChar, training_provider)
+      .input('venue', sql.VarChar, venue)
+      .input('trainer', sql.VarChar, trainer)
+      .input('type_tb', sql.VarChar, type_tb)
+      .input('effectiveness_form', sql.VarChar, effectiveness_form)
+      .input('eff_form_file', sql.VarChar, eff_form_file)
+      .query(`INSERT INTO TrainingRecords (employee_id, date_from, date_to, duration, course_title, training_provider, venue, trainer, type_tb, effectiveness_form, eff_form_file)
+              VALUES (@employee_id, @date_from, @date_to, @duration, @course_title, @training_provider, @venue, @trainer, @type_tb, @effectiveness_form, @eff_form_file);
+              SELECT SCOPE_IDENTITY() as id;`);
+    
+    res.json({ success: true, id: result.recordset[0].id });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Update training record
+app.put('/api/trainings/:id', async (req, res) => {
+  try {
+    const { employee_id, date_from, date_to, duration, course_title, training_provider, venue, trainer, type_tb, effectiveness_form, eff_form_file } = req.body;
+    
+    await pool.request()
+      .input('id', sql.BigInt, req.params.id)
+      .input('employee_id', sql.BigInt, employee_id)
+      .input('date_from', sql.DateTime, date_from)
+      .input('date_to', sql.DateTime, date_to)
+      .input('duration', sql.VarChar, duration)
+      .input('course_title', sql.VarChar, course_title)
+      .input('training_provider', sql.VarChar, training_provider)
+      .input('venue', sql.VarChar, venue)
+      .input('trainer', sql.VarChar, trainer)
+      .input('type_tb', sql.VarChar, type_tb)
+      .input('effectiveness_form', sql.VarChar, effectiveness_form)
+      .input('eff_form_file', sql.VarChar, eff_form_file)
+      .query(`UPDATE TrainingRecords 
+              SET employee_id = @employee_id, date_from = @date_from, date_to = @date_to, duration = @duration,
+                  course_title = @course_title, training_provider = @training_provider, venue = @venue,
+                  trainer = @trainer, type_tb = @type_tb, effectiveness_form = @effectiveness_form, eff_form_file = @eff_form_file
+              WHERE id = @id`);
+    
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Delete training record
 app.delete('/api/trainings/:id', async (req, res) => {
   try {
-    const result = await pool.request()
+    await pool.request()
       .input('id', sql.BigInt, req.params.id)
       .query('DELETE FROM TrainingRecords WHERE id = @id');
     
-    if (result.rowsAffected[0] === 0) {
-      return res.status(404).json({ success: false, message: 'Training record not found' });
-    }
-    
     res.json({ success: true });
   } catch (err) {
-    console.error('Error deleting training record:', err.message);
-    res.status(500).json({ success: false, message: 'Error deleting training record' });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Serve frontend
-app.get('*', (req, res) => {
+app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Start Server
 const PORT = process.env.PORT || 3001;
 
 async function startServer() {
@@ -272,17 +293,49 @@ async function startServer() {
   app.listen(PORT, () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
     console.log(`📊 Database: NSB_Training`);
-    console.log(`🔗 API Base: http://localhost:${PORT}/api`);
   });
 }
 
 startServer();
 
-// Graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\n🛑 Shutting down...');
   if (pool) {
     await pool.close();
   }
   process.exit(0);
+});
+
+
+// Remove test file endpoint
+app.post('/api/tests/remove', async (req, res) => {
+  try {
+    const { employee_id, course_title } = req.body;
+    
+    if (!employee_id || !course_title) {
+      return res.status(400).json({ success: false, message: 'Missing required fields' });
+    }
+
+    // Remove the file from the training record
+    const result = await pool.request()
+      .input('employee_id', sql.BigInt, employee_id)
+      .input('course_title', sql.VarChar, course_title)
+      .query(`
+        UPDATE TrainingRecords 
+        SET eff_form_file = NULL, effectiveness_form = 'N/A'
+        WHERE employee_id = @employee_id AND course_title = @course_title
+      `);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ success: false, message: 'Training record not found' });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Attachment removed successfully'
+    });
+  } catch (err) {
+    console.error('Remove error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
 });

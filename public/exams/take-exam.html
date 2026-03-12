@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Take Exam - NSB Training</title>
+  <link rel="stylesheet" href="../css/exam-form.css">
+  <link rel="stylesheet" href="../css/take-exam.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Employee Selection Modal -->
+    <div id="employeeSelectionModal" class="modal" style="display: flex;">
+      <div class="modal-content" style="max-width: 500px;">
+        <h2 style="margin-top: 0; color: var(--navy);">Select Employee</h2>
+        <p style="color: #666; margin-bottom: 20px;">Please select the employee who will take this exam.</p>
+        
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #333;">Employee:</label>
+          <select id="employeeSelect" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+            <option value="">-- Select an employee --</option>
+          </select>
+          <div id="employeeError" style="color: #dc3545; font-size: 12px; margin-top: 5px; display: none;"></div>
+        </div>
+        
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button class="btn-secondary" onclick="goBack()">Cancel</button>
+          <button class="btn-primary" onclick="startExamWithEmployee()">Start Exam</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Priority Settings Modal -->
+    <div id="prioritySettingsModal" class="modal" style="display: none;">
+      <div class="modal-content" style="max-width: 500px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h2 style="margin: 0; color: var(--navy);">Question Priority Order</h2>
+          <button onclick="closePrioritySettings()" style="background: none; border: none; font-size: 24px; cursor: pointer;">✕</button>
+        </div>
+        
+        <p style="color: #666; margin-bottom: 15px;">Set the order in which question types appear (1 = first, 4 = last):</p>
+        
+        <div id="priorityList" style="margin-bottom: 20px;"></div>
+        
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button class="btn-secondary" onclick="closePrioritySettings()">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="exam-header">
+      <div class="header-content">
+        <h1 id="examTitle">Loading Exam...</h1>
+        <p id="examDescription" class="exam-description"></p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-secondary" onclick="showPrioritySettings()" title="Adjust question priority order">⚙️ Priority</button>
+        <button class="btn-secondary" onclick="goBack()">← Back</button>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-container">
+      <div class="progress-bar">
+        <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+      </div>
+      <p class="progress-text"><span id="currentQuestion">1</span> of <span id="totalQuestions">0</span></p>
+    </div>
+
+    <!-- Questions Container -->
+    <div class="exam-content">
+      <div id="questionsContainer" class="questions-container"></div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="exam-navigation">
+      <button id="prevBtn" class="btn-secondary" onclick="previousQuestion()" style="display: none;">← Previous</button>
+      <button id="nextBtn" class="btn-primary" onclick="nextQuestion()">Next →</button>
+      <button id="submitBtn" class="btn-success" onclick="submitExam()" style="display: none;">✓ Submit Exam</button>
+    </div>
+
+    <!-- Video Modal -->
+    <div id="videoModal" class="modal" style="display: none;">
+      <div class="modal-content" style="max-width: 800px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h2 id="videoTitle" style="margin: 0;">Video</h2>
+          <button onclick="closeVideoModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">✕</button>
+        </div>
+        <div id="videoContainer" style="width: 100%; background: #000; border-radius: 8px; overflow: hidden;">
+          <video id="videoPlayer" style="width: 100%; height: auto; max-height: 500px;" controls>
+            <source id="videoSource" src="" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        <div style="margin-top: 20px; text-align: center;">
+          <button class="btn-primary" onclick="closeVideoModal()">Continue to Question</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div id="resultModal" class="modal" style="display: none;">
+      <div class="modal-content result-modal">
+        <div class="result-header" id="resultHeader"></div>
+        <div class="result-details">
+          <p><strong>Your Score:</strong> <span id="scorePercentage">0</span>%</p>
+          <p><strong>Points:</strong> <span id="scorePoints">0</span> / <span id="totalPoints">0</span></p>
+          <p><strong>Status:</strong> <span id="passStatus">Failed</span></p>
+        </div>
+        <div class="result-message" id="resultMessage"></div>
+        <div class="result-actions">
+          <button class="btn-secondary" onclick="goBack()">Back to Exams</button>
+          <button class="btn-primary" onclick="retakeExam()">Retake Exam</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../src/take-exam.js"></script>
+</body>
+</html>

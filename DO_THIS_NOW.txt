@@ -1,0 +1,48 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║                         FIX COURSES NOT SHOWING                           ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+PROBLEM: Courses not appearing in Exam Management
+
+ROOT CAUSE: ExamQuestions table has wrong schema (still has exam_id, needs course_id)
+
+SOLUTION: Execute migration script
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 1: RUN THIS SQL SCRIPT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+File: MIGRATE_NOW.sql
+
+This will:
+  ✓ Drop old ExamQuestions table
+  ✓ Create new ExamQuestions table with course_id
+  ✓ Add indexes for performance
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 2: RESTART BACKEND SERVER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Press: Ctrl+C (to stop current server)
+Then run: node server.js
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 3: REFRESH BROWSER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Press: Ctrl+Shift+R
+Go to: http://localhost:3000/exams/all-exams.html
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DONE! Courses should now appear.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Time: 2-3 minutes
+Risk: Low

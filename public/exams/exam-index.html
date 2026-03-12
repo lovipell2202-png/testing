@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Exam Management - NSB Engineering</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/styles.css"/>
+  <style>
+    .exam-dashboard {
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 250px;
+      background: var(--navy);
+      color: white;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .sidebar h3 {
+      margin: 0 0 20px 0;
+      font-size: 16px;
+    }
+
+    .sidebar-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sidebar-item {
+      padding: 12px 15px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: left;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .sidebar-item:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .sidebar-item.active {
+      background: #ff6b35;
+      font-weight: 600;
+    }
+
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 40px;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .exam-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .exam-card {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .exam-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+
+    .exam-card h3 {
+      margin: 0 0 10px 0;
+      color: var(--navy);
+      font-size: 14px;
+    }
+
+    .exam-card p {
+      margin: 0;
+      color: #666;
+      font-size: 13px;
+    }
+
+    .form-section {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 25px;
+      margin-bottom: 25px;
+    }
+
+    .form-section h3 {
+      margin: 0 0 20px 0;
+      color: var(--navy);
+      font-size: 16px;
+      border-bottom: 2px solid #f0f0f0;
+      padding-bottom: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .question-builder {
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .question-type-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #ddd;
+    }
+
+    .question-type-tab {
+      padding: 10px 15px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      color: #666;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .question-type-tab.active {
+      color: var(--navy);
+      border-bottom-color: var(--navy);
+    }
+
+    .question-type-content {
+      display: none;
+    }
+
+    .question-type-content.active {
+      display: block;
+    }
+
+    .option-input {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+
+    .option-input input {
+      flex: 1;
+    }
+
+    .option-input button {
+      padding: 8px 12px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .btn-add-option {
+      padding: 8px 15px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    .btn-add-question {
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 15px;
+    }
+
+    .btn-primary {
+      padding: 12px 30px;
+      background: var(--navy);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .btn-primary:hover {
+      background: #1a3a52;
+    }
+
+    .video-upload-section {
+      background: #f0f8ff;
+      border: 2px dashed #007bff;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .video-upload-section h4 {
+      margin: 0 0 10px 0;
+      color: var(--navy);
+    }
+
+    .video-upload-section p {
+      margin: 0 0 15px 0;
+      color: #666;
+      font-size: 13px;
+    }
+
+    .video-list {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #ddd;
+    }
+
+    .video-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      background: white;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+
+    .video-item button {
+      padding: 5px 10px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .success-message {
+      background: #d4edda;
+      color: #155724;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .error-message {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="exam-dashboard">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h3>📋 Exam Management</h3>
+      <div class="sidebar-menu">
+        <button class="sidebar-item active" onclick="switchTab('view-exams')">📚 View Exams</button>
+        <button class="sidebar-item" onclick="switchTab('create-exam')">➕ Create Exam</button>
+        <button class="sidebar-item" onclick="switchTab('manage-exams')">⚙️ Manage Exams</button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- View Exams Tab -->
+      <div id="view-exams" class="tab-content active">
+        <h1>Available Exams</h1>
+        
+        <!-- Exams List -->
+        <p style="color: #666; margin-bottom: 30px;">Click "Take Exam" to start or "View" to see details:</p>
+        <div id="examsListContainer" class="exam-list">
+          <p style="text-align: center; color: #999;">Loading exams from database...</p>
+        </div>
+      </div>
+
+      <!-- Exam Interface -->
+      <div id="examInterface" style="display: none; padding: 40px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+          <h2 id="examTitle" style="margin: 0;"></h2>
+          <button onclick="cancelExam()" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer;">Cancel Exam</button>
+        </div>
+        
+        <div id="questionContainer"></div>
+        
+        <div style="display: flex; gap: 10px; margin-top: 30px; justify-content: space-between;">
+          <button onclick="previousQuestion()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer;">← Previous</button>
+          <button onclick="nextQuestion()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer;">Next →</button>
+          <button onclick="submitExam()" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer;">Submit Exam</button>
+        </div>
+      </div>
+
+      <!-- Create Exam Tab -->
+      <div id="create-exam" class="tab-content">
+        <h1>Create New Exam</h1>
+        <div class="success-message" id="successMessage"></div>
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- Basic Info -->
+        <div class="form-section">
+          <h3>Exam Information</h3>
+          <div class="form-group">
+            <label>Exam Title *</label>
+            <div style="position: relative;">
+              <input type="text" id="examTitle" placeholder="Search or select course title..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+              <div id="examTitleDropdown" style="display: none; position: absolute; background: white; border: 1px solid #ddd; border-radius: 6px; max-height: 250px; overflow-y: auto; z-index: 100; width: 100%; margin-top: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Course Code (Optional)</label>
+            <input type="text" id="courseCode" placeholder="e.g., TRE-22-004A">
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="examDescription" placeholder="Exam description..."></textarea>
+          </div>
+        </div>
+
+        <!-- Question Builder -->
+        <div class="form-section">
+          <h3>Questions</h3>
+          
+          <div class="question-type-tabs">
+            <button class="question-type-tab active" onclick="switchQuestionType('multiple-choice')">Multiple Choice</button>
+            <button class="question-type-tab" onclick="switchQuestionType('procedure')">Procedure Details</button>
+            <button class="question-type-tab" onclick="switchQuestionType('enumeration')">Enumeration</button>
+            <button class="question-type-tab" onclick="switchQuestionType('bulk-add')">📋 Bulk Add</button>
+          </div>
+
+          <!-- Multiple Choice -->
+          <div id="multiple-choice" class="question-type-content active">
+            <div id="mcQuestionsContainer"></div>
+            <button class="btn-add-question" onclick="addMCQuestionForm()" style="width: 100%; background: #007bff; margin-top: 15px;">+ Add Another Question Form</button>
+          </div>
+
+          <!-- Procedure Details -->
+          <div id="procedure" class="question-type-content">
+            <div class="question-builder">
+              <div class="form-group">
+                <label>Procedure Title *</label>
+                <input type="text" id="procTitle" placeholder="e.g., Definition of Terms">
+              </div>
+              <div class="form-group">
+                <label>Procedure Content *</label>
+                <textarea id="procContent" placeholder="Enter procedure details..."></textarea>
+              </div>
+              <div class="form-group">
+                <label>Instructions (Optional)</label>
+                <textarea id="procInstructions" placeholder="e.g., Instruction: Encircle the correct answer."></textarea>
+              </div>
+              <button class="btn-add-question" onclick="addProcedureQuestion()">+ Add Procedure</button>
+            </div>
+          </div>
+
+          <!-- Enumeration -->
+          <div id="enumeration" class="question-type-content">
+            <div class="question-builder">
+              <div class="form-group">
+                <label>Enumeration Title *</label>
+                <input type="text" id="enumTitle" placeholder="e.g., Enumeration">
+              </div>
+              <div class="form-group">
+                <label>Instruction *</label>
+                <textarea id="enumInstruction" placeholder="e.g., Instruction: Enumerate the following."></textarea>
+              </div>
+              <div class="form-group">
+                <label>Items to Enumerate *</label>
+                <textarea id="enumItems" placeholder="Enter items (one per line)"></textarea>
+              </div>
+              <button class="btn-add-question" onclick="addEnumerationQuestion()">+ Add Enumeration</button>
+            </div>
+          </div>
+
+          <!-- Bulk Add Questions -->
+          <div id="bulk-add" class="question-type-content">
+            <div class="question-builder">
+              <h4 style="margin-top: 0; color: var(--navy);">📋 Bulk Add Multiple Questions</h4>
+              <p style="color: #666; font-size: 13px; margin-bottom: 15px;">Paste questions in simple format. One question per block, separated by blank lines.</p>
+              
+              <div class="form-group">
+                <label>Format Instructions:</label>
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 6px; font-size: 12px; color: #333; margin-bottom: 15px; line-height: 1.6;">
+                  <strong>Simple Format:</strong><br>
+                  <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>Line 1: Question text</li>
+                    <li>Line 2: Option A</li>
+                    <li>Line 3: Option B</li>
+                    <li>Line 4: Option C</li>
+                    <li>Line 5: Option D (correct answer)</li>
+                    <li>Line 6: Blank line (separator)</li>
+                  </ul>
+                  
+                  <strong>Example:</strong><br>
+                  <code style="background: white; padding: 8px; border-radius: 3px; display: block; margin-top: 10px; white-space: pre; font-size: 11px;">Is a system for organizing spaces so work can be performed efficiently?
+5M
+3S
+FOD
+5S
+
+I designate a place for every needed item so that anyone can find it.
+Organize
+Designate
+Arrange
+Allocate</code>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Paste Questions Here *</label>
+                <textarea id="bulkQuestionsInput" placeholder="Question 1?&#10;Option A&#10;Option B&#10;Option C&#10;Option D&#10;&#10;Question 2?&#10;Option A&#10;Option B&#10;Option C&#10;Option D" style="min-height: 200px; font-family: monospace;"></textarea>
+              </div>
+
+              <button class="btn-add-question" onclick="addBulkQuestions()" style="background: #28a745; width: 100%;">+ Add All Questions</button>
+              <button class="btn-add-question" onclick="testBulkAdd()" style="background: #007bff; width: 100%; margin-top: 10px;">🧪 Test with Sample Questions</button>
+            </div>
+          </div>
+
+          <div id="questionsList" style="margin-top: 30px;">
+            <h4>Questions Added: <span id="questionCount">0</span></h4>
+            <div id="questionsPreview"></div>
+          </div>
+        </div>
+
+        <!-- Video Upload (Optional) -->
+        <div class="form-section">
+          <h3>📹 Tutorial Videos (Optional)</h3>
+          <div class="video-upload-section">
+            <h4>Upload Tutorial Videos</h4>
+            <p>Add video tutorials to help employees understand the exam topics</p>
+            <input type="file" id="videoFile" accept="video/*" style="display: none;">
+            <button class="btn-primary" onclick="document.getElementById('videoFile').click()">Choose Video</button>
+            <div class="video-list" id="videoList" style="display: none;"></div>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="form-section">
+          <button class="btn-primary" onclick="saveExam()" style="width: 100%; padding: 15px; font-size: 16px;">Save Exam</button>
+        </div>
+      </div>
+
+      <!-- Manage Exams Tab -->
+      <div id="manage-exams" class="tab-content">
+        <h1>Manage Exams</h1>
+        <p style="color: #666; margin-bottom: 30px;">Edit, delete, or view exam details:</p>
+        <div id="manageExamsList" class="exam-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exam Viewer Modal -->
+  <div id="examViewerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; overflow-y: auto;">
+    <div style="background: white; margin: 40px auto; max-width: 900px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+      <!-- Modal Header -->
+      <div style="padding: 20px; border-bottom: 2px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
+        <h2 id="examViewerTitle" style="margin: 0; color: var(--navy);">Exam Details</h2>
+        <button onclick="closeExamViewer()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">✕</button>
+      </div>
+
+      <!-- Modal Content -->
+      <div style="padding: 30px; max-height: 70vh; overflow-y: auto;">
+        <div id="examViewerContent"></div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div style="padding: 20px; border-top: 1px solid #ddd; text-align: right; background: #f9f9f9;">
+        <button onclick="closeExamViewer()" class="btn-secondary" style="margin-right: 10px;">Close</button>
+        <button onclick="takeExamFromViewer()" class="btn-primary">Take This Exam</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="exam-index.js"></script>
+</body>
+</html>

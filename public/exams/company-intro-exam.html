@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>company intro exam - NSB Engineering</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/styles.css"/>
+  <link rel="stylesheet" href="../css/exam-form.css"/>
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div style="padding: 20px; border-bottom: 2px solid var(--border);">
+        <h3 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: var(--navy);">MENU</h3>
+      </div>
+      
+      <div style="padding: 0;">
+        <a href="../index.html" class="sidebar-menu-item">📊 Dashboard</a>
+      </div>
+
+      <div style="padding: 0;">
+        <a href="../all-employees.html" class="sidebar-menu-item">👥 All Employees</a>
+      </div>
+
+      <div style="padding: 0;">
+        <a href="../training-records.html" class="sidebar-menu-item">📚 Training Records</a>
+      </div>
+
+      <div style="padding: 0;">
+        <a href="../test-form.html" class="sidebar-menu-item">✏️ Course Tests</a>
+      </div>
+
+      <div style="padding: 0;">
+        <a href="../exams/exam-index.html" class="sidebar-menu-item">📋 Take Exam</a>
+      </div>
+
+      <div style="padding: 0;">
+        <a href="../dropdown-manager.html" class="sidebar-menu-item">⚙️ Manage Dropdowns</a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="main">
+      <div class="page-header">
+        <h2>company intro exam</h2>
+      </div>
+
+      <!-- Employee Selection -->
+      <div id="employeeSelection" class="card">
+        <h3>Employee Information</h3>
+        <div style="margin-bottom: 20px;">
+          <label style="font-weight: 600; display: block; margin-bottom: 8px;">Employee Name:</label>
+          <div style="position: relative;">
+            <input type="text" id="employeeName" placeholder="Type employee name or ID to search..." style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px;">
+            <div id="employeeSearchResults" style="display: none; position: absolute; background: white; border: 1px solid var(--border); border-radius: 6px; max-height: 250px; overflow-y: auto; z-index: 100; width: 100%; margin-top: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></div>
+          </div>
+        </div>
+        <div style="margin-bottom: 20px;">
+          <label style="font-weight: 600; display: block; margin-bottom: 8px;">Employee ID:</label>
+          <input type="text" id="employeeId" placeholder="Auto-filled from search" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px;" readonly>
+        </div>
+        <div style="margin-bottom: 20px;">
+          <label style="font-weight: 600; display: block; margin-bottom: 8px;">Department/Position:</label>
+          <input type="text" id="departmentPosition" placeholder="Auto-filled from search" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px;" readonly>
+        </div>
+        <button class="btn-primary" onclick="startExam()" style="width: 100%;">Start Exam</button>
+      </div>
+
+      <!-- Exam Container -->
+      <div id="examContainer" style="display: none;">
+        <div class="exam-toolbar">
+          <div class="exam-info">
+            <span id="examTitle" style="font-weight: 600; font-size: 16px;">company intro exam</span>
+            <span id="examProgress" style="margin-left: 20px; color: var(--muted);"></span>
+          </div>
+          <div class="exam-actions">
+            <button class="btn-secondary" onclick="printExam()">🖨️ Print</button>
+            <button class="btn-secondary" onclick="cancelExam()">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Exam Content -->
+        <div id="examContent" class="exam-content"></div>
+
+        <!-- Exam Footer -->
+        <div class="exam-footer">
+          <button class="btn-secondary" onclick="previousQuestion()">← Previous</button>
+          <button class="btn-primary" onclick="nextQuestion()">Next →</button>
+          <button class="btn-success" onclick="submitExam()" style="margin-left: auto;">Submit Exam</button>
+        </div>
+      </div>
+
+      <!-- Print Preview -->
+      <div id="printPreview" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 9999; overflow-y: auto;">
+        <div style="padding: 20px;">
+          <button onclick="closePrintPreview()" style="position: absolute; top: 20px; right: 20px; padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Close Preview</button>
+          <div id="printContent" style="max-width: 8.5in; margin: 0 auto; background: white; padding: 40px;"></div>
+          <div style="text-align: center; margin-top: 20px;">
+            <button onclick="window.print()" style="padding: 10px 30px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 16px;">Print Document</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Course-specific configuration
+    const COURSE_TITLE = 'company intro exam';
+    const COURSE_SLUG = 'company-intro-exam';
+  </script>
+  <script src="../src/course-exam.js"></script>
+</body>
+</html>

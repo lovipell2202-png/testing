@@ -3,10 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>NSB Engineering — Employee Training Record</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>NSB Engineering — Employee Training Record v4-FINAL</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%23000033'>📚</text></svg>">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/styles.css"/>
-  <link rel="stylesheet" href="dashboard/dashboard.css"/>
+  <link rel="stylesheet" href="css/styles.css?v=4-final"/>
+  <link rel="stylesheet" href="dashboard/dashboard.css?v=4-final"/>
 </head>
 <body>
 
@@ -18,43 +22,119 @@
     <div style="padding: 20px; border-bottom: 2px solid var(--border);">
       <h3 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: var(--navy);">MENU</h3>
     </div>
-    
-    <!-- Dashboard Menu Item -->
     <div style="padding: 0;">
-      <button class="sidebar-menu-item" onclick="showDashboard()" style="width: 100%; text-align: left; padding: 15px; border: none; background: none; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+      <a href="index.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--navy); background: rgba(0,0,51,0.05); border-bottom: 1px solid var(--border); border-left: 4px solid var(--navy);">
         📊 Dashboard
-      </button>
+      </a>
     </div>
-
-    <!-- All Employees Menu Item -->
     <div style="padding: 0;">
       <a href="all-employees.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
         👥 All Employees
       </a>
     </div>
-
-    <!-- Training Records Menu Item -->
     <div style="padding: 0;">
       <a href="training-records.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
-        📚 Training Records
+        � Training Records
       </a>
     </div>
-
-    <!-- Dropdown Manager Menu Item -->
     <div style="padding: 0;">
       <a href="dropdown-manager.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
         ⚙️ Manage Dropdowns
+      </a>
+    </div>
+    <div style="padding: 0;">
+      <a href="upload-test-result.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+        📝 Test Management
+      </a>
+    </div>
+    <div style="padding: 0;">
+      <a href="exams/all-exams.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+        📚 Exam Management
       </a>
     </div>
   </aside>
 
     <!-- DASHBOARD SECTION -->
     <div id="dashboardSection" style="display: none;">
-      <div style="padding: 20px 32px; border-bottom: 2px solid var(--border);">
-        <h2 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: var(--navy); letter-spacing: 1px;">TRAINING DASHBOARD</h2>
+      <!-- User Info & Logout Bar -->
+      <div style="padding: 15px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="font-weight: 600;">Welcome, <span id="userName">User</span></span>
+          <span style="margin-left: 20px; opacity: 0.9;">Role: <span id="userRole">EMPLOYEE</span></span>
+          <span style="margin-left: 20px; opacity: 0.9;">Dept: <span id="userDepartment">-</span></span>
+        </div>
+        <button id="logoutBtn" style="padding: 8px 16px; background: rgba(255,255,255,0.2); color: white; border: 1px solid white; border-radius: 4px; cursor: pointer; font-weight: 600;">Logout</button>
       </div>
+
+      <div style="padding: 20px 32px; border-bottom: 2px solid var(--border); background: var(--navy);">
+        <h2 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: white; letter-spacing: 1px;">TRAINING DASHBOARD</h2>
+      </div>
+
       
-      <!-- STATS CARDS -->
+      <!-- EMPLOYEE SEARCH & ANALYTICS SECTION -->
+      <div id="employeeAnalyticsSection" style="padding: 25px 32px; border-bottom: 2px solid var(--border); background: #f8f9fa;">
+        <h3 style="margin: 0 0 20px 0; font-size: 20px; font-weight: 700; color: var(--navy);">👤 EMPLOYEE ANALYTICS</h3>
+        <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 300px; position: relative;">
+            <label style="font-weight: 600; font-size: 14px; display: block; margin-bottom: 8px; color: var(--navy);">🔍 Search by Name or Employee ID</label>
+            <input type="text" id="empSearchInput" placeholder="Type employee name or ID number..." 
+              style="width: 100%; padding: 12px 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"
+              onkeyup="searchEmployee()">
+            <div id="empSearchResults" style="display: none; position: absolute; background: white; border: 2px solid var(--navy); border-radius: 8px; max-height: 250px; overflow-y: auto; z-index: 100; width: 100%; margin-top: 5px; box-shadow: 0 8px 16px rgba(0,0,0,0.15);">
+            </div>
+          </div>
+          <button onclick="clearEmployeeSearch()" style="padding: 12px 24px; background: var(--red); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.3s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">✖ Clear</button>
+        </div>
+        
+        <!-- EMPLOYEE DETAILS (Hidden by default) -->
+        <div id="employeeDetails" style="display: none; margin-top: 20px; padding: 20px; background: white; border-radius: 8px; border: 1px solid var(--border);">
+          <h3 id="empDetailsName" style="margin: 0 0 15px 0; font-size: 18px; font-weight: 700; color: var(--navy);"></h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px;">
+            <div class="stat-card">
+              <div class="stat-label">Total Trainings</div>
+              <div class="stat-value" id="empTotalTrainings">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">📎 With Attachments</div>
+              <div class="stat-value" id="empWithAttachments">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">📄 PDF Files</div>
+              <div class="stat-value" id="empPdfCount">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">📋 Certificates</div>
+              <div class="stat-value" id="empCertCount">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">📝 With Exams</div>
+              <div class="stat-value" id="empExamCount">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">📋 With TEEF</div>
+              <div class="stat-value" id="empTeefCount">0</div>
+            </div>
+          </div>
+          <div>
+            <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 600; color: var(--navy);">All Training Records:</h4>
+            <div style="max-height: 300px; overflow-y: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <thead style="background: var(--navy); color: white; position: sticky; top: 0;">
+                  <tr>
+                    <th style="padding: 10px; text-align: left;">Date</th>
+                    <th style="padding: 10px; text-align: left;">Course</th>
+                    <th style="padding: 10px; text-align: center;">Type</th>
+                    <th style="padding: 10px; text-align: center;">Eff. Form</th>
+                    <th style="padding: 10px; text-align: center;">Attachment</th>
+                  </tr>
+                </thead>
+                <tbody id="empTrainingsList">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
       <div style="padding: 20px 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
         <div class="stat-card">
           <div class="stat-label">Total Employees</div>
@@ -155,9 +235,10 @@
     <!-- RECORDS SECTION -->
     <div id="recordsSection">
       <div class="welcome">
-        <div class="welcome-icon">📋</div>
-        <h2>Employee Training Record</h2>
-        <p>Select an employee from the sidebar to view their training records.</p>
+        <div class="welcome-icon">📊</div>
+        <h2>Welcome to Training Dashboard</h2>
+        <p>Click the button below to view the dashboard analytics and employee training records.</p>
+        <button class="btn btn-primary" onclick="showDashboard()" style="margin-top: 20px; padding: 12px 32px; font-size: 16px;">📊 Go to Dashboard</button>
       </div>
     </div>
   </main>
@@ -297,6 +378,7 @@
             <option value="N/A">N/A</option>
             <option value="W/EXAM">W/EXAM — With Examination</option>
             <option value="W/TEEF">W/TEEF — With Training Effectiveness Evaluation Form</option>
+            <option value="W/EXAM_TEEF">W/EXAM & TEEF — Both</option>
           </select>
         </div>
       </div>
@@ -372,14 +454,10 @@
     <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
       <!-- Print Header (hidden on screen, visible on print) -->
       <div class="print-modal-header" style="display: none;">
-        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 2px solid #1a2340;">
-          <img src="NSB-LOGO.png" alt="NSB Logo" style="width: 80px; height: 80px; margin-right: 15px;">
-          <div style="text-align: center;">
-            <h1 style="margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 2px; color: #1a2340;">NSB ENGINEERING</h1>
-            <p style="margin: 3px 0 0 0; font-size: 11px; color: #666;">Design and Fabrication</p>
-          </div>
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 3px solid #000;">
+          <img src="NSB-LOGO.png" alt="NSB Logo" style="width: 320px; height: auto; object-fit: contain;">
         </div>
-        <div style="text-align: center; font-size: 14px; font-weight: 700; margin: 12px 0; padding: 6px; border: 2px solid #1a2340;">
+        <div style="text-align: center; font-size: 14px; font-weight: 700; margin: 10px 0; padding: 6px; border: 2px solid #000; letter-spacing: 1px;">
           EMPLOYEE TRAINING RECORD
         </div>
       </div>
@@ -399,6 +477,7 @@
     </div>
     <div class="modal-foot">
       <button class="btn btn-success" onclick="openAddTrainingForEmployee()">➕ Add Training</button>
+      <button class="btn btn-warning" onclick="editSelectedOverviewTraining()">✏️ Edit</button>
       <button class="btn btn-outline btn-secondary" onclick="closeModal('empTrainingOverview')">Close</button>
       <button class="btn btn-primary" onclick="printEmployeeTraining()">🖨 Print</button>
     </div>
@@ -429,16 +508,25 @@
 
 <script>
   console.log('=== SCRIPT LOADING DEBUG ===');
-  console.log('Loading app.js...');
+  console.log('Loading modules...');
 </script>
-<script src="src/app.js"></script>
+<!-- Load modules in order -->
+<script src="src/modules/ui-helpers.js?v=2"></script>
+<script src="src/modules/dropdown-manager.js?v=2"></script>
+<script src="src/modules/data-loader.js?v=2"></script>
+<script src="src/modules/employee-manager.js?v=2"></script>
+<script src="src/modules/training-manager.js?v=2"></script>
+
+<!-- Main app entry point -->
+<script src="src/app-refactored.js?v=2"></script>
+
 <script>
-  console.log('app.js loaded');
+  console.log('app-refactored.js loaded');
   console.log('showAllEmployees exists:', typeof showAllEmployees);
   console.log('toggleSubmenu exists:', typeof toggleSubmenu);
   console.log('Loading dashboard.js...');
 </script>
-<script src="dashboard/dashboard.js"></script>
+<script src="dashboard/dashboard.js?v=4-final"></script>
 <script>
   console.log('dashboard.js loaded');
   console.log('showDashboard exists:', typeof showDashboard);

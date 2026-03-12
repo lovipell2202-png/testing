@@ -15,21 +15,35 @@
       <div style="padding: 20px; border-bottom: 2px solid var(--border);">
         <h3 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: var(--navy);">MENU</h3>
       </div>
-      
       <div style="padding: 0;">
-        <a href="index.html" class="sidebar-menu-item">📊 Dashboard</a>
+        <a href="index.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+          📊 Dashboard
+        </a>
       </div>
-
       <div style="padding: 0;">
-        <a href="all-employees.html" class="sidebar-menu-item active">👥 All Employees</a>
+        <a href="all-employees.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--navy); background: rgba(0,0,51,0.05); border-bottom: 1px solid var(--border); border-left: 4px solid var(--navy);">
+          👥 All Employees
+        </a>
       </div>
-
       <div style="padding: 0;">
-        <a href="training-records.html" class="sidebar-menu-item">📚 Training Records</a>
+        <a href="training-records.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+          📚 Training Records
+        </a>
       </div>
-
       <div style="padding: 0;">
-        <a href="dropdown-manager.html" class="sidebar-menu-item">⚙️ Manage Dropdowns</a>
+        <a href="dropdown-manager.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+          ⚙️ Manage Dropdowns
+        </a>
+      </div>
+      <div style="padding: 0;">
+        <a href="upload-test-result.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+          📝 Test Management
+        </a>
+      </div>
+      <div style="padding: 0;">
+        <a href="exams/all-exams.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+          📚 Exam Management
+        </a>
       </div>
     </aside>
 
@@ -87,16 +101,12 @@
         <h3 id="overviewModalTitle">Employee Training Overview</h3>
         <button class="modal-close" onclick="closeModal('empTrainingOverview')">✕</button>
       </div>
-      <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+      <div class="modal-body" style="max-height: 100vh; overflow-y: auto;">
         <div class="print-modal-header" style="display: none;">
-          <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 2px solid #1a2340;">
-            <img src="NSB-LOGO.png" alt="NSB Logo" style="width: 80px; height: 80px; margin-right: 15px;">
-            <div style="text-align: center;">
-              <h1 style="margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 2px; color: #1a2340;">NSB ENGINEERING</h1>
-              <p style="margin: 3px 0 0 0; font-size: 11px; color: #666;">Design and Fabrication</p>
-            </div>
+          <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 3px solid #000;">
+            <img src="NSB-LOGO.png" alt="NSB Logo" style="width: 220px; height: auto; object-fit: contain;">
           </div>
-          <div style="text-align: center; font-size: 14px; font-weight: 700; margin: 12px 0; padding: 6px; border: 2px solid #1a2340;">
+          <div style="text-align: center; font-size: 14px; font-weight: 700; margin: 10px 0; padding: 6px; border: 2px solid #000; letter-spacing: 1px;">
             EMPLOYEE TRAINING RECORD
           </div>
         </div>
@@ -108,9 +118,10 @@
       </div>
       <div class="modal-foot">
         <button class="btn btn-success" onclick="openAddTrainingForEmployee()">➕ Add Training</button>
-        <button class="btn btn-secondary" onclick="editSelectedOverviewTraining()">✏️ Edit</button>
+        <button class="btn btn-warning" onclick="editSelectedOverviewTraining()">✏️ Edit</button>
+        <button class="btn btn-danger" onclick="deleteSelectedOverviewTraining()">🗑️ Delete</button>
+        <button class="btn btn-primary" onclick="printEmployeeTraining()">🖨️ Print</button>
         <button class="btn btn-outline btn-secondary" onclick="closeModal('empTrainingOverview')">Close</button>
-        <button class="btn btn-primary" onclick="printEmployeeTraining()">🖨 Print</button>
       </div>
     </div>
   </div>
@@ -136,7 +147,7 @@
           <div class="form-group"><label>Training Provider</label><input id="t_training_provider" list="providerList" placeholder="Select or type provider name" /><datalist id="providerList"></datalist></div>
           <div class="form-group"><label>Venue</label><input id="t_venue" list="venueList" placeholder="Select or type venue name" /><datalist id="venueList"></datalist></div>
           <div class="form-group"><label>Trainer</label><input id="t_trainer" list="trainerList" placeholder="Select or type trainer name" /><datalist id="trainerList"></datalist></div>
-          <div class="form-group"><label>Training Effectiveness Form</label><select id="t_effectiveness_form"><option value="N/A">N/A</option><option value="W/EXAM">W/EXAM — With Examination</option><option value="W/TEEF">W/TEEF — With Training Effectiveness Evaluation Form</option></select></div>
+          <div class="form-group"><label>Training Effectiveness Form</label><select id="t_effectiveness_form"><option value="N/A">N/A</option><option value="W/EXAM">W/EXAM — With Examination</option><option value="W/TEEF">W/TEEF — With Training Effectiveness Evaluation Form</option><option value="W/EXAM_TEEF">W/EXAM & TEEF — Both</option></select></div>
         </div>
       </div>
       <div class="modal-foot">
@@ -153,7 +164,7 @@
         <h3>Training Record Details</h3>
         <button class="modal-close" onclick="closeModal('viewTrain')">✕</button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
         <div class="form-grid">
           <div class="form-group"><label>Date From</label><div style="padding: 10px 12px; background: #f7f9fd; border-radius: 6px; font-size: 14px;" id="v_date_from"></div></div>
           <div class="form-group"><label>Date To</label><div style="padding: 10px 12px; background: #f7f9fd; border-radius: 6px; font-size: 14px;" id="v_date_to"></div></div>
@@ -192,7 +203,17 @@
     </div>
   </div>
 
-  <script src="src/app.js"></script>
-  <script src="src/all-employees.js"></script>
+  <!-- Load modules in order -->
+  <script src="src/modules/ui-helpers.js?v=2"></script>
+  <script src="src/modules/dropdown-manager.js?v=2"></script>
+  <script src="src/modules/data-loader.js?v=2"></script>
+  <script src="src/modules/employee-manager.js?v=2"></script>
+  <script src="src/modules/training-manager.js?v=2"></script>
+  
+  <!-- Main app entry point -->
+  <script src="src/app-refactored.js?v=2"></script>
+  
+  <!-- Page-specific script -->
+  <script src="src/all-employees.js?v=2"></script>
 </body>
 </html>
