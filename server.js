@@ -32,14 +32,14 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 const dbConfig = {
-  user: 'sa',
-  password: 'YourPassword123!',
-  server: 'localhost',
-  port: 1433,
-  database: 'NSB_Training',
+  user: process.env.DB_USER || 'sa',
+  password: process.env.DB_PASSWORD || 'YourPassword123!',
+  server: process.env.DB_SERVER || 'localhost',
+  port: process.env.DB_PORT || 1433,
+  database: process.env.DB_NAME || 'NSB_Training',
   options: {
-    encrypt: false,
-    trustServerCertificate: true,
+    encrypt: process.env.NODE_ENV === 'production' ? true : false,
+    trustServerCertificate: process.env.NODE_ENV === 'production' ? false : true,
     enableArithAbort: true,
   },
 };
