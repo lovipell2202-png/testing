@@ -30,6 +30,17 @@ function printEmployeeTraining() {
     return;
   }
   
+  // Extract last name for PDF filename
+  let empLastName = 'Employee';
+  if (emp.last_name) {
+    empLastName = emp.last_name;
+  } else if (emp.full_name) {
+    const nameParts = emp.full_name.split(' ');
+    empLastName = nameParts[nameParts.length - 1];
+  }
+  const sanitizedLastName = empLastName.replace(/[^a-zA-Z0-9]/g, '_');
+  const filename = `${sanitizedLastName}_TrainingRecord.pdf`;
+  
   console.log('🖨️ Print - Employee object:', emp);
   console.log('🖨️ Print - Employee object keys:', Object.keys(emp));
   console.log('🖨️ Print - date_hired value:', emp.date_hired);
@@ -109,7 +120,7 @@ function printEmployeeTraining() {
           text-align: center; 
           margin-bottom: 8px; 
           padding-bottom: 6px;
-          border-bottom: 2px solid #000;
+          border-bottom: none;
         }
         .logo-section {
           display: flex;
@@ -142,7 +153,7 @@ function printEmployeeTraining() {
           gap: 20px;
           margin-bottom: 0; 
           padding: 4px 6px; 
-          border: 1px solid #000;
+          border: none;
           border-top: none;
           font-size: 8px;
         }
@@ -297,6 +308,13 @@ function printEmployeeTraining() {
   
   printWindow.document.write(htmlContent);
   printWindow.document.close();
+  
+  // Set up print with custom filename after window loads
+  printWindow.onload = function() {
+    // Trigger print - the filename will be set in the print dialog
+    printWindow.focus();
+    printWindow.print();
+  };
 }
 
 // Open add training for employee
@@ -330,10 +348,29 @@ function openAddTrainingForEmployee() {
 
 // Open edit training modal
 async function openEditTraining(trainingId) {
-  const training = (window.trainings || []).find(t => t.id === trainingId);
+  console.log('=== openEditTraining called with id:', trainingId);
+  
+  let training = (window.trainings || []).find(t => t.id === trainingId);
+  
+  // If not found in memory, try to fetch from API
   if (!training) {
-    window.UIHelpers.showNotification('Error', 'Training record not found.', false);
-    return;
+    console.log('Training not found in memory, fetching from API...');
+    try {
+      const res = await fetch(`/api/trainings/${trainingId}`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        training = data.data;
+        console.log('✅ Loaded training from API:', training);
+      } else {
+        console.error('Failed to load training from API:', data);
+        window.UIHelpers.showNotification('Error', 'Training record not found.', false);
+        return;
+      }
+    } catch (err) {
+      console.error('Error fetching training:', err);
+      window.UIHelpers.showNotification('Error', 'Training record not found.', false);
+      return;
+    }
   }
   
   window.UIHelpers.closeModal('empTrainingOverview');
@@ -527,30 +564,31 @@ function openEmployeeTrainingOverview(empId) {
   const empTrainings = (window.trainings || []).filter(t => t.employee_id == empId);
   
   const fmt = window.UIHelpers.formatDate;
+  const fmtLong = window.UIHelpers.formatDateLong;
   
   document.getElementById('overviewModalTitle').textContent = `Training Overview - ${emp.full_name}`;
   
   document.getElementById('overviewEmpInfo').innerHTML = `
-    <div style="display: grid; grid-template-columns: 2fr 1.5fr 1.5fr; gap: 15px;">
+    <div>
       <div>
-        <label style="font-size: 11px; font-weight: 700; color: var(--muted); display: block; margin-bottom: 4px;">Employee Name:</label>
-        <span style="font-size: 14px; font-weight: 700; color: var(--navy);">${emp.full_name || emp.employee_name}</span>
+        <label>Employee Name:</label>
+        <span>${emp.full_name || emp.employee_name}</span>
       </div>
       <div>
-        <label style="font-size: 11px; font-weight: 700; color: var(--muted); display: block; margin-bottom: 4px;">Department:</label>
-        <span style="font-size: 14px; font-weight: 700; color: var(--navy);">${emp.department}</span>
+        <label>Department:</label>
+        <span>${emp.department}</span>
       </div>
       <div>
-        <label style="font-size: 11px; font-weight: 700; color: var(--muted); display: block; margin-bottom: 4px;">Date Hired:</label>
-        <span style="font-size: 14px; font-weight: 700; color: var(--navy);">${fmt(emp.date_hired)}</span>
+        <label>Date Hired:</label>
+        <span>${fmtLong(emp.date_hired)}</span>
       </div>
-      <div>
-        <label style="font-size: 11px; font-weight: 700; color: var(--muted); display: block; margin-bottom: 4px;">Employee No.:</label>
-        <span style="font-size: 14px; font-weight: 700; color: var(--navy);">${emp.employee_no}</span>
+      <div style="flex-basis: 100%; margin-top: 4px;">
+        <label>Employee No.:</label>
+        <span style="font-size: 11px; font-weight: 600; color: #000;">${emp.employee_no}</span>
       </div>
       <div style="grid-column: span 2;">
-        <label style="font-size: 11px; font-weight: 700; color: var(--muted); display: block; margin-bottom: 4px;">Position:</label>
-        <span style="font-size: 14px; font-weight: 700; color: var(--navy);">${emp.position}</span>
+        <label style="font-size: 9px; font-weight: 700; color: #666; display: inline; margin-right: 3px;">Position:</label>
+        <span style="font-size: 11px; font-weight: 600; color: #000;">${emp.position}</span>
       </div>
     </div>
   `;

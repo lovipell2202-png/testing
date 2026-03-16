@@ -556,17 +556,24 @@ tbody td {
   }
   
   .modal-overlay.printing #overviewEmpInfo > div {
-    display: grid !important;
-    grid-template-columns: 2fr 1.5fr 1.5fr !important;
-    gap: 15px !important;
-    padding: 6px 0 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 40px !important;
+    padding: 8px 0 !important;
+    border: none !important;
     border-bottom: 1px solid #000 !important;
-    align-items: start !important;
+    align-items: baseline !important;
+    justify-content: space-between !important;
   }
   
   .modal-overlay.printing #overviewEmpInfo > div > div {
-    display: block !important;
-    line-height: 1.4 !important;
+    display: inline-flex !important;
+    align-items: baseline !important;
+    gap: 5px !important;
+    line-height: 1.2 !important;
+    padding: 0 !important;
+    border: none !important;
+    flex: 0 1 auto !important;
   }
   
   .modal-overlay.printing #overviewEmpInfo label {
@@ -574,8 +581,9 @@ tbody td {
     font-weight: 700 !important;
     color: #000 !important;
     display: inline !important;
-    margin: 0 3px 0 0 !important;
+    margin: 0 !important;
     padding: 0 !important;
+    white-space: nowrap !important;
   }
   
   .modal-overlay.printing #overviewEmpInfo span {

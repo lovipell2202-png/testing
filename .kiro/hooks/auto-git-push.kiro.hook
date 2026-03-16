@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "name": "Auto Git Push to GitHub",
+  "description": "Automatically commits and pushes changes to GitHub whenever files are saved",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "git add -A && git commit -m \"Auto-commit: $(date '+%Y-%m-%d %H:%M:%S')\" && git push origin HEAD 2>&1 || true",
+    "timeout": 30
+  }
+}

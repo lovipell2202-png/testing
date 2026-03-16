@@ -144,56 +144,60 @@ async function loadEmployeeCourses() {
   }
 }
 
-// Update document type info based on selected course
+// Update document type based on selected course
 function updateCourseDocumentType() {
   const courseSelect = document.getElementById('courseSelectUpload');
   const selectedOption = courseSelect.options[courseSelect.selectedIndex];
-  const courseDocTypeInfo = document.getElementById('courseDocTypeInfo');
-  const courseDocTypeList = document.getElementById('courseDocTypeList');
   const documentTypeSelect = document.getElementById('documentType');
+  const attachmentTypesDisplay = document.getElementById('attachmentTypesDisplay');
+  const attachmentTypesList = document.getElementById('attachmentTypesList');
   
   if (!selectedOption.value) {
-    courseDocTypeInfo.style.display = 'none';
     // Clear document type when course is deselected
     documentTypeSelect.value = '';
+    attachmentTypesDisplay.style.display = 'none';
     updateFileAccept();
     return;
   }
   
-  const hasExam = selectedOption.dataset.hasExam === 'true';
-  const hasTeef = selectedOption.dataset.hasTeef === 'true';
-  const hasExamTeef = selectedOption.dataset.hasExamTeef === 'true';
+  // Get effectiveness forms from the selected course option
+  let effectivenessForms = [];
+  try {
+    effectivenessForms = JSON.parse(selectedOption.dataset.effectivenessForms || '[]');
+  } catch (e) {
+    console.error('Error parsing effectiveness forms:', e);
+  }
   
-  let docTypes = [];
+  console.log('Effectiveness forms for course:', effectivenessForms);
+  
   let suggestedDocType = '';
+  let attachmentTypes = [];
   
-  if (hasExam) {
-    docTypes.push('<span style="padding: 6px 12px; background: #e3f2fd; border: 1px solid #2196f3; border-radius: 4px; font-size: 13px; font-weight: 600; color: #1565c0;">📄 W/EXAM (PDF)</span>');
-    if (!suggestedDocType) suggestedDocType = 'W/EXAM';
-  }
-  
-  if (hasTeef) {
-    docTypes.push('<span style="padding: 6px 12px; background: #f3e5f5; border: 1px solid #9c27b0; border-radius: 4px; font-size: 13px; font-weight: 600; color: #6a1b9a;">📋 W/TEEF (Certificate)</span>');
-    if (!suggestedDocType) suggestedDocType = 'W/TEEF';
-  }
-  
-  if (hasExamTeef) {
-    docTypes.push('<span style="padding: 6px 12px; background: #e8f5e9; border: 1px solid #4caf50; border-radius: 4px; font-size: 13px; font-weight: 600; color: #2e7d32;">✅ W/EXAM & TEEF (Both)</span>');
+  // Determine the suggested document type and build attachment display
+  if (effectivenessForms.includes('W/EXAM_TEEF')) {
     suggestedDocType = 'W/EXAM_TEEF';
+    attachmentTypes.push('<span style="padding: 8px 14px; background: #e3f2fd; border: 1px solid #2196f3; border-radius: 4px; font-size: 13px; font-weight: 600; color: #1565c0;">📄 Exam (PDF)</span>');
+    attachmentTypes.push('<span style="padding: 8px 14px; background: #f3e5f5; border: 1px solid #9c27b0; border-radius: 4px; font-size: 13px; font-weight: 600; color: #6a1b9a;">🎓 Certificate (PDF/PNG/JPG)</span>');
+  } else if (effectivenessForms.includes('W/EXAM')) {
+    suggestedDocType = 'W/EXAM';
+    attachmentTypes.push('<span style="padding: 8px 14px; background: #e3f2fd; border: 1px solid #2196f3; border-radius: 4px; font-size: 13px; font-weight: 600; color: #1565c0;">📄 Exam (PDF)</span>');
+  } else if (effectivenessForms.includes('W/TEEF')) {
+    suggestedDocType = 'W/TEEF';
+    attachmentTypes.push('<span style="padding: 8px 14px; background: #f3e5f5; border: 1px solid #9c27b0; border-radius: 4px; font-size: 13px; font-weight: 600; color: #6a1b9a;">🎓 Certificate (PDF/PNG/JPG)</span>');
   }
   
-  if (docTypes.length > 0) {
-    courseDocTypeList.innerHTML = docTypes.join('');
-    courseDocTypeInfo.style.display = 'block';
+  if (suggestedDocType) {
+    documentTypeSelect.value = suggestedDocType;
     
-    // Only auto-fill if document type is empty AND this is the first time selecting a course
-    if (!documentTypeSelect.value && suggestedDocType) {
-      documentTypeSelect.value = suggestedDocType;
-      updateFileAccept();
-      updateFileUploadUI();
+    // Display attachment types
+    if (attachmentTypes.length > 0) {
+      attachmentTypesList.innerHTML = attachmentTypes.join('');
+      attachmentTypesDisplay.style.display = 'block';
     }
-  } else {
-    courseDocTypeInfo.style.display = 'none';
+    
+    updateFileAccept();
+    updateFileUploadUI();
+    console.log('Auto-filled document type:', suggestedDocType);
   }
   
   fetchCurrentAttachment();
@@ -226,11 +230,15 @@ async function fetchCurrentAttachment() {
       
       if (trainingRecord.eff_form_file) {
         const fileName = trainingRecord.eff_form_file.split('/').pop();
+        // Get employee name for custom filename
+        const employeeName = (trainingRecord.full_name || 'Employee').replace(/[^a-zA-Z0-9]/g, '_');
+        const courseName = (trainingRecord.course_title || 'Certificate').replace(/[^a-zA-Z0-9]/g, '_');
+        const downloadFileName = `${employeeName}_${courseName}.pdf`;
         attachmentHTML = `
           <div style="padding: 10px; background: white; border-radius: 4px; border: 1px solid #ddd;">
             <p style="margin: 5px 0;"><strong>File:</strong> ${fileName}</p>
             <p style="margin: 5px 0;"><strong>Type:</strong> ${trainingRecord.effectiveness_form}</p>
-            <a href="${trainingRecord.eff_form_file}" target="_blank" style="color: #2196f3; text-decoration: none; font-weight: 600;">📥 Download File</a>
+            <a href="${trainingRecord.eff_form_file}" target="_blank" download="${downloadFileName}" style="color: #2196f3; text-decoration: none; font-weight: 600;">📥 Download File</a>
           </div>
         `;
         removeAttachmentBtn.style.display = 'inline-block';

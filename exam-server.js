@@ -1,9 +1,47 @@
 const sql = require('mssql');
+const fs = require('fs');
+const path = require('path');
 
 let pool;
 
 function setPool(dbPool) {
   pool = dbPool;
+}
+
+// Helper function to save base64 image to disk
+function saveBase64Image(base64String) {
+  if (!base64String || !base64String.startsWith('data:image')) {
+    return null;
+  }
+  
+  try {
+    // Extract the base64 data and format
+    const matches = base64String.match(/^data:image\/(\w+);base64,(.+)$/);
+    if (!matches) return null;
+    
+    const format = matches[1];
+    const data = matches[2];
+    const buffer = Buffer.from(data, 'base64');
+    
+    // Create filename with timestamp
+    const filename = `identification_${Date.now()}.${format}`;
+    const filepath = path.join(__dirname, 'public', 'uploads', 'images', filename);
+    
+    // Ensure directory exists
+    const dir = path.dirname(filepath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    
+    // Write file
+    fs.writeFileSync(filepath, buffer);
+    
+    // Return the URL path
+    return `/uploads/images/${filename}`;
+  } catch (err) {
+    console.error('Error saving image:', err);
+    return null;
+  }
 }
 
 async function getExams(req, res) {
@@ -41,7 +79,8 @@ async function getExamById(req, res) {
                      option_a, option_b, option_c, option_d, correct_answer, points,
                      procedure_title, procedure_content, procedure_instructions, procedure_answer,
                      enumeration_title, enumeration_instruction, enumeration_items, enumeration_answer,
-                     enumeration_items_json, procedure_items_json
+                     enumeration_items_json, procedure_items_json,
+                     identification_title, identification_instruction, identification_image_url, identification_answer, identification_items_json
               FROM ExamQuestions 
               WHERE course_id = @course_id 
               ORDER BY question_type, question_number`);
@@ -71,7 +110,7 @@ async function createExam(req, res) {
     const courseId = courseResult.recordset[0].id;
 
     if (questions && questions.length > 0) {
-      let mcNum = 1, enumNum = 1, procNum = 1;
+      let mcNum = 1, enumNum = 1, procNum = 1, idNum = 1;
       
       for (let i = 0; i < questions.length; i++) {
         const q = questions[i];
@@ -127,6 +166,32 @@ async function createExam(req, res) {
             .input('points', sql.Int, 1)
             .query(`INSERT INTO ExamQuestions (course_id, question_number, question_type, question_text, procedure_title, procedure_content, procedure_instructions, procedure_answer, procedure_items_json, points, created_at)
                     VALUES (@course_id, @question_number, @question_type, @question_text, @procedure_title, @procedure_content, @procedure_instructions, @procedure_answer, @procedure_items_json, @points, GETDATE())`);
+        } else if (q.type === 'identification') {
+          questionNum = idNum++;
+          // If no new image uploaded but existing image_url provided, preserve the existing image
+          let imageUrl = null;
+          if (q.image_base64 && q.image_base64.startsWith('data:image')) {
+            // New image uploaded - save it
+            imageUrl = saveBase64Image(q.image_base64);
+          } else if (q.image_url && q.image_url.includes('/uploads/')) {
+            // No new image, but existing URL provided - preserve it
+            imageUrl = q.image_url;
+          }
+          
+          await pool.request()
+            .input('course_id', sql.BigInt, courseId)
+            .input('question_number', sql.Int, questionNum)
+            .input('question_type', sql.VarChar(50), 'identification')
+            .input('question_text', sql.VarChar(sql.MAX), q.question_text || '')
+            .input('identification_title', sql.VarChar(sql.MAX), q.title || '')
+            .input('identification_instruction', sql.VarChar(sql.MAX), q.instruction || '')
+            .input('identification_image_url', sql.VarChar(sql.MAX), imageUrl || '')
+            .input('identification_answer', sql.VarChar(sql.MAX), q.answer || '')
+            .input('identification_items_json', sql.VarChar(sql.MAX), JSON.stringify(q.items || []))
+            .input('points', sql.Int, q.count || q.items?.length || 1)
+            .query(`INSERT INTO ExamQuestions (course_id, question_number, question_type, question_text, identification_title, identification_instruction, identification_image_url, identification_answer, identification_items_json, points, created_at)
+                    VALUES (@course_id, @question_number, @question_type, @question_text, @identification_title, @identification_instruction, @identification_image_url, @identification_answer, @identification_items_json, @points, GETDATE())`);
+          console.log(`[DEBUG] Identification question inserted successfully with image URL: ${imageUrl}`);
         }
       }
     }
@@ -160,7 +225,7 @@ async function updateExam(req, res) {
       .query('DELETE FROM ExamQuestions WHERE course_id = @course_id');
 
     if (questions && questions.length > 0) {
-      let mcNum = 1, enumNum = 1, procNum = 1;
+      let mcNum = 1, enumNum = 1, procNum = 1, idNum = 1;
       
       for (let i = 0; i < questions.length; i++) {
         const q = questions[i];
@@ -211,6 +276,31 @@ async function updateExam(req, res) {
             .input('points', sql.Int, 1)
             .query(`INSERT INTO ExamQuestions (course_id, question_number, question_type, question_text, procedure_title, procedure_content, procedure_instructions, procedure_answer, procedure_items_json, points, created_at)
                     VALUES (@course_id, @question_number, @question_type, @question_text, @procedure_title, @procedure_content, @procedure_instructions, @procedure_answer, @procedure_items_json, @points, GETDATE())`);
+        } else if (q.type === 'identification') {
+          questionNum = idNum++;
+          // If no new image uploaded but existing image_url provided, preserve the existing image
+          let imageUrl = null;
+          if (q.image_base64 && q.image_base64.startsWith('data:image')) {
+            // New image uploaded - save it
+            imageUrl = saveBase64Image(q.image_base64);
+          } else if (q.image_url && q.image_url.includes('/uploads/')) {
+            // No new image, but existing URL provided - preserve it
+            imageUrl = q.image_url;
+          }
+          
+          await pool.request()
+            .input('course_id', sql.BigInt, courseId)
+            .input('question_number', sql.Int, questionNum)
+            .input('question_type', sql.VarChar(50), 'identification')
+            .input('question_text', sql.VarChar(sql.MAX), q.question_text || '')
+            .input('identification_title', sql.VarChar(sql.MAX), q.title || '')
+            .input('identification_instruction', sql.VarChar(sql.MAX), q.instruction || '')
+            .input('identification_image_url', sql.VarChar(sql.MAX), imageUrl || '')
+            .input('identification_answer', sql.VarChar(sql.MAX), q.answer || '')
+            .input('identification_items_json', sql.VarChar(sql.MAX), JSON.stringify(q.items || []))
+            .input('points', sql.Int, q.count || q.items?.length || 1)
+            .query(`INSERT INTO ExamQuestions (course_id, question_number, question_type, question_text, identification_title, identification_instruction, identification_image_url, identification_answer, identification_items_json, points, created_at)
+                    VALUES (@course_id, @question_number, @question_type, @question_text, @identification_title, @identification_instruction, @identification_image_url, @identification_answer, @identification_items_json, @points, GETDATE())`);
         }
       }
     }
@@ -256,12 +346,12 @@ async function saveExamResult(req, res) {
       console.error('Error fetching employee name:', empErr.message);
     }
 
-    // Fetch course title from exam
+    // Fetch course title from exam (exam_id refers to course_id)
     let courseTitle = '';
     try {
       const courseResult = await pool.request()
         .input('exam_id', sql.BigInt, exam_id)
-        .query('SELECT course_title FROM Exams WHERE id = @exam_id');
+        .query('SELECT course_title FROM Courses WHERE id = @exam_id');
       
       if (courseResult.recordset.length > 0) {
         courseTitle = courseResult.recordset[0].course_title || '';

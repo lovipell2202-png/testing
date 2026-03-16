@@ -1,0 +1,230 @@
+-- ============================================================================
+-- NSB Training Database - Complete Check & Verification Script
+-- ============================================================================
+-- This script checks all tables, columns, and data integrity
+
+USE NSB_Training;
+
+-- ============================================================================
+-- 1. CHECK ALL TABLES AND ROW COUNTS
+-- ============================================================================
+
+-- Get all tables
+SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES 
+WHERE TABLE_CATALOG = 'NSB_Training' AND TABLE_TYPE = 'BASE TABLE' 
+ORDER BY TABLE_NAME;
+
+-- Get row counts for all tables
+SELECT 'Employees' as TableName, COUNT(*) as RecordCount FROM Employees
+UNION ALL
+SELECT 'Courses', COUNT(*) FROM Courses
+UNION ALL
+SELECT 'ExamQuestions', COUNT(*) FROM ExamQuestions
+UNION ALL
+SELECT 'ExamResults', COUNT(*) FROM ExamResults
+UNION ALL
+SELECT 'TrainingRecords', COUNT(*) FROM TrainingRecords
+UNION ALL
+SELECT 'TrainingEvaluationForms', COUNT(*) FROM TrainingEvaluationForms
+UNION ALL
+SELECT 'Users', COUNT(*) FROM Users
+UNION ALL
+SELECT 'Sessions', COUNT(*) FROM Sessions;
+
+-- ============================================================================
+-- 2. GET ALL COLUMNS FOR EACH TABLE
+-- ============================================================================
+
+SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_NAME = 'Employees' 
+ORDER BY ORDINAL_POSITION;
+
+SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_NAME = 'Courses' 
+ORDER BY ORDINAL_POSITION;
+
+SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_NAME = 'ExamQuestions' 
+ORDER BY ORDINAL_POSITION;
+
+SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_NAME = 'ExamResults' 
+ORDER BY ORDINAL_POSITION;
+
+SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_NAME = 'TrainingRecords' 
+ORDER BY ORDINAL_POSITION;
+
+SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_NAME = 'TrainingEvaluationForms' 
+ORDER BY ORDINAL_POSITION;
+
+SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_NAME = 'Users' 
+ORDER BY ORDINAL_POSITION;
+
+SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_NAME = 'Sessions' 
+ORDER BY ORDINAL_POSITION;
+
+-- ============================================================================
+-- 3. GET SAMPLE DATA FROM EACH TABLE
+-- ============================================================================
+
+SELECT TOP 5 * FROM Employees;
+SELECT TOP 5 * FROM Courses;
+SELECT TOP 5 * FROM ExamQuestions;
+SELECT TOP 5 * FROM ExamResults;
+SELECT TOP 5 * FROM TrainingRecords;
+SELECT TOP 5 * FROM TrainingEvaluationForms;
+SELECT TOP 5 * FROM Users;
+SELECT TOP 5 * FROM Sessions;
+
+-- ============================================================================
+-- 4. CHECK INDEXES
+-- ============================================================================
+
+SELECT 
+    OBJECT_NAME(i.object_id) as TableName,
+    i.name as IndexName,
+    i.type_desc as IndexType
+FROM sys.indexes i
+WHERE i.name IS NOT NULL
+ORDER BY OBJECT_NAME(i.object_id), i.name;
+
+-- ============================================================================
+-- 5. CHECK FOREIGN KEYS
+-- ============================================================================
+
+SELECT 
+    OBJECT_NAME(fk.parent_object_id) as TableName,
+    fk.name as ForeignKeyName,
+    OBJECT_NAME(fk.referenced_object_id) as ReferencedTable
+FROM sys.foreign_keys fk
+ORDER BY OBJECT_NAME(fk.parent_object_id);
+
+-- ============================================================================
+-- 6. DATA INTEGRITY CHECKS
+-- ============================================================================
+
+-- Check for orphaned exam results
+SELECT COUNT(*) as OrphanedRecords FROM ExamResults 
+WHERE employee_id NOT IN (SELECT id FROM Employees);
+
+-- Check for orphaned exam questions
+SELECT COUNT(*) as OrphanedRecords FROM ExamQuestions 
+WHERE course_id NOT IN (SELECT id FROM Courses);
+
+-- Check question types distribution
+SELECT question_type, COUNT(*) as Count FROM ExamQuestions GROUP BY question_type;
+
+-- ============================================================================
+-- 7. DETAILED TABLE CHECKS
+-- ============================================================================
+
+PRINT '========== CHECKING EMPLOYEES TABLE ==========';
+IF OBJECT_ID('Employees', 'U') IS NOT NULL
+BEGIN
+    PRINT 'Employees table exists';
+    SELECT 'Employees' as TableName, COUNT(*) as RecordCount FROM Employees;
+END
+ELSE
+BEGIN
+    PRINT 'Employees table does NOT exist';
+END
+
+PRINT '';
+PRINT '========== CHECKING COURSES TABLE ==========';
+IF OBJECT_ID('Courses', 'U') IS NOT NULL
+BEGIN
+    PRINT 'Courses table exists';
+    SELECT 'Courses' as TableName, COUNT(*) as RecordCount FROM Courses;
+END
+ELSE
+BEGIN
+    PRINT 'Courses table does NOT exist';
+END
+
+PRINT '';
+PRINT '========== CHECKING EXAMQUESTIONS TABLE ==========';
+IF OBJECT_ID('ExamQuestions', 'U') IS NOT NULL
+BEGIN
+    PRINT 'ExamQuestions table exists';
+    SELECT 'ExamQuestions' as TableName, COUNT(*) as RecordCount FROM ExamQuestions;
+    
+    -- Check question types distribution
+    PRINT '';
+    PRINT 'Question Types Distribution:';
+    SELECT question_type, COUNT(*) as Count FROM ExamQuestions GROUP BY question_type;
+END
+ELSE
+BEGIN
+    PRINT 'ExamQuestions table does NOT exist';
+END
+
+PRINT '';
+PRINT '========== CHECKING EXAMRESULTS TABLE ==========';
+IF OBJECT_ID('ExamResults', 'U') IS NOT NULL
+BEGIN
+    PRINT 'ExamResults table exists';
+    SELECT 'ExamResults' as TableName, COUNT(*) as RecordCount FROM ExamResults;
+    
+    -- Check if required columns exist
+    IF EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'ExamResults' AND COLUMN_NAME = 'employee_full_name')
+        PRINT 'employee_full_name column exists';
+    ELSE
+        PRINT 'employee_full_name column MISSING';
+        
+    IF EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'ExamResults' AND COLUMN_NAME = 'course_title')
+        PRINT 'course_title column exists';
+    ELSE
+        PRINT 'course_title column MISSING';
+END
+ELSE
+BEGIN
+    PRINT 'ExamResults table does NOT exist';
+END
+
+PRINT '';
+PRINT '========== CHECKING TRAININGRECORDS TABLE ==========';
+IF OBJECT_ID('TrainingRecords', 'U') IS NOT NULL
+BEGIN
+    PRINT 'TrainingRecords table exists';
+    SELECT 'TrainingRecords' as TableName, COUNT(*) as RecordCount FROM TrainingRecords;
+END
+ELSE
+BEGIN
+    PRINT 'TrainingRecords table does NOT exist';
+END
+
+PRINT '';
+PRINT '========== SUMMARY STATISTICS ==========';
+SELECT 
+    'Employees' as Entity,
+    COUNT(*) as Total
+FROM Employees
+UNION ALL
+SELECT 'Courses', COUNT(*) FROM Courses
+UNION ALL
+SELECT 'ExamQuestions', COUNT(*) FROM ExamQuestions
+UNION ALL
+SELECT 'ExamResults', COUNT(*) FROM ExamResults
+UNION ALL
+SELECT 'TrainingRecords', COUNT(*) FROM TrainingRecords
+UNION ALL
+SELECT 'TrainingEvaluationForms', COUNT(*) FROM TrainingEvaluationForms
+UNION ALL
+SELECT 'Users', COUNT(*) FROM Users
+UNION ALL
+SELECT 'Sessions', COUNT(*) FROM Sessions;
+
+PRINT '';
+PRINT 'Database check complete!';

@@ -50,6 +50,7 @@ async function setupExamsTables() {
         CREATE TABLE [dbo].[ExamQuestions] (
           [id] BIGINT IDENTITY(1,1) PRIMARY KEY,
           [exam_id] BIGINT NOT NULL,
+          [course_id] BIGINT NULL,
           [question_number] INT NOT NULL,
           [question_type] VARCHAR(50) NOT NULL,
           [question_text] VARCHAR(MAX) NOT NULL,
@@ -62,9 +63,18 @@ async function setupExamsTables() {
           [procedure_title] VARCHAR(200) NULL,
           [procedure_content] VARCHAR(MAX) NULL,
           [procedure_instructions] VARCHAR(MAX) NULL,
+          [procedure_answer] VARCHAR(MAX) NULL,
+          [procedure_items_json] VARCHAR(MAX) NULL,
           [enumeration_title] VARCHAR(200) NULL,
           [enumeration_instruction] VARCHAR(MAX) NULL,
           [enumeration_items] VARCHAR(MAX) NULL,
+          [enumeration_answer] VARCHAR(MAX) NULL,
+          [enumeration_items_json] VARCHAR(MAX) NULL,
+          [identification_title] VARCHAR(200) NULL,
+          [identification_instruction] VARCHAR(MAX) NULL,
+          [identification_image_url] VARCHAR(MAX) NULL,
+          [identification_answer] VARCHAR(MAX) NULL,
+          [identification_items_json] VARCHAR(MAX) NULL,
           [created_at] DATETIME DEFAULT GETDATE(),
           FOREIGN KEY ([exam_id]) REFERENCES [Exams]([id]) ON DELETE CASCADE
         );

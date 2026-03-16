@@ -7,6 +7,53 @@ let currentEditingExamId = null;
 let questionsArray = [];
 let currentQuestionType = null;
 let enumItemsArray = [];
+let idItemsArray = [];
+let procItemsArray = []; // For procedure items
+
+// Tab switching function
+function switchTab(tabName) {
+  // Hide all tab contents
+  const tabContents = document.querySelectorAll('.tab-content');
+  tabContents.forEach(tab => tab.classList.remove('active'));
+  
+  // Remove active class from all tab buttons
+  const tabButtons = document.querySelectorAll('.tab-btn');
+  tabButtons.forEach(btn => btn.classList.remove('active'));
+  
+  // Show selected tab content
+  const selectedTab = document.getElementById(`tab-${tabName}`);
+  if (selectedTab) {
+    selectedTab.classList.add('active');
+  }
+  
+  // Add active class to clicked button
+  event.target.classList.add('active');
+  
+  // Update questions summary when switching to details tab
+  if (tabName === 'details') {
+    updateQuestionsSummary();
+  }
+}
+
+// Update questions summary
+function updateQuestionsSummary() {
+  const summary = document.getElementById('questionsSummary');
+  if (questionsArray.length === 0) {
+    summary.innerHTML = '<p style="margin: 0; color: #666;">No questions added yet. Go to the "Add Questions" tab to add questions.</p>';
+  } else {
+    const questionTypes = {};
+    questionsArray.forEach(q => {
+      questionTypes[q.type] = (questionTypes[q.type] || 0) + 1;
+    });
+    
+    let summary_text = `<p style="margin: 0; font-weight: 600; color: #004085;">✓ ${questionsArray.length} question(s) added:</p>`;
+    Object.entries(questionTypes).forEach(([type, count]) => {
+      const typeLabel = type.replace(/_/g, ' ').toUpperCase();
+      summary_text += `<p style="margin: 5px 0 0 0; color: #004085;">• ${count} ${typeLabel}</p>`;
+    });
+    summary.innerHTML = summary_text;
+  }
+}
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -34,7 +81,6 @@ async function initializeData() {
       allCourses.forEach(course => {
         courseMap[course.id] = course.course_title;
       });
-      populateCourseDropdown();
     }
 
     // Process exams
@@ -176,7 +222,6 @@ function openCreateModal() {
   enumItemsArray = [];
   document.getElementById('examModalTitle').textContent = 'Create New Exam';
   document.getElementById('examTitle').value = '';
-  document.getElementById('examCourse').value = '';
   document.getElementById('examDescription').value = '';
   document.getElementById('examPassingScore').value = '70';
   
@@ -189,6 +234,19 @@ function openCreateModal() {
   document.getElementById('questionsContainer').innerHTML = '';
   document.getElementById('questionTypeMenu').style.display = 'none';
   document.getElementById('questionFormContainer').style.display = 'none';
+  
+  // Reset tabs to first tab
+  const tabContents = document.querySelectorAll('.tab-content');
+  tabContents.forEach(tab => tab.classList.remove('active'));
+  const tabButtons = document.querySelectorAll('.tab-btn');
+  tabButtons.forEach(btn => btn.classList.remove('active'));
+  
+  document.getElementById('tab-details').classList.add('active');
+  tabButtons[0].classList.add('active');
+  
+  // Update questions summary
+  updateQuestionsSummary();
+  
   document.getElementById('examModalOverlay').classList.add('open');
 }
 
@@ -211,7 +269,8 @@ function addEnumItem() {
     id: Date.now(),
     number: itemNum,
     text: '',
-    answer: ''
+    answer: '',
+    points: 1
   };
   enumItemsArray.push(newItem);
   renderEnumItems();
@@ -238,10 +297,14 @@ function renderEnumItems() {
         <input type="text" id="enumItemText_${item.id}" placeholder="e.g., SORT OR SEIRI" value="${item.text}" onchange="updateEnumItem(${idx}, 'text', this.value)" onkeypress="return /[a-zA-Z\s]/.test(String.fromCharCode(event.which))" style="width: 100%; padding: 8px; border: 2px solid ${item.text.trim() ? '#28a745' : '#dc3545'}; border-radius: 4px; font-size: 12px; box-sizing: border-box;">
         ${!item.text.trim() ? '<small style="color: #dc3545; display: block; margin-top: 4px;">⚠️ Item text is required</small>' : '<small style="color: #28a745; display: block; margin-top: 4px;">✓ Item text provided</small>'}
       </div>
-      <div>
+      <div style="margin-bottom: 8px;">
         <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #333;">Enumeration Answer ${item.number} * <span style="color: #999; font-size: 11px;">(letters and spaces only)</span></label>
         <textarea id="enumItemAnswer_${item.id}" placeholder="e.g., This is the correct answer for this item" value="${item.answer || ''}" onchange="updateEnumItem(${idx}, 'answer', this.value)" onkeypress="return /[a-zA-Z\s]/.test(String.fromCharCode(event.which))" style="width: 100%; padding: 8px; border: 2px solid ${item.answer.trim() ? '#28a745' : '#dc3545'}; border-radius: 4px; font-size: 12px; box-sizing: border-box; min-height: 50px; resize: vertical;">${item.answer || ''}</textarea>
         ${!item.answer.trim() ? '<small style="color: #dc3545; display: block; margin-top: 4px;">⚠️ Answer is required</small>' : '<small style="color: #28a745; display: block; margin-top: 4px;">✓ Answer provided</small>'}
+      </div>
+      <div>
+        <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #333;">Points for this item</label>
+        <input type="number" id="enumItemPoints_${item.id}" placeholder="e.g., 1" value="${item.points || 1}" min="1" onchange="updateEnumItem(${idx}, 'points', parseInt(this.value) || 1)" style="width: 100%; padding: 8px; border: 2px solid #28a745; border-radius: 4px; font-size: 12px; box-sizing: border-box;">
       </div>
     </div>
   `).join('');
@@ -444,24 +507,52 @@ function addQuestionForm(type) {
         <label>Question Text *</label>
         <textarea id="procQuestion" placeholder="Enter the question..." style="min-height: 60px;"></textarea>
       </div>
-      <div class="form-group">
-        <label>Procedure Content *</label>
-        <textarea id="procContent" placeholder="Enter detailed procedure steps..." style="min-height: 100px;"></textarea>
+      
+      <div style="background: #f8f0ff; border: 2px solid #6f42c1; border-radius: 6px; padding: 15px; margin-bottom: 20px;">
+        <h4 style="margin-top: 0; color: #6f42c1;">📖 Procedure Items</h4>
+        <p style="font-size: 12px; color: #666; margin: 0 0 15px 0;">Add each procedure step/question. Each item accepts uppercase letters and numbers.</p>
+        <div id="procItemsList" style="margin-bottom: 15px;"></div>
+        <button onclick="addProcItem()" style="width: 100%; padding: 10px; background: #6f42c1; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">➕ Add Item</button>
       </div>
-      <div class="form-group">
-        <label>Correct Answer * (CAPITAL LETTERS ONLY, use OR for multiple answers)</label>
-        <textarea id="procAnswer" placeholder="e.g., A, B, C OR A, B, D" style="min-height: 60px; text-transform: uppercase;" onchange="updateProcItemCount()"></textarea>
-        <small style="color: #666; margin-top: 5px; display: block;">Example: A, B, C (for 3 items) or A, B OR C, D (for 2 possible answers)</small>
-      </div>
-      <div class="form-group">
-        <label>Number of Items * (Auto-calculated)</label>
-        <input type="number" id="procCount" placeholder="Auto-filled based on answer" min="1" max="20" readonly style="background: #f0f0f0; cursor: not-allowed;">
-        <small style="color: #666; margin-top: 5px; display: block;">This field auto-updates based on your correct answer</small>
-      </div>
+      
       <div class="form-group">
         <label>Video URL (Optional)</label>
         <input type="url" id="procVideoUrl" placeholder="https://example.com/video.mp4">
       </div>
+      <div style="display: flex; gap: 10px;">
+        <button onclick="saveQuestion()" style="flex: 1; padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">✓ Add Question</button>
+        <button onclick="cancelQuestion()" style="flex: 1; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">✕ Cancel</button>
+      </div>
+    `;
+    setTimeout(() => renderProcItems(), 0);
+  } else if (type === 'identification') {
+    formHTML = `
+      <div class="form-group">
+        <label>Identification Title *</label>
+        <input type="text" id="idTitle" placeholder="e.g., Identify the parts..." onchange="autoFillCourseFromIdentification()">
+      </div>
+      <div class="form-group">
+        <label>Instruction *</label>
+        <textarea id="idInstruction" placeholder="Enter instructions..." style="min-height: 60px;"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Question Text *</label>
+        <textarea id="idQuestion" placeholder="Enter the question..." style="min-height: 60px;"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Reference Image (Optional)</label>
+        <input type="file" id="idImageFile" accept="image/*" onchange="handleIdImageUpload(event)">
+        <small style="color: #666; margin-top: 5px; display: block;">Image to display as reference during exam (JPG, PNG, GIF)</small>
+        <div id="idImagePreview" style="margin-top: 10px;"></div>
+      </div>
+      
+      <div style="background: #e8f5e9; border: 2px solid #28a745; border-radius: 6px; padding: 15px; margin-bottom: 20px;">
+        <h4 style="margin-top: 0; color: #28a745;">🖼️ Identification Items</h4>
+        <p style="font-size: 12px; color: #666; margin: 0 0 15px 0;">Add each item to identify. Each item is worth 1 point.</p>
+        <div id="idItemsList" style="margin-bottom: 15px;"></div>
+        <button onclick="addIdItem()" style="width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">➕ Add Item</button>
+      </div>
+      
       <div style="display: flex; gap: 10px;">
         <button onclick="saveQuestion()" style="flex: 1; padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">✓ Add Question</button>
         <button onclick="cancelQuestion()" style="flex: 1; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">✕ Cancel</button>
@@ -550,40 +641,83 @@ function saveQuestion() {
     const questionText = document.getElementById('procQuestion').value.trim();
     const title = document.getElementById('procTitle').value.trim();
     const instruction = document.getElementById('procInstruction').value.trim();
-    const content = document.getElementById('procContent').value.trim();
-    let answer = document.getElementById('procAnswer').value.trim().toUpperCase();
     const video = document.getElementById('procVideoUrl').value.trim();
     const priority = document.getElementById('procPriority').value || 'procedure';
     
-    if (!/^[A-Z,\s]+(\s+OR\s+[A-Z,\s]+)*$/.test(answer)) {
-      showError('Correct Answer must contain only CAPITAL LETTERS, commas, and OR');
-      return;
-    }
-    
-    if (!questionText || !title || !instruction || !content || !answer) {
+    if (!questionText || !title || !instruction) {
       showError('Please fill in all required fields');
       return;
     }
     
-    const answerOptions = answer.split(/\s+OR\s+/);
-    let count = 0;
-    answerOptions.forEach(option => {
-      const letters = option.match(/[A-Z]/g);
-      if (letters) {
-        count = Math.max(count, letters.length);
+    if (procItemsArray.length === 0) {
+      showError('Please add at least one procedure item');
+      return;
+    }
+    
+    // Validate that all items have both text and answer
+    for (let item of procItemsArray) {
+      if (!item.text.trim() || !item.answer.trim()) {
+        showError('All procedure items must have both text and answer');
+        return;
       }
-    });
+      // Validate that answer only contains letters and numbers
+      if (!/^[A-Z0-9\s,]+$/.test(item.answer.trim())) {
+        showError('Answer can only contain uppercase letters, numbers, and commas');
+        return;
+      }
+    }
     
     question = {
       type: 'procedure',
       question_text: questionText,
       title: title,
       instruction: instruction,
-      content: content,
-      answer: answer,
-      count: count,
+      items: procItemsArray,
+      count: procItemsArray.length,
+      answer: procItemsArray.map(item => item.answer).join(' | '),
       video_url: video || null,
       priority: priority
+    };
+    console.log('[DEBUG] Procedure question saved:', question);
+  } else if (currentQuestionType === 'identification') {
+    const title = document.getElementById('idTitle').value.trim();
+    const instruction = document.getElementById('idInstruction').value.trim();
+    const questionText = document.getElementById('idQuestion').value.trim();
+    const imageFile = document.getElementById('idImageFile');
+    const imageBase64 = imageFile.dataset.base64 || null;
+    
+    if (!title || !instruction || !questionText) {
+      showError('Please fill in all required fields');
+      return;
+    }
+    
+    if (idItemsArray.length === 0) {
+      showError('Please add at least one identification item');
+      return;
+    }
+    
+    // Validate that all items have both text and answer
+    for (let item of idItemsArray) {
+      if (!item.text.trim() || !item.answer.trim()) {
+        showError('All identification items must have both text and answer');
+        return;
+      }
+      // Validate that answer only contains letters and numbers
+      if (!/^[A-Z0-9\s,]+$/.test(item.answer.trim())) {
+        showError('Answer can only contain uppercase letters, numbers, and commas');
+        return;
+      }
+    }
+    
+    question = {
+      type: 'identification',
+      question_text: questionText,
+      title: title,
+      instruction: instruction,
+      image_base64: imageBase64,
+      items: idItemsArray,
+      count: idItemsArray.length,
+      answer: idItemsArray.map(item => item.answer).join(' | ')
     };
   }
   
@@ -598,6 +732,10 @@ function cancelQuestion() {
   document.getElementById('questionFormContainer').style.display = 'none';
   document.getElementById('questionTypeMenu').style.display = 'none';
   currentQuestionType = null;
+  // Clear all items arrays
+  enumItemsArray = [];
+  idItemsArray = [];
+  procItemsArray = [];
 }
 
 // Auto-fill course from enumeration
@@ -626,6 +764,162 @@ function autoFillCourseFromProcedure() {
   }
 }
 
+// Auto-fill course from identification
+function autoFillCourseFromIdentification() {
+  const idTitle = document.getElementById('idTitle').value.trim();
+  if (idTitle) {
+    const matchedCourse = findCourseByTitle(idTitle);
+    if (matchedCourse) {
+      document.getElementById('examCourse').value = matchedCourse.id;
+      document.getElementById('examTitle').value = matchedCourse.course_title;
+      showSuccess('Course auto-filled: ' + matchedCourse.course_title);
+    }
+  }
+}
+
+// Handle identification image file upload
+function handleIdImageUpload(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const preview = document.getElementById('idImagePreview');
+      preview.innerHTML = `<img src="${e.target.result}" style="max-width: 200px; max-height: 200px; border-radius: 6px; border: 1px solid #ddd;">`;
+      // Store the base64 data in a data attribute
+      document.getElementById('idImageFile').dataset.base64 = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+// Add identification item
+function addIdItem() {
+  const itemNum = idItemsArray.length + 1;
+  const newItem = {
+    id: Date.now(),
+    number: itemNum,
+    text: '',
+    answer: '',
+    points: 1
+  };
+  idItemsArray.push(newItem);
+  renderIdItems();
+}
+
+// Render identification items
+function renderIdItems() {
+  const container = document.getElementById('idItemsList');
+  if (!container) return;
+  
+  if (idItemsArray.length === 0) {
+    container.innerHTML = '<p style="color: #999; text-align: center; margin: 0;">No items added yet</p>';
+    return;
+  }
+  
+  container.innerHTML = idItemsArray.map((item, idx) => `
+    <div style="background: white; border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin-bottom: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <strong style="color: #28a745;">Item ${item.number}</strong>
+        <button onclick="removeIdItem(${idx})" style="padding: 4px 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;">Remove</button>
+      </div>
+      <div style="margin-bottom: 8px;">
+        <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #333;">Item Text/Label *</label>
+        <input type="text" id="idItemText_${item.id}" placeholder="e.g., Part A, Component 1" value="${item.text}" onchange="updateIdItem(${idx}, 'text', this.value)" style="width: 100%; padding: 8px; border: 2px solid ${item.text.trim() ? '#28a745' : '#dc3545'}; border-radius: 4px; font-size: 12px; box-sizing: border-box;">
+        ${!item.text.trim() ? '<small style="color: #dc3545; display: block; margin-top: 4px;">⚠️ Item text is required</small>' : '<small style="color: #28a745; display: block; margin-top: 4px;">✓ Item text provided</small>'}
+      </div>
+      <div style="margin-bottom: 8px;">
+        <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #333;">Correct Answer (UPPERCASE) *</label>
+        <textarea id="idItemAnswer_${item.id}" placeholder="e.g., A, B1, PART3" onchange="updateIdItem(${idx}, 'answer', this.value)" style="width: 100%; padding: 8px; border: 2px solid ${item.answer.trim() ? '#28a745' : '#dc3545'}; border-radius: 4px; font-size: 12px; box-sizing: border-box; text-transform: uppercase; min-height: 50px; resize: vertical;">${item.answer}</textarea>
+        ${!item.answer.trim() ? '<small style="color: #dc3545; display: block; margin-top: 4px;">⚠️ Answer is required</small>' : '<small style="color: #28a745; display: block; margin-top: 4px;">✓ Answer provided</small>'}
+      </div>
+      <div>
+        <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #333;">Points for this item</label>
+        <input type="number" id="idItemPoints_${item.id}" placeholder="e.g., 1" value="${item.points || 1}" min="1" onchange="updateIdItem(${idx}, 'points', parseInt(this.value) || 1)" style="width: 100%; padding: 8px; border: 2px solid #28a745; border-radius: 4px; font-size: 12px; box-sizing: border-box;">
+      </div>
+    </div>
+  `).join('');
+}
+
+// Update identification item
+function updateIdItem(idx, field, value) {
+  if (idItemsArray[idx]) {
+    idItemsArray[idx][field] = field === 'answer' ? value.toUpperCase() : value;
+    renderIdItems();
+  }
+}
+
+// Remove identification item
+function removeIdItem(idx) {
+  idItemsArray.splice(idx, 1);
+  // Renumber items
+  idItemsArray.forEach((item, i) => {
+    item.number = i + 1;
+  });
+  renderIdItems();
+}
+
+// Add procedure item
+function addProcItem() {
+  const itemNum = procItemsArray.length + 1;
+  const newItem = {
+    id: Date.now(),
+    number: itemNum,
+    text: '',
+    answer: '',
+    points: 1
+  };
+  procItemsArray.push(newItem);
+  renderProcItems();
+}
+
+// Render procedure items
+function renderProcItems() {
+  const container = document.getElementById('procItemsList');
+  if (!container) return;
+  
+  if (procItemsArray.length === 0) {
+    container.innerHTML = '<p style="color: #999; text-align: center; margin: 0;">No items added yet</p>';
+    return;
+  }
+  
+  container.innerHTML = procItemsArray.map((item, idx) => `
+    <div style="background: white; border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin-bottom: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <strong style="color: #6f42c1;">Item ${item.number}</strong>
+        <button onclick="removeProcItem(${idx})" style="padding: 4px 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;">Remove</button>
+      </div>
+      <div style="margin-bottom: 8px;">
+        <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #333;">Question/Step *</label>
+        <input type="text" id="procItemText_${item.id}" placeholder="e.g., Step 1, First check" value="${item.text}" onchange="updateProcItem(${idx}, 'text', this.value)" style="width: 100%; padding: 8px; border: 2px solid ${item.text.trim() ? '#6f42c1' : '#dc3545'}; border-radius: 4px; font-size: 12px; box-sizing: border-box;">
+        ${!item.text.trim() ? '<small style="color: #dc3545; display: block; margin-top: 4px;">⚠️ Question text is required</small>' : '<small style="color: #6f42c1; display: block; margin-top: 4px;">✓ Question provided</small>'}
+      </div>
+      <div style="margin-bottom: 8px;">
+        <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #333;">Correct Answer (UPPERCASE letters and numbers) *</label>
+        <textarea id="procItemAnswer_${item.id}" placeholder="e.g., A, B1, PART3" onchange="updateProcItem(${idx}, 'answer', this.value)" style="width: 100%; padding: 8px; border: 2px solid ${item.answer.trim() ? '#6f42c1' : '#dc3545'}; border-radius: 4px; font-size: 12px; box-sizing: border-box; text-transform: uppercase; min-height: 50px; resize: vertical;">${item.answer}</textarea>
+        ${!item.answer.trim() ? '<small style="color: #dc3545; display: block; margin-top: 4px;">⚠️ Answer is required</small>' : '<small style="color: #6f42c1; display: block; margin-top: 4px;">✓ Answer provided</small>'}
+      </div>
+    </div>
+  `).join('');
+}
+
+// Update procedure item
+function updateProcItem(idx, field, value) {
+  if (procItemsArray[idx]) {
+    procItemsArray[idx][field] = field === 'answer' ? value.toUpperCase() : value;
+    renderProcItems();
+  }
+}
+
+// Remove procedure item
+function removeProcItem(idx) {
+  procItemsArray.splice(idx, 1);
+  // Renumber items
+  procItemsArray.forEach((item, i) => {
+    item.number = i + 1;
+  });
+  renderProcItems();
+}
+
 // Render questions
 function renderQuestions() {
   const container = document.getElementById('questionsContainer');
@@ -637,7 +931,7 @@ function renderQuestions() {
   container.innerHTML = questionsArray.map((q, idx) => `
     <div style="background: white; border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start;">
       <div style="flex: 1;">
-        <strong style="color: var(--navy);">Q${idx + 1}: ${q.type === 'multiple_choice' ? '📝 Multiple Choice' : q.type === 'enumeration' ? '📋 Enumeration' : '📖 Procedure'}</strong>
+        <strong style="color: var(--navy);">Q${idx + 1}: ${q.type === 'multiple_choice' ? '📝 Multiple Choice' : q.type === 'enumeration' ? '📋 Enumeration' : q.type === 'procedure' ? '📖 Procedure' : '🖼️ Identification'}</strong>
         <p style="margin: 5px 0 0 0; color: #333; font-size: 13px; font-weight: 500;">${q.question_text || q.title || ''}</p>
         ${q.type === 'multiple_choice' ? `<p style="margin: 3px 0 0 0; color: #007bff; font-size: 12px;">✓ Answer: ${q.correct_answer}</p>` : ''}
         ${q.type === 'enumeration' ? `
@@ -649,10 +943,16 @@ function renderQuestions() {
         ${q.type === 'procedure' ? `
           <div style="margin: 8px 0 0 0; padding: 8px; background: #f8f0ff; border-radius: 4px; font-size: 12px;">
             <p style="margin: 0 0 4px 0; color: #6f42c1; font-weight: 600;">📖 ${q.title}</p>
+            <p style="margin: 0 0 4px 0; color: #666;"><strong>Items:</strong> ${q.count || (q.items ? q.items.length : 0)} items</p>
           </div>
         ` : ''}
-      </div>
-      <div style="display: flex; gap: 8px; flex-shrink: 0;">
+        ${q.type === 'identification' ? `
+          <div style="margin: 8px 0 0 0; padding: 8px; background: #e8f5e9; border-radius: 4px; font-size: 12px;">
+            <p style="margin: 0 0 4px 0; color: #28a745; font-weight: 600;">🖼️ ${q.title}</p>
+            <p style="margin: 0 0 4px 0; color: #666;"><strong>Items:</strong> ${q.count || (q.items ? q.items.length : 0)} items</p>
+            ${q.image_url ? '<p style="margin: 0; color: #28a745;">📷 Has reference image</p>' : ''}
+          </div>
+        ` : ''}
         <button onclick="editQuestion(${idx})" style="padding: 6px 12px; background: #ffc107; color: black; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;">Edit</button>
         <button onclick="removeQuestion(${idx})" style="padding: 6px 12px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;">Remove</button>
       </div>
@@ -766,6 +1066,8 @@ function editQuestion(idx) {
     `;
     setTimeout(() => renderEnumItems(), 0);
   } else if (q.type === 'procedure') {
+    procItemsArray = JSON.parse(JSON.stringify(q.items || []));
+    console.log('[DEBUG] editQuestion - procedure - procItemsArray:', procItemsArray);
     formHTML = `
       <div class="form-group">
         <label>Question Priority (Display Order) *</label>
@@ -789,20 +1091,14 @@ function editQuestion(idx) {
         <label>Question Text *</label>
         <textarea id="procQuestion" placeholder="Enter the question..." style="min-height: 60px;">${q.question_text || ''}</textarea>
       </div>
-      <div class="form-group">
-        <label>Procedure Content *</label>
-        <textarea id="procContent" placeholder="Enter detailed procedure steps..." style="min-height: 100px;">${q.content || ''}</textarea>
+      
+      <div style="background: #f8f0ff; border: 2px solid #6f42c1; border-radius: 6px; padding: 15px; margin-bottom: 20px;">
+        <h4 style="margin-top: 0; color: #6f42c1;">📖 Procedure Items</h4>
+        <p style="font-size: 12px; color: #666; margin: 0 0 15px 0;">Add each procedure step/question. Each item accepts uppercase letters and numbers.</p>
+        <div id="procItemsList" style="margin-bottom: 15px;"></div>
+        <button onclick="addProcItem()" style="width: 100%; padding: 10px; background: #6f42c1; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">➕ Add Item</button>
       </div>
-      <div class="form-group">
-        <label>Correct Answer * (CAPITAL LETTERS ONLY, use OR for multiple answers)</label>
-        <textarea id="procAnswer" placeholder="e.g., A, B, C OR A, B, D" style="min-height: 60px; text-transform: uppercase;" onchange="updateProcItemCount()">${(q.answer || '').toUpperCase()}</textarea>
-        <small style="color: #666; margin-top: 5px; display: block;">Example: A, B, C (for 3 items) or A, B OR C, D (for 2 possible answers)</small>
-      </div>
-      <div class="form-group">
-        <label>Number of Items * (Auto-calculated)</label>
-        <input type="number" id="procCount" placeholder="Auto-filled based on answer" min="1" max="20" readonly style="background: #f0f0f0; cursor: not-allowed;">
-        <small style="color: #666; margin-top: 5px; display: block;">This field auto-updates based on your correct answer</small>
-      </div>
+      
       <div class="form-group">
         <label>Video URL (Optional)</label>
         <input type="url" id="procVideoUrl" placeholder="https://example.com/video.mp4" value="${q.video_url || ''}">
@@ -812,6 +1108,44 @@ function editQuestion(idx) {
         <button onclick="cancelQuestion()" style="flex: 1; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">✕ Cancel</button>
       </div>
     `;
+    setTimeout(() => renderProcItems(), 0);
+  } else if (q.type === 'identification') {
+    idItemsArray = JSON.parse(JSON.stringify(q.items || []));
+    formHTML = `
+      <div class="form-group">
+        <label>Identification Title *</label>
+        <input type="text" id="idTitle" placeholder="e.g., Identify the parts..." value="${q.title || ''}">
+      </div>
+      <div class="form-group">
+        <label>Instruction *</label>
+        <textarea id="idInstruction" placeholder="Enter instructions..." style="min-height: 60px;">${q.instruction || ''}</textarea>
+      </div>
+      <div class="form-group">
+        <label>Question Text *</label>
+        <textarea id="idQuestion" placeholder="Enter the question..." style="min-height: 60px;">${q.question_text || ''}</textarea>
+      </div>
+      <div class="form-group">
+        <label>Reference Image (Optional)</label>
+        <input type="file" id="idImageFile" accept="image/*" onchange="handleIdImageUpload(event)">
+        <small style="color: #666; margin-top: 5px; display: block;">Image to display as reference during exam (JPG, PNG, GIF)</small>
+        <div id="idImagePreview" style="margin-top: 10px;">
+          ${q.image_url ? `<img src="${q.image_url}" style="max-width: 200px; max-height: 200px; border-radius: 6px; border: 1px solid #ddd;">` : (q.image_base64 ? `<img src="${q.image_base64}" style="max-width: 200px; max-height: 200px; border-radius: 6px; border: 1px solid #ddd;">` : '')}
+        </div>
+      </div>
+      
+      <div style="background: #e8f5e9; border: 2px solid #28a745; border-radius: 6px; padding: 15px; margin-bottom: 20px;">
+        <h4 style="margin-top: 0; color: #28a745;">🖼️ Identification Items</h4>
+        <p style="font-size: 12px; color: #666; margin: 0 0 15px 0;">Add each item to identify. Each item is worth 1 point.</p>
+        <div id="idItemsList" style="margin-bottom: 15px;"></div>
+        <button onclick="addIdItem()" style="width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">➕ Add Item</button>
+      </div>
+      
+      <div style="display: flex; gap: 10px;">
+        <button onclick="updateQuestion(${idx})" style="flex: 1; padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">✓ Update Question</button>
+        <button onclick="cancelQuestion()" style="flex: 1; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">✕ Cancel</button>
+      </div>
+    `;
+    setTimeout(() => renderIdItems(), 0);
   }
   
   document.getElementById('questionFormContent').innerHTML = formHTML;
@@ -884,35 +1218,77 @@ function updateQuestion(idx) {
     const questionText = document.getElementById('procQuestion').value.trim();
     const title = document.getElementById('procTitle').value.trim();
     const instruction = document.getElementById('procInstruction').value.trim();
-    const content = document.getElementById('procContent').value.trim();
-    const answer = document.getElementById('procAnswer').value.trim().toUpperCase();
     const video = document.getElementById('procVideoUrl').value.trim();
     const priority = document.getElementById('procPriority').value || 'procedure';
     
-    if (!questionText || !title || !instruction || !content || !answer) {
+    if (!questionText || !title || !instruction) {
       showError('Please fill in all required fields');
       return;
     }
     
-    const answerOptions = answer.split(/\s+OR\s+/);
-    let count = 0;
-    answerOptions.forEach(option => {
-      const letters = option.match(/[A-Z]/g);
-      if (letters) {
-        count = Math.max(count, letters.length);
+    if (procItemsArray.length === 0) {
+      showError('Please add at least one procedure item');
+      return;
+    }
+    
+    // Validate that all items have both text and answer
+    for (let item of procItemsArray) {
+      if (!item.text.trim() || !item.answer.trim()) {
+        showError('All procedure items must have both question text and answer');
+        return;
       }
-    });
+    }
     
     question = {
       type: 'procedure',
       question_text: questionText,
       title: title,
       instruction: instruction,
-      content: content,
-      answer: answer,
-      count: count,
+      items: procItemsArray,
+      count: procItemsArray.length,
+      answer: '',
       video_url: video || null,
       priority: priority
+    };
+  } else if (currentQuestionType === 'identification') {
+    const title = document.getElementById('idTitle').value.trim();
+    const instruction = document.getElementById('idInstruction').value.trim();
+    const questionText = document.getElementById('idQuestion').value.trim();
+    const imageFile = document.getElementById('idImageFile');
+    const imageBase64 = imageFile.dataset.base64 || null;
+    
+    // Get existing image URL from the question being edited
+    const existingQuestion = questionsArray[idx];
+    const existingImageUrl = existingQuestion ? existingQuestion.image_url : '';
+    
+    if (!title || !instruction || !questionText) {
+      showError('Please fill in all required fields');
+      return;
+    }
+    
+    if (idItemsArray.length === 0) {
+      showError('Please add at least one identification item');
+      return;
+    }
+    
+    // Validate that all items have both text and answer
+    for (let item of idItemsArray) {
+      if (!item.text.trim() || !item.answer.trim()) {
+        showError('All identification items must have both text and answer');
+        return;
+      }
+    }
+    
+    question = {
+      type: 'identification',
+      question_text: questionText,
+      title: title,
+      instruction: instruction,
+      image_base64: imageBase64,
+      image_url: existingImageUrl || '', // Preserve existing image URL if no new image uploaded
+      items: idItemsArray,
+      count: idItemsArray.length,
+      answer: idItemsArray.map(item => item.answer).join(' | ')
     };
   }
   
@@ -937,14 +1313,10 @@ function editExam(examId) {
   currentEditingExamId = examId;
   questionsArray = [];
   enumItemsArray = [];
+  idItemsArray = [];
+  procItemsArray = [];
   document.getElementById('examModalTitle').textContent = 'Edit Exam';
   document.getElementById('examTitle').value = exam.title;
-  
-  const matchedCourse = allCourses.find(c => c.course_title === exam.course_title);
-  if (matchedCourse) {
-    document.getElementById('examCourse').value = matchedCourse.id;
-  }
-  
   document.getElementById('examDescription').value = exam.description || '';
   document.getElementById('examPassingScore').value = exam.passing_score;
   document.getElementById('questionsContainer').innerHTML = '<p style="color: #999; text-align: center;">Loading questions...</p>';
@@ -1025,14 +1397,42 @@ async function loadExamQuestions(examId) {
           console.log('[DEBUG] Enumeration question object:', enumQuestion);
           return enumQuestion;
         } else if (q.question_type === 'procedure') {
+          let items = [];
+          if (q.procedure_items_json) {
+            try {
+              items = JSON.parse(q.procedure_items_json);
+            } catch (e) {
+              console.log('[DEBUG] JSON parse error for procedure:', e.message);
+            }
+          }
           return {
             type: 'procedure',
             question_text: q.question_text || '',
             title: q.procedure_title || '',
-            content: q.procedure_content || '',
             instruction: q.procedure_instructions || '',
+            items: items,
+            count: items.length || 0,
             answer: q.procedure_answer || '',
             video_url: null
+          };
+        } else if (q.question_type === 'identification') {
+          let items = [];
+          if (q.identification_items_json) {
+            try {
+              items = JSON.parse(q.identification_items_json);
+            } catch (e) {
+              console.log('[DEBUG] JSON parse error for identification:', e.message);
+            }
+          }
+          return {
+            type: 'identification',
+            question_text: q.question_text || '',
+            title: q.identification_title || '',
+            instruction: q.identification_instruction || '',
+            image_url: q.identification_image_url || '',
+            answer: q.identification_answer || '',
+            items: items,
+            points: q.points || 1
           };
         }
       });
@@ -1049,18 +1449,18 @@ async function loadExamQuestions(examId) {
 // Save exam
 async function saveExam() {
   const title = document.getElementById('examTitle').value.trim();
-  const courseId = document.getElementById('examCourse').value;
   const description = document.getElementById('examDescription').value.trim();
   const passingScore = parseInt(document.getElementById('examPassingScore').value) || 70;
 
-  if (!title || !courseId) {
+  if (!title) {
     showError('Please fill in all required fields');
     return;
   }
 
-  const course = allCourses.find(c => c.id == courseId);
+  // Extract course from title (the title IS the course name)
+  const course = allCourses.find(c => c.course_title === title);
   if (!course) {
-    showError('Invalid course selected');
+    showError('Invalid course. Please select a valid course title.');
     return;
   }
 
@@ -1094,10 +1494,34 @@ async function saveExam() {
           type: 'procedure',
           question: q.question_text || '',
           title: q.title || '',
-          content: q.content || '',
-          instructions: q.instruction || '',
-          answer: q.answer || '',
-          items_json: JSON.stringify(q.items || [])
+          instruction: q.instruction || '',
+          items: q.items || [],
+          items_json: JSON.stringify(q.items || []),
+          count: q.count || q.items?.length || 0,
+          answer: q.answer || ''
+        };
+      } else if (q.type === 'identification') {
+        // If there's an existing image_url and no new image_base64, keep the existing image
+        let imageData = '';
+        if (q.image_base64 && q.image_base64.startsWith('data:image')) {
+          // New image uploaded - use the base64
+          imageData = q.image_base64;
+        } else if (q.image_url && q.image_url.includes('/uploads/')) {
+          // No new image uploaded but existing image URL exists - preserve it
+          // We'll handle this on server side
+          imageData = '';
+        }
+        return {
+          type: 'identification',
+          question_text: q.question_text || '',
+          title: q.title || '',
+          instruction: q.instruction || '',
+          image_base64: imageData,
+          image_url: q.image_url || '', // Send existing URL to server
+          items: q.items || [],
+          items_json: JSON.stringify(q.items || []),
+          count: q.count || q.items?.length || 0,
+          answer: q.answer || ''
         };
       }
       return q;
@@ -1212,6 +1636,7 @@ async function viewExam(examId) {
       const multipleChoice = questions.filter(q => q.question_type === 'multiple_choice');
       const enumeration = questions.filter(q => q.question_type === 'enumeration');
       const procedure = questions.filter(q => q.question_type === 'procedure');
+      const identification = questions.filter(q => q.question_type === 'identification');
 
       let sectionsHtml = '';
       
@@ -1277,11 +1702,63 @@ async function viewExam(examId) {
         `;
       }
 
-      // Calculate overall total items (including enumeration items)
+      if (identification.length > 0) {
+        sectionsHtml += `
+          <div style="background: linear-gradient(135deg, #f8f9fa 0%, #f0f1f3 100%); border-left: 5px solid #28a745; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
+            <h4 style="color: #28a745; margin: 0 0 16px 0; font-size: 16px; font-weight: 700;">🖼️ Identification Questions (${identification.length})</h4>
+            ${identification.map((q, idx) => {
+              let items = [];
+              try {
+                if (q.identification_items_json) {
+                  items = JSON.parse(q.identification_items_json);
+                }
+              } catch (e) {
+                console.error('Error parsing identification items:', e);
+              }
+              return `
+              <div class="question-item" style="margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                  <div class="question-number" style="flex: 1;">Q${questions.indexOf(q) + 1}: ${q.identification_title}</div>
+                </div>
+                ${q.identification_image_url ? `
+                  <div style="background: white; padding: 12px; border-radius: 6px; margin-bottom: 10px; text-align: center;">
+                    <img src="${q.identification_image_url}" style="max-width: 100%; max-height: 300px; border-radius: 4px;" alt="Reference image">
+                  </div>
+                ` : ''}
+                <div style="background: white; padding: 12px; border-radius: 6px; margin-bottom: 10px;">
+                  <p style="color: #666; margin: 0 0 8px 0; font-size: 13px;"><strong>Instructions:</strong></p>
+                  <p style="color: #333; margin: 0 0 12px 0; white-space: pre-wrap; font-size: 13px; line-height: 1.6;">${q.identification_instruction}</p>
+                  <p style="color: #666; margin: 0 0 8px 0; font-size: 13px;"><strong>Items to Identify:</strong></p>
+                  ${items.length > 0 ? `
+                    <div style="background: #f8f9fa; padding: 10px; border-radius: 4px;">
+                      ${items.map((item, i) => `
+                        <div style="padding: 6px 0; border-bottom: 1px solid #eee;">
+                          <strong>${i + 1}. ${item.text}</strong> → <span style="color: #28a745; font-weight: 600;">Answer: ${item.answer}</span>
+                        </div>
+                      `).join('')}
+                    </div>
+                  ` : '<p style="color: #999; margin: 0;">No items defined</p>'}
+                </div>
+              </div>
+            `;
+            }).join('')}
+          </div>
+        `;
+      }
+
+      // Calculate overall total items (including enumeration and identification items)
       let overallTotal = 0;
       questions.forEach(q => {
-        if (q.question_type === 'enumeration') {
-          overallTotal += parseInt(q.enumeration_items) || 0;
+        if (q.question_type === 'enumeration' || q.question_type === 'identification') {
+          try {
+            let items = [];
+            if (q.enumeration_items_json) {
+              items = JSON.parse(q.enumeration_items_json);
+            }
+            overallTotal += items.length || 0;
+          } catch (e) {
+            overallTotal += parseInt(q.enumeration_items) || 0;
+          }
         } else {
           overallTotal += 1;
         }

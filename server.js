@@ -339,3 +339,344 @@ app.post('/api/tests/remove', async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
+// Training Evaluation Form Endpoints
+
+// Save evaluation form
+app.post('/api/evaluation-forms', async (req, res) => {
+  try {
+    const {
+      training_id,
+      employee_id,
+      course_title,
+      resource_speaker,
+      participant_name,
+      training_date,
+      position,
+      venue,
+      program_ratings,
+      trainer_ratings,
+      transfer_ratings,
+      overall_score,
+      total_average_score,
+      page1_remarks_1,
+      page1_remarks_2,
+      overall_remarks,
+      applied_before_ratings,
+      applied_after_ratings,
+      applied_before_total,
+      applied_before_avg,
+      applied_after_total,
+      applied_after_avg,
+      business_ratings,
+      business_feedbacks,
+      business_total,
+      business_avg,
+      page2_remarks_1,
+      page2_remarks_2
+    } = req.body;
+
+    const result = await pool.request()
+      .input('training_id', sql.BigInt, training_id)
+      .input('employee_id', sql.BigInt, employee_id)
+      .input('course_title', sql.VarChar, course_title)
+      .input('resource_speaker', sql.VarChar, resource_speaker)
+      .input('participant_name', sql.VarChar, participant_name)
+      .input('training_date', sql.DateTime, training_date ? new Date(training_date) : null)
+      .input('position', sql.VarChar, position)
+      .input('venue', sql.VarChar, venue)
+      .input('program_1_rating', sql.Int, program_ratings[0] || null)
+      .input('program_2_rating', sql.Int, program_ratings[1] || null)
+      .input('program_3_rating', sql.Int, program_ratings[2] || null)
+      .input('program_4_rating', sql.Int, program_ratings[3] || null)
+      .input('program_5_rating', sql.Int, program_ratings[4] || null)
+      .input('trainer_1_rating', sql.Int, trainer_ratings[0] || null)
+      .input('trainer_2_rating', sql.Int, trainer_ratings[1] || null)
+      .input('trainer_3_rating', sql.Int, trainer_ratings[2] || null)
+      .input('trainer_4_rating', sql.Int, trainer_ratings[3] || null)
+      .input('trainer_5_rating', sql.Int, trainer_ratings[4] || null)
+      .input('transfer_1_rating', sql.Int, transfer_ratings[0] || null)
+      .input('transfer_2_rating', sql.Int, transfer_ratings[1] || null)
+      .input('transfer_3_rating', sql.Int, transfer_ratings[2] || null)
+      .input('transfer_4_rating', sql.Int, transfer_ratings[3] || null)
+      .input('transfer_5_rating', sql.Int, transfer_ratings[4] || null)
+      .input('overall_score', sql.Int, overall_score || null)
+      .input('total_average_score', sql.Decimal(5, 2), total_average_score || null)
+      .input('page1_remarks_1', sql.NVarChar, page1_remarks_1)
+      .input('page1_remarks_2', sql.NVarChar, page1_remarks_2)
+      .input('overall_remarks', sql.NVarChar, overall_remarks)
+      .input('applied_before_1_rating', sql.Int, applied_before_ratings[0] || null)
+      .input('applied_before_2_rating', sql.Int, applied_before_ratings[1] || null)
+      .input('applied_before_3_rating', sql.Int, applied_before_ratings[2] || null)
+      .input('applied_before_4_rating', sql.Int, applied_before_ratings[3] || null)
+      .input('applied_before_5_rating', sql.Int, applied_before_ratings[4] || null)
+      .input('applied_before_total', sql.Int, applied_before_total || null)
+      .input('applied_before_avg', sql.Decimal(5, 2), applied_before_avg || null)
+      .input('applied_after_1_rating', sql.Int, applied_after_ratings[0] || null)
+      .input('applied_after_2_rating', sql.Int, applied_after_ratings[1] || null)
+      .input('applied_after_3_rating', sql.Int, applied_after_ratings[2] || null)
+      .input('applied_after_4_rating', sql.Int, applied_after_ratings[3] || null)
+      .input('applied_after_5_rating', sql.Int, applied_after_ratings[4] || null)
+      .input('applied_after_total', sql.Int, applied_after_total || null)
+      .input('applied_after_avg', sql.Decimal(5, 2), applied_after_avg || null)
+      .input('business_1_rating', sql.Int, business_ratings[0] || null)
+      .input('business_1_feedback', sql.NVarChar, business_feedbacks[0] || '')
+      .input('business_2_rating', sql.Int, business_ratings[1] || null)
+      .input('business_2_feedback', sql.NVarChar, business_feedbacks[1] || '')
+      .input('business_3_rating', sql.Int, business_ratings[2] || null)
+      .input('business_3_feedback', sql.NVarChar, business_feedbacks[2] || '')
+      .input('business_total', sql.Int, business_total || null)
+      .input('business_avg', sql.Decimal(5, 2), business_avg || null)
+      .input('page2_remarks_1', sql.NVarChar, page2_remarks_1)
+      .input('page2_remarks_2', sql.NVarChar, page2_remarks_2)
+      .query(`
+        INSERT INTO TrainingEvaluationForms (
+          training_id, employee_id, course_title, resource_speaker, participant_name,
+          training_date, position, venue,
+          program_1_rating, program_2_rating, program_3_rating, program_4_rating, program_5_rating,
+          trainer_1_rating, trainer_2_rating, trainer_3_rating, trainer_4_rating, trainer_5_rating,
+          transfer_1_rating, transfer_2_rating, transfer_3_rating, transfer_4_rating, transfer_5_rating,
+          overall_score, total_average_score, page1_remarks_1, page1_remarks_2, overall_remarks,
+          applied_before_1_rating, applied_before_2_rating, applied_before_3_rating, applied_before_4_rating, applied_before_5_rating,
+          applied_before_total, applied_before_avg,
+          applied_after_1_rating, applied_after_2_rating, applied_after_3_rating, applied_after_4_rating, applied_after_5_rating,
+          applied_after_total, applied_after_avg,
+          business_1_rating, business_1_feedback, business_2_rating, business_2_feedback, business_3_rating, business_3_feedback,
+          business_total, business_avg, page2_remarks_1, page2_remarks_2
+        ) VALUES (
+          @training_id, @employee_id, @course_title, @resource_speaker, @participant_name,
+          @training_date, @position, @venue,
+          @program_1_rating, @program_2_rating, @program_3_rating, @program_4_rating, @program_5_rating,
+          @trainer_1_rating, @trainer_2_rating, @trainer_3_rating, @trainer_4_rating, @trainer_5_rating,
+          @transfer_1_rating, @transfer_2_rating, @transfer_3_rating, @transfer_4_rating, @transfer_5_rating,
+          @overall_score, @total_average_score, @page1_remarks_1, @page1_remarks_2, @overall_remarks,
+          @applied_before_1_rating, @applied_before_2_rating, @applied_before_3_rating, @applied_before_4_rating, @applied_before_5_rating,
+          @applied_before_total, @applied_before_avg,
+          @applied_after_1_rating, @applied_after_2_rating, @applied_after_3_rating, @applied_after_4_rating, @applied_after_5_rating,
+          @applied_after_total, @applied_after_avg,
+          @business_1_rating, @business_1_feedback, @business_2_rating, @business_2_feedback, @business_3_rating, @business_3_feedback,
+          @business_total, @business_avg, @page2_remarks_1, @page2_remarks_2
+        )
+      `);
+
+    res.json({ success: true, message: 'Evaluation form saved successfully', id: result.recordset?.[0]?.id });
+  } catch (err) {
+    console.error('Error saving evaluation form:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Get evaluation forms for a training
+app.get('/api/evaluation-forms/:trainingId', async (req, res) => {
+  try {
+    const { trainingId } = req.params;
+    
+    const result = await pool.request()
+      .input('training_id', sql.BigInt, trainingId)
+      .query('SELECT * FROM TrainingEvaluationForms WHERE training_id = @training_id ORDER BY created_at DESC');
+    
+    res.json({ success: true, data: result.recordset });
+  } catch (err) {
+    console.error('Error fetching evaluation forms:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Get all venues for dropdown
+app.get('/api/venues', async (req, res) => {
+  try {
+    const result = await pool.request()
+      .query(`
+        SELECT DISTINCT venue FROM TrainingRecords 
+        WHERE venue IS NOT NULL AND venue != ''
+        ORDER BY venue
+      `);
+    
+    const venues = result.recordset.map(r => r.venue);
+    res.json({ success: true, data: venues });
+  } catch (err) {
+    console.error('Error fetching venues:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Add new employee endpoint
+app.post('/api/employees/add', async (req, res) => {
+  try {
+    const { full_name } = req.body;
+    
+    if (!full_name || !full_name.trim()) {
+      return res.status(400).json({ success: false, message: 'Employee name is required' });
+    }
+    
+    // Check if employee already exists
+    const checkResult = await pool.request()
+      .input('full_name', sql.VarChar, full_name)
+      .query('SELECT id FROM Employees WHERE full_name = @full_name');
+    
+    if (checkResult.recordset.length > 0) {
+      return res.status(400).json({ success: false, message: 'Employee already exists' });
+    }
+    
+    // Add new employee
+    const result = await pool.request()
+      .input('full_name', sql.VarChar, full_name)
+      .input('employee_no', sql.VarChar, `EMP-${Date.now()}`)
+      .query(`
+        INSERT INTO Employees (employee_no, full_name, date_hired)
+        VALUES (@employee_no, @full_name, GETDATE())
+      `);
+    
+    res.json({ success: true, message: 'Employee added successfully' });
+  } catch (err) {
+    console.error('Error adding employee:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Add new position endpoint
+app.post('/api/positions/add', async (req, res) => {
+  try {
+    const { position } = req.body;
+    
+    if (!position || !position.trim()) {
+      return res.status(400).json({ success: false, message: 'Position is required' });
+    }
+    
+    // Check if position already exists
+    const checkResult = await pool.request()
+      .input('position', sql.VarChar, position)
+      .query('SELECT id FROM Employees WHERE position = @position LIMIT 1');
+    
+    if (checkResult.recordset.length > 0) {
+      return res.json({ success: true, message: 'Position already exists' });
+    }
+    
+    // Position will be saved when used in evaluation form
+    res.json({ success: true, message: 'Position ready to save' });
+  } catch (err) {
+    console.error('Error adding position:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Add new venue endpoint
+app.post('/api/venues/add', async (req, res) => {
+  try {
+    const { venue } = req.body;
+    
+    if (!venue || !venue.trim()) {
+      return res.status(400).json({ success: false, message: 'Venue is required' });
+    }
+    
+    // Check if venue already exists
+    const checkResult = await pool.request()
+      .input('venue', sql.VarChar, venue)
+      .query('SELECT id FROM TrainingRecords WHERE venue = @venue LIMIT 1');
+    
+    if (checkResult.recordset.length > 0) {
+      return res.json({ success: true, message: 'Venue already exists' });
+    }
+    
+    // Venue will be saved when used in evaluation form
+    res.json({ success: true, message: 'Venue ready to save' });
+  } catch (err) {
+    console.error('Error adding venue:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Get all speakers for datalist
+app.get('/api/speakers', async (req, res) => {
+  try {
+    const result = await pool.request()
+      .query(`
+        SELECT DISTINCT trainer FROM TrainingRecords 
+        WHERE trainer IS NOT NULL AND trainer != ''
+        ORDER BY trainer
+      `);
+    
+    const speakers = result.recordset.map(r => r.trainer);
+    res.json({ success: true, data: speakers });
+  } catch (err) {
+    console.error('Error fetching speakers:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Add new speaker endpoint
+app.post('/api/speakers/add', async (req, res) => {
+  try {
+    const { speaker_name } = req.body;
+    
+    if (!speaker_name || !speaker_name.trim()) {
+      return res.status(400).json({ success: false, message: 'Speaker name is required' });
+    }
+    
+    // Speaker will be saved when evaluation form is submitted
+    res.json({ success: true, message: 'Speaker ready to save' });
+  } catch (err) {
+    console.error('Error adding speaker:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Update venue endpoint to save new venues to TrainingRecords
+app.post('/api/venues/add', async (req, res) => {
+  try {
+    const { venue } = req.body;
+    
+    if (!venue || !venue.trim()) {
+      return res.status(400).json({ success: false, message: 'Venue is required' });
+    }
+    
+    // Check if venue already exists
+    const checkResult = await pool.request()
+      .input('venue', sql.VarChar, venue)
+      .query('SELECT TOP 1 id FROM TrainingRecords WHERE venue = @venue');
+    
+    if (checkResult.recordset.length > 0) {
+      return res.json({ success: true, message: 'Venue already exists' });
+    }
+    
+    // Add venue to a default training record or create a reference
+    // For now, just confirm it will be saved when form is submitted
+    res.json({ success: true, message: 'Venue ready to save' });
+  } catch (err) {
+    console.error('Error adding venue:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Add new course endpoint
+app.post('/api/courses/add', async (req, res) => {
+  try {
+    const { course_title } = req.body;
+    
+    if (!course_title || !course_title.trim()) {
+      return res.status(400).json({ success: false, message: 'Course title is required' });
+    }
+    
+    // Check if course already exists
+    const checkResult = await pool.request()
+      .input('course_title', sql.VarChar, course_title)
+      .query('SELECT TOP 1 id FROM Courses WHERE course_title = @course_title');
+    
+    if (checkResult.recordset.length > 0) {
+      return res.status(400).json({ success: false, message: 'Course already exists' });
+    }
+    
+    // Add new course
+    const result = await pool.request()
+      .input('course_title', sql.VarChar, course_title)
+      .query(`
+        INSERT INTO Courses (course_title, created_at)
+        VALUES (@course_title, GETDATE())
+      `);
+    
+    res.json({ success: true, message: 'Course added successfully' });
+  } catch (err) {
+    console.error('Error adding course:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});

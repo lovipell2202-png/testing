@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Training Effectiveness Evaluation Form</title>
+  <link rel="stylesheet" href="src/training-evaluation-form.css">
+  <style>
+    @page {
+      margin: 0;
+      size: A4;
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+    
+    @page :first {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- Page 1 -->
+  <div class="page">
+    <div class="header">
+      <img src="NSB-LOGO.png" alt="NSB Engineering Logo" class="logo">
+    </div>
+
+    <div class="title-bar">TRAINING EFFECTIVENESS EVALUATION FORM</div>
+
+    <div class="info-section">
+      <div class="info-row">
+        <div class="info-field">
+          <label>Training Title:</label>
+          <input type="text" class="underline-input" id="training_title" placeholder="Type training title">
+        </div>
+        <div class="info-field">
+          <label>Resource Speaker:</label>
+          <div style="display: flex; gap: 5px; align-items: center;">
+            <input type="text" class="underline-input" id="resource_speaker" placeholder="Type or select" style="border: none; border-bottom: 1px solid #000; padding: 2px 4px; font-size: 9pt; flex: 1;" list="speaker_list">
+            <datalist id="speaker_list"></datalist>
+            <button type="button" id="add_speaker_btn" style="padding: 4px 8px; font-size: 8pt; background: #4169e1; color: white; border: none; border-radius: 3px; cursor: pointer;">+ Add</button>
+          </div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-field">
+          <label>Name of Participant:</label>
+          <div style="display: flex; gap: 5px; align-items: center;">
+            <select class="underline-input" id="participant_name" style="border: none; border-bottom: 1px solid #000; padding: 2px 4px; font-size: 9pt; flex: 1;">
+              <option value="">-- Select Employee --</option>
+            </select>
+            <button type="button" id="add_participant_btn" style="padding: 4px 8px; font-size: 8pt; background: #4169e1; color: white; border: none; border-radius: 3px; cursor: pointer;">+ Add</button>
+          </div>
+        </div>
+        <div class="info-field">
+          <label>Training Date:</label>
+          <input type="text" class="underline-input" id="training_date" placeholder="MM/DD/YYYY">
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-field">
+          <label>Position:</label>
+          <div style="display: flex; gap: 5px; align-items: center;">
+            <select class="underline-input" id="position" style="border: none; border-bottom: 1px solid #000; padding: 2px 4px; font-size: 9pt; flex: 1;">
+              <option value="">-- Select Position --</option>
+            </select>
+            <button type="button" id="add_position_btn" style="padding: 4px 8px; font-size: 8pt; background: #4169e1; color: white; border: none; border-radius: 3px; cursor: pointer;">+ Add</button>
+          </div>
+        </div>
+        <div class="info-field">
+          <label>Venue:</label>
+          <div style="display: flex; gap: 5px; align-items: center;">
+            <select class="underline-input" id="venue" style="border: none; border-bottom: 1px solid #000; padding: 2px 4px; font-size: 9pt; flex: 1;">
+              <option value="">-- Select Venue --</option>
+            </select>
+            <button type="button" id="add_venue_btn" style="padding: 4px 8px; font-size: 8pt; background: #4169e1; color: white; border: none; border-radius: 3px; cursor: pointer;">+ Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="section-title">Preliminary Evaluation</h3>
+    <p class="instructions"><strong>Instructions:</strong> Put a check (✓) on the column that corresponds to the rating of the respective training course.</p>
+
+    <!-- Section I: Program Contents -->
+    <table class="evaluation-table">
+      <thead>
+        <tr>
+          <th class="section-header" colspan="6">I. Program Contents</th>
+          <th class="rating-header-group" colspan="5">
+            <div class="rating-labels">
+              <div class="rating-label">5<br><span class="rating-text">Excellent</span></div>
+              <div class="rating-label">4<br><span class="rating-text">Very Satisfactory</span></div>
+              <div class="rating-label">3<br><span class="rating-text">Satisfactory</span></div>
+              <div class="rating-label">2<br><span class="rating-text">Needs Improvement</span></div>
+              <div class="rating-label">1<br><span class="rating-text">Failed</span></div>
+            </div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="6" class="criteria"><strong>1.</strong> The topics discussed were appropriate to meet employee's needs.<br><span class="tagalog">(Ang mga paksang tinalakay ay angkop upang matugunan ang pangangailangan ng empleyado.)</span></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="program"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="program"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="program"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="program"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="program"></td>
+        </tr>
+        <tr>
+          <td colspan="6" class="criteria"><strong>2.</strong> The objectives of the training program were clearly defined.<br><span class="tagalog">(Ang mga layunin ng programa sa pagsasanay ay malinaw na tinukoy.)</span></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="program"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="program"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="program"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="program"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="program"></td>
+        </tr>
+        <tr>
+          <td colspan="6" class="criteria"><strong>3.</strong> The delivery strategy of the topic was effective for knowledge transfer.<br><span class="tagalog">(Ang estratehiya ng paghahatid ng paksa ay epektibo para sa paglipat ng kaalaman.)</span></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="program"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="program"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="program"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="program"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="program"></td>
+        </tr>
+        <tr>
+          <td colspan="6" class="criteria"><strong>4.</strong> The resources utilized were appropriate and relevant to the training course.<br><span class="tagalog">(Ang mga kagamitan na ginamit ay angkop at may kaugnayan sa kursong pagsasanay.)</span></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="program"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="program"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="program"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="program"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="program"></td>
+        </tr>
+        <tr>
+          <td colspan="6" class="criteria"><strong>5.</strong> The overall content of the training was easy to understand.<br><span class="tagalog">(Ang kabuuang nilalaman ng pagsasanay ay madaling maintindihan.)</span></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="program"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="program"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="program"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="program"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="program"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Section II: Trainer/Speaker's Evaluation -->
+    <table class="evaluation-table">
+      <thead>
+        <tr>
+          <th class="section-header yellow-header" colspan="6">II. Trainer/ Speaker's Evaluation</th>
+          <th class="rating-header-group" colspan="5">
+            <div class="rating-labels">
+              <div class="rating-label">5<br><span class="rating-text">Excellent</span></div>
+              <div class="rating-label">4<br><span class="rating-text">Very Satisfactory</span></div>
+              <div class="rating-label">3<br><span class="rating-text">Satisfactory</span></div>
+              <div class="rating-label">2<br><span class="rating-text">Needs Improvement</span></div>
+              <div class="rating-label">1<br><span class="rating-text">Failed</span></div>
+            </div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="6" class="criteria"><strong>1.</strong> The trainer was able to conduct the training program at the onset of each session.<br><span class="tagalog">(Ang tagapagsanay ay nagsagawa ng programa ng pagsasanay sa simula ng bawat sesyon.)</span></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="trainer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="trainer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="trainer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="trainer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="trainer"></td>
+        </tr>
+        <tr>
+          <td colspan="6" class="criteria"><strong>2.</strong> The trainers' knowledge and skills were relevant to this course.<br><span class="tagalog">(Ang kaalaman at kasanayan ng mga tagapagsanay ay may kaugnayan sa kursong ito.)</span></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="trainer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="trainer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="trainer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="trainer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="trainer"></td>
+        </tr>
+        <tr>
+          <td colspan="6" class="criteria"><strong>3.</strong> The trainer initiates or adapts activities and projects to enhance understanding.<br><span class="tagalog">(Ang tagapagsanay ay nagsisimula o nag-aangkop ng mga aktibidad at proyekto upang mapahusay ang pag-unawa.)</span></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="trainer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="trainer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="trainer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="trainer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="trainer"></td>
+        </tr>
+        <tr>
+          <td colspan="6" class="criteria"><strong>4.</strong> The presentation of each session was relaxed and confident.<br><span class="tagalog">(Ang presentasyon ng bawat sesyon ay relaxed at may kumpiyansa.)</span></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="trainer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="trainer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="trainer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="trainer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="trainer"></td>
+        </tr>
+        <tr>
+          <td colspan="6" class="criteria"><strong>5.</strong> Trainer listens to trainees' comments and adjusts content based on feedback.<br><span class="tagalog">(Nakikinig sa tagapagsanay/query ang mga unawa at feedback at nagsasaayos ng paghahatid batay sa feedback.)</span></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="trainer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="trainer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="trainer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="trainer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="trainer"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Section III: Transfer Quotient -->
+    <table class="evaluation-table">
+      <thead>
+        <tr>
+          <th class="section-header green-header" colspan="6">III. Transfer Quotient (Theoretical Learning) / Job Impact</th>
+          <th class="rating-header-group" colspan="5">
+            <div class="rating-labels">
+              <div class="rating-label">5<br><span class="rating-text">Excellent</span></div>
+              <div class="rating-label">4<br><span class="rating-text">Very Satisfactory</span></div>
+              <div class="rating-label">3<br><span class="rating-text">Satisfactory</span></div>
+              <div class="rating-label">2<br><span class="rating-text">Needs Improvement</span></div>
+              <div class="rating-label">1<br><span class="rating-text">Failed</span></div>
+            </div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="6" class="criteria"><strong>1.</strong> All activities were relevant to meet the employee's needs and knowledge requirements.<br><span class="tagalog">(Ang lahat ng mga aktibidad ay may kaugnayan upang matugunan ang mga pangangailangan at mga kinakailangan sa kaalaman.)</span></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="transfer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="transfer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="transfer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="transfer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="transfer"></td>
+        </tr>
+        <tr>
+          <td colspan="6" class="criteria"><strong>2.</strong> Training was appropriate for the level of skills and knowledge of the employee.<br><span class="tagalog">(Ang pagsasanay ay angkop para sa antas ng kasanayan at kaalaman ng empleyado.)</span></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="transfer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="transfer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="transfer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="transfer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="transfer"></td>
+        </tr>
+        <tr>
+          <td colspan="6" class="criteria"><strong>3.</strong> Learning outcomes were effectively communicated and applied.<br><span class="tagalog">(Ang mga resulta ng pag-aaral ay epektibong naiparating at inilapat.)</span></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="transfer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="transfer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="transfer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="transfer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="transfer"></td>
+        </tr>
+        <tr>
+          <td colspan="6" class="criteria"><strong>4.</strong> The training has helped me to better understand my job and how I affect quality.<br><span class="tagalog">(Nakatulong sa akin ang pagsasanay na mas maunawaan ang aking trabaho at kung paano ko nakakaapekto ang kalidad.)</span></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="transfer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="transfer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="transfer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="transfer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="transfer"></td>
+        </tr>
+        <tr>
+          <td colspan="6" class="criteria"><strong>5.</strong> The Training and Development Section provided enough training to do the job requirements efficiently.<br><span class="tagalog">(Ang Seksyon ng Pagsasanay at Pagpapaunlad ay nagbigay ng sapat na pagsasanay sa trabaho nang mahusay.)</span></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="transfer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="transfer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="transfer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="transfer"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="transfer"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="remarks-section">
+      <h4>Remarks / Comments / Suggestions <em>*Required</em></h4>
+      <p><strong>1. What did you like most about the training and the strategies have you learned in this training program?</strong></p>
+      <textarea class="remarks-textarea" rows="2"></textarea>
+
+      <p><strong>2. What could we improve in the future for the betterment of the HR Training and Development Section?</strong></p>
+      <textarea class="remarks-textarea" rows="2"></textarea>
+    </div>
+
+    <div class="footer-section">
+      <div class="rating-scale">
+        <table class="scale-table">
+          <thead>
+            <tr>
+              <th colspan="3" style="text-align: center; font-weight: bold;">RATING SCALE</th>
+            </tr>
+            <tr>
+              <th>Average</th>
+              <th>Rating Criteria</th>
+              <th>Range</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>4.51-5</td>
+              <td>Excellent</td>
+              <td>95% - 100%</td>
+            </tr>
+            <tr>
+              <td>3.5-4.49</td>
+              <td>Very Satisfactory</td>
+              <td>86% - 94%</td>
+            </tr>
+            <tr>
+              <td>3.0-3.49</td>
+              <td>Satisfactory</td>
+              <td>80% - 85%</td>
+            </tr>
+            <tr>
+              <td>2.0-2.99</td>
+              <td>Needs Improvement</td>
+              <td>75% - 79%</td>
+            </tr>
+            <tr>
+              <td>0-1.99</td>
+              <td>Poor</td>
+              <td>74% & below</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="score-section">
+          <div><strong>Overall Score:</strong> <input type="text" class="score-input" id="overall_score" readonly></div>
+          <div><strong>Total Average Score:</strong> <input type="text" class="score-input" id="total_average_score" readonly></div>
+        </div>
+      </div>
+
+      <div class="remarks-box">
+        <div class="box-title">OVERALL REMARKS ABOUT THE TRAINING: <em>*Optional</em></div>
+        <div class="box-content">
+          <textarea placeholder="Enter overall remarks here..."></textarea>
+        </div>
+        <div class="signature-row">
+          <div class="signature-field">
+            <div><strong>RATED BY:</strong></div>
+            <div class="sig-line"></div>
+            <div class="sig-label">Employee's Name and Signature</div>
+          </div>
+          <div class="signature-field">
+            <div><strong>RECEIVED BY:</strong></div>
+            <div class="sig-line"></div>
+            <div class="sig-label">HR Training and Development Personnel</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span>F-HRD18-6/EFF-09-18-2024</span>
+      <span style="text-align: right;">Page 1 of 2</span>
+    </div>
+  </div>
+
+  <script src="src/training-evaluation-form.js"></script>
+</body>
+</html>
+
+  <!-- Page 2 -->
+  <div class="page page-break">
+    <div class="header">
+      <img src="NSB-LOGO.png" alt="NSB Engineering Logo" class="logo">
+    </div>
+
+    <div class="title-bar">TRAINING EFFECTIVENESS EVALUATION FORM</div>
+
+    <h3 class="section-title center">APPLIED SKILLS</h3>
+    <p class="center-text"><em>(To be evaluated by immediate superior)</em></p>
+
+    <p class="instructions"><strong>Instructions:</strong> Put a check (✓) on the column that corresponds to the rating of the respective training course.</p>
+
+    <!-- Job Application Section -->
+    <table class="applied-skills-table">
+      <thead>
+        <tr>
+          <th colspan="12" class="section-header orange-header">I. Job Application <em>(3 months after the training)</em></th>
+        </tr>
+        <tr>
+          <th colspan="6" class="sub-header">Before the Training</th>
+          <th colspan="6" class="sub-header">After the Training</th>
+        </tr>
+        <tr>
+          <th class="rating-col">5<br><span class="small">Excellent</span></th>
+          <th class="rating-col">4<br><span class="small">Very Satisfactory</span></th>
+          <th class="rating-col">3<br><span class="small">Satisfactory</span></th>
+          <th class="rating-col">2<br><span class="small">Needs Improvement</span></th>
+          <th class="rating-col">1<br><span class="small">Failed</span></th>
+          <th class="criteria-col" rowspan="2">
+          </th>
+          <th class="rating-col">5<br><span class="small">Excellent</span></th>
+          <th class="rating-col">4<br><span class="small">Very Satisfactory</span></th>
+          <th class="rating-col">3<br><span class="small">Satisfactory</span></th>
+          <th class="rating-col">2<br><span class="small">Needs Improvement</span></th>
+          <th class="rating-col">1<br><span class="small">Failed</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="applied-before"></td>
+          <td rowspan="5" class="criteria-col">
+             <div class="criteria-list">
+              <div><strong>1.</strong> Ability to disseminate/cascade learnings gained throughout the training.<br><span class="tagalog">(Kakayahang magbahagi ng mga natutunan sa pagsasanay.)</span></div>
+              <div><strong>2.</strong> Knowledge/skills and performance of the employee.<br><span class="tagalog">(Kaalaman/kasanayan at pagganap ng empleyado.)</span></div>
+              <div><strong>3.</strong> Application / Implementation on the job.<br><span class="tagalog">(Aplikasyon / Pagpapatupad sa trabaho.)</span></div>
+              <div><strong>4.</strong> Attitude towards work requirements and others.<br><span class="tagalog">(Pag-uugali tungo sa mga pangangailangan ng trabaho.)</span></div>
+              <div><strong>5.</strong> Impact of the training in Continual Improvements.<br><span class="tagalog">(Epekto ng pagsasanay sa Patuloy na Pagpapabuti.)</span></div>
+            </div>
+          </td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="applied-after"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="applied-after"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="applied-after"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="applied-after"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="applied-after"></td>
+        </tr>
+        <tr>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="applied-after"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="applied-after"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="applied-after"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="applied-after"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="applied-after"></td>
+        </tr>
+        <tr>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="applied-after"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="applied-after"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="applied-after"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="applied-after"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="applied-after"></td>
+        </tr>
+        <tr>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="applied-after"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="applied-after"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="applied-after"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="applied-after"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="applied-after"></td>
+        </tr>
+        <tr>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="applied-before"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="applied-after"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="applied-after"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="applied-after"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="applied-after"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="applied-after"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="score-row">
+      <div><strong>Total Score:</strong> <input type="text" class="score-input" id="applied_before_total" readonly></div>
+      <div><strong>Total Score:</strong> <input type="text" class="score-input" id="applied_after_total" readonly></div>
+    </div>
+    <div class="score-row">
+      <div><strong>Average:</strong> <input type="text" class="score-input" id="applied_before_avg" readonly></div>
+      <div><strong>Average:</strong> <input type="text" class="score-input" id="applied_after_avg" readonly></div>
+    </div>
+
+    <div class="signature-single">
+      <div><strong>Rated by:</strong></div>
+      <div class="sig-line-single"></div>
+      <div class="sig-label">Immediate Superior's Name and Signature / Date</div>
+    </div>
+
+    <p class="instructions" style="margin-top: 30px;"><strong>Instructions:</strong> Put a check (✓) on the column that corresponds to the rating of the respective training course.</p>
+
+    <!-- Business Result Section -->
+    <table class="evaluation-table">
+      <thead>
+        <tr>
+          <th class="section-header purple-header" colspan="6">II. Business Result/Return of Investment <em>(6 months after the training)</em></th>
+          <th class="rating-header-group" colspan="5">
+            <div class="rating-labels">
+              <div class="rating-label">5<br><span class="rating-text">Excellent</span></div>
+              <div class="rating-label">4<br><span class="rating-text">Very Satisfactory</span></div>
+              <div class="rating-label">3<br><span class="rating-text">Satisfactory</span></div>
+              <div class="rating-label">2<br><span class="rating-text">Needs Improvement</span></div>
+              <div class="rating-label">1<br><span class="rating-text">Failed</span></div>
+            </div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="6" class="criteria">
+            <strong>1.</strong> The employee was able to comply with Higher Return of Investment (ROI) requirements.<br>
+            <strong>Feedback:</strong> <input type="text" class="feedback-input" style="width: 70%;">
+          </td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="business"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="business"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="business"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="business"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="business"></td>
+        </tr>
+        <tr>
+          <td colspan="6" class="criteria">
+            <strong>2.</strong> The employee contributes to the Continual Improvements of the organization.<br>
+            <strong>Feedback:</strong> <input type="text" class="feedback-input" style="width: 70%;">
+          </td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="business"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="business"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="business"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="business"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="business"></td>
+        </tr>
+        <tr>
+          <td colspan="6" class="criteria">
+            <strong>3.</strong> The training was a worthwhile investment on his/her career development.<br>
+            <strong>Feedback:</strong> <input type="text" class="feedback-input" style="width: 70%;">
+          </td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="5" data-section="business"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="4" data-section="business"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="3" data-section="business"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="2" data-section="business"></td>
+          <td class="checkbox"><input type="checkbox" class="rating-check" value="1" data-section="business"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="score-row" style="justify-content: flex-end; margin-top: 10px;">
+      <div><strong>Total Score:</strong> <input type="text" class="score-input" id="business_total" readonly></div>
+    </div>
+    <div class="score-row" style="justify-content: flex-end;">
+      <div><strong>Average Score:</strong> <input type="text" class="score-input" id="business_avg" readonly></div>
+    </div>
+
+    <div class="remarks-section" style="margin-top: 20px;">
+      <h4>Remarks / Comments / Suggestions <em>*Required</em></h4>
+      <p><strong>1. List down improvements in employee's skills/knowledge/attitude and performance.</strong></p>
+      <textarea class="remarks-textarea" rows="3"></textarea>
+
+      <p><strong>2. What other training programs can the HR Training and Development provide to further improve the employee(s) skills/ knowledge/ attitude and performance.</strong></p>
+      <textarea class="remarks-textarea" rows="3"></textarea>
+    </div>
+
+    <div class="footer-section" style="margin-top: 30px;">
+      <div class="rating-scale">
+        <table class="scale-table">
+          <thead>
+            <tr>
+              <th colspan="3" style="text-align: center; font-weight: bold;">RATING SCALE</th>
+            </tr>
+            <tr>
+              <th>Average</th>
+              <th>Rating Criteria</th>
+              <th>Range</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>4.5-5</td>
+              <td>Excellent</td>
+              <td>95% - 100%</td>
+            </tr>
+            <tr>
+              <td>3.5-4.49</td>
+              <td>Very Satisfactory</td>
+              <td>86% - 94%</td>
+            </tr>
+            <tr>
+              <td>3.0-3.49</td>
+              <td>Satisfactory</td>
+              <td>80% - 85%</td>
+            </tr>
+            <tr>
+              <td>2.0-2.99</td>
+              <td>Needs Improvement</td>
+              <td>75% - 79%</td>
+            </tr>
+            <tr>
+              <td>0-1.99</td>
+              <td>Poor</td>
+              <td>74% & below</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="signature-box">
+        <div class="signature-row">
+          <div class="signature-field">
+            <div><strong>RATED BY:</strong></div>
+            <div class="sig-line"></div>
+            <div class="sig-label">Immediate Superior's Name and Signature / Date</div>
+          </div>
+          <div class="signature-field">
+            <div><strong>RECEIVED BY:</strong></div>
+            <div class="sig-line"></div>
+            <div class="sig-label">HR Training and Development Personnel</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span>F-HRD18-6/EFF-09-18-2024</span>
+      <span style="text-align: right;">Page 2 of 2</span>
+    </div>
+  </div>
+
+  <script src="src/training-evaluation-form.js"></script>
+</body>
+</html>

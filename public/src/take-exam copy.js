@@ -1,0 +1,408 @@
+// Take Exam Management
+const API = '';
+let currentEmployees = [];
+let currentQuestions = [];
+let currentAnswers = {};
+let currentQuestion = 0;
+let examStarted = false;
+let selectedEmployeeId = null;
+let selectedEmployeeName = null;
+let examId = null;
+let sectionScores = { multiple_choice: 0, enumeration: 0, procedure: 0, identification: 0 };
+let sectionTotals = { multiple_choice: 0, enumeration: 0, procedure: 0, identification: 0 };
+
+document.addEventListener('DOMContentLoaded', () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  examId = urlParams.get('id');
+  if (!examId) {
+    alert('No exam ID provided');
+    window.location.href = '/exams/all-exams.html';
+    return;
+  }
+  loadEmployees();
+  loadExamDetails();
+});
+
+async function loadEmployees() {
+  try {
+    const response = await fetch(`${API}/api/employees`);
+    const data = await response.json();
+    if (data.success && Array.isArray(data.data)) {
+      currentEmployees = data.data;
+      populateEmployeeSelect();
+    }
+  } catch (err) {
+    console.error('Error loading employees:', err);
+  }
+}
+
+function populateEmployeeSelect() {
+  const select = document.getElementById('employeeSelect');
+  if (!select) return;
+  select.innerHTML = '<option value="">-- Select an employee --</option>';
+  currentEmployees.forEach(emp => {
+    const option = document.createElement('option');
+    option.value = emp.id;
+    option.textContent = emp.full_name || `${emp.first_name} ${emp.last_name}`;
+    select.appendChild(option);
+  });
+}
+
+async function loadExamDetails() {
+  try {
+    const response = await fetch(`${API}/api/exams/${examId}`);
+    const data = await response.json();
+    if (data.success && data.exam) {
+      document.getElementById('examTitle').textContent = data.exam.title || 'Exam';
+      document.getElementById('examDescription').textContent = data.exam.description || '';
+    }
+  } catch (err) {
+    console.error('Error loading exam details:', err);
+  }
+}
+
+function startExamWithEmployee() {
+  const employeeSelect = document.getElementById('employeeSelect');
+  selectedEmployeeId = employeeSelect.value;
+  if (!selectedEmployeeId) {
+    alert('Please select an employee');
+    return;
+  }
+  const employee = currentEmployees.find(e => e.id == selectedEmployeeId);
+  if (employee) {
+    selectedEmployeeName = employee.full_name || `${employee.first_name} ${employee.last_name}`;
+  }
+  document.getElementById('employeeSelectionModal').style.display = 'none';
+  loadExamQuestions();
+}
+
+async function loadExamQuestions() {
+  try {
+    const response = await fetch(`${API}/api/exams/${examId}`);
+    const data = await response.json();
+    if (data.success && data.questions && Array.isArray(data.questions)) {
+      const typeOrder = { 'multiple_choice': 1, 'enumeration': 2, 'procedure': 3, 'identification': 4 };
+      currentQuestions = data.questions.sort((a, b) => {
+        return (typeOrder[a.question_type] || 999) - (typeOrder[b.question_type] || 999);
+      });
+      
+      currentQuestions.forEach(q => {
+        currentAnswers[q.id] = null;
+        const points = q.points || 1;
+        if (q.question_type === 'enumeration' || q.question_type === 'identification') {
+          try {
+            let items = [];
+            if (q.enumeration_items_json) {
+              items = JSON.parse(q.enumeration_items_json);
+            }
+            let total = 0;
+            items.forEach(item => { total += item.points || 1; });
+            sectionTotals[q.question_type] = (sectionTotals[q.question_type] || 0) + total;
+          } catch (e) {
+            sectionTotals[q.question_type] = (sectionTotals[q.question_type] || 0) + points;
+          }
+        } else {
+          sectionTotals[q.question_type] = (sectionTotals[q.question_type] || 0) + points;
+        }
+      });
+      
+      examStarted = true;
+      currentQuestion = 0;
+      document.getElementById('totalQuestions').textContent = currentQuestions.length;
+      displayQuestion();
+    }
+  } catch (err) {
+    console.error('Error loading questions:', err);
+    alert('Failed to load exam questions');
+  }
+}
+
+
+function displayQuestion() {
+  if (currentQuestion >= currentQuestions.length) {
+    submitExam();
+    return;
+  }
+  const question = currentQuestions[currentQuestion];
+  const container = document.getElementById('questionsContainer');
+  document.getElementById('currentQuestion').textContent = currentQuestion + 1;
+  document.getElementById('progressFill').style.width = ((currentQuestion + 1) / currentQuestions.length * 100) + '%';
+  
+  let html = `<div class="question-container" style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+      <div style="background: #2196f3; color: white; padding: 10px 18px; border-radius: 20px; font-size: 12px; font-weight: 700;">
+        Question ${currentQuestion + 1} of ${currentQuestions.length}
+      </div>
+      <div style="font-size: 12px; color: #999; background: #f5f5f5; padding: 8px 14px; border-radius: 6px; font-weight: 600;">
+        ${question.question_type.toUpperCase().replace(/_/g, ' ')}
+      </div>
+    </div>
+    <div style="font-size: 18px; font-weight: 600; color: #333; margin-bottom: 30px; line-height: 1.7;">
+      ${question.question_text || ''}
+    </div>`;
+  
+  if (question.question_type === 'multiple_choice') {
+    html += `<div style="margin-bottom: 20px;"><div style="display: flex; flex-direction: column; gap: 12px;">`;
+    ['A', 'B', 'C', 'D'].forEach(opt => {
+      const value = question['option_' + opt.toLowerCase()];
+      if (value) {
+        const isSelected = currentAnswers[question.id] === opt;
+        html += `<label style="display: flex; align-items: center; padding: 16px; background: ${isSelected ? '#e3f2fd' : '#f8f9fa'}; border: 2px solid ${isSelected ? '#2196f3' : '#e0e0e0'}; border-radius: 8px; cursor: pointer;">
+          <input type="radio" name="answer" value="${opt}" ${isSelected ? 'checked' : ''} onchange="selectAnswer(${question.id}, '${opt}')" style="width: 20px; height: 20px; margin-right: 15px; cursor: pointer;">
+          <span style="display: flex; align-items: center; gap: 14px; width: 100%;"><span style="background: #2196f3; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">${opt}</span>
+          <span style="font-size: 14px; color: #333;">${value}</span></span>
+        </label>`;
+      }
+    });
+    html += `</div></div>`;
+  } else if (question.question_type === 'enumeration') {
+    let items = [];
+    try { if (question.enumeration_items_json) items = JSON.parse(question.enumeration_items_json); } catch (e) {}
+    html += `<div style="margin-bottom: 20px;"><div style="display: flex; flex-direction: column; gap: 14px;">`;
+    items.forEach((item, idx) => {
+      html += `<div style="padding: 16px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #2196f3;">
+        <label style="display: block; margin-bottom: 12px; font-weight: 600; color: #333; font-size: 14px;">
+          <span style="background: #2196f3; color: white; width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px;">${idx + 1}</span>
+          ${item.text || item}
+        </label>
+        <input type="text" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; text-transform: uppercase; font-weight: 600; font-family: 'Courier New', monospace;" 
+          placeholder="Type answer (CAPITAL LETTERS)" value="${(currentAnswers[question.id] && currentAnswers[question.id][idx]) || ''}"
+          onchange="updateEnumerationAnswer(${question.id}, ${idx}, this.value)" oninput="this.value = this.value.toUpperCase()">
+        <small style="display: block; margin-top: 10px; color: #2196f3; font-size: 12px; font-weight: 700;">✓ Correct Answer: <strong style="color: #1565c0;">${item.answer || 'N/A'}</strong></small>
+      </div>`;
+    });
+    html += `</div></div>`;
+  } else if (question.question_type === 'procedure') {
+    html += `<div style="margin-bottom: 20px;">
+      <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 16px; border-radius: 8px; margin-bottom: 22px;">
+        <p style="margin: 0 0 10px 0; font-size: 12px; font-weight: 700; color: #e65100; text-transform: uppercase;">📋 Procedure Content:</p>
+        <p style="margin: 0; font-size: 13px; color: #555; line-height: 1.7; white-space: pre-wrap; font-family: 'Courier New', monospace;">${question.procedure_content || ''}</p>
+      </div>
+      <label style="display: block; margin-bottom: 12px; font-weight: 700; color: #333; font-size: 12px; text-transform: uppercase;">Your Answer:</label>
+      <textarea style="width: 100%; min-height: 150px; padding: 14px; border: 2px solid #ddd; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 13px; resize: vertical; line-height: 1.6;" 
+        placeholder="Enter your detailed answer here..." onchange="selectAnswer(${question.id}, this.value)">${currentAnswers[question.id] || ''}</textarea>
+  } else if (question.question_type === 'identification') {
+    let items = [];
+    try { if (question.identification_items_json) items = JSON.parse(question.identification_items_json); } catch (e) {}
+    html += `<div style="margin-bottom: 20px;">`;ems = JSON.parse(question.enumeration_items_json); } catch (e) {}
+    html += `<div style="margin-bottom: 20px;">`;
+    if (question.identification_image_url) {
+      html += `<div style="background: #f5f5f5; border: 2px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 22px; text-align: center;">
+        <img src="${question.identification_image_url}" style="max-width: 100%; max-height: 400px; border-radius: 6px;" alt="Reference image">
+      </div>`;
+    }
+    html += `<div style="display: flex; flex-direction: column; gap: 14px;">`;
+    items.forEach((item, idx) => {
+      html += `<div style="padding: 16px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #4caf50;">
+        <label style="display: block; margin-bottom: 12px; font-weight: 600; color: #333; font-size: 14px;">
+          <span style="background: #4caf50; color: white; width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px;">${idx + 1}</span>
+          ${item.text || item}
+        </label>
+        <input type="text" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; text-transform: uppercase; font-weight: 600; font-family: 'Courier New', monospace;" 
+          placeholder="Type answer (UPPERCASE LETTERS AND NUMBERS)" value="${(currentAnswers[question.id] && currentAnswers[question.id][idx]) || ''}"
+          onchange="updateIdentificationAnswer(${question.id}, ${idx}, this.value)" oninput="this.value = this.value.toUpperCase()">
+        <small style="display: block; margin-top: 10px; color: #4caf50; font-size: 12px; font-weight: 700;">✓ Correct Answer: <strong style="color: #2e7d32;">${item.answer || 'N/A'}</strong></small>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+  
+  html += `</div>`;
+  container.innerHTML = html;
+  document.getElementById('prevBtn').style.display = currentQuestion > 0 ? 'block' : 'none';
+  document.getElementById('nextBtn').style.display = currentQuestion < currentQuestions.length - 1 ? 'block' : 'none';
+  document.getElementById('submitBtn').style.display = currentQuestion === currentQuestions.length - 1 ? 'block' : 'none';
+}
+
+
+function selectAnswer(questionId, answer) {
+  currentAnswers[questionId] = answer;
+}
+
+function updateEnumerationAnswer(questionId, itemIndex, answer) {
+  if (!currentAnswers[questionId]) currentAnswers[questionId] = [];
+  if (!Array.isArray(currentAnswers[questionId])) currentAnswers[questionId] = [];
+  currentAnswers[questionId][itemIndex] = answer.toUpperCase();
+}
+
+function updateIdentificationAnswer(questionId, itemIndex, answer) {
+  if (!currentAnswers[questionId]) currentAnswers[questionId] = [];
+  if (!Array.isArray(currentAnswers[questionId])) currentAnswers[questionId] = [];
+  currentAnswers[questionId][itemIndex] = answer.toUpperCase();
+}
+
+function nextQuestion() {
+  if (currentQuestion < currentQuestions.length - 1) {
+    currentQuestion++;
+    displayQuestion();
+  }
+}
+
+function previousQuestion() {
+  if (currentQuestion > 0) {
+    currentQuestion--;
+    displayQuestion();
+  }
+}
+
+async function submitExam() {
+  let totalScore = 0, totalPoints = 0;
+  sectionScores = { multiple_choice: 0, enumeration: 0, procedure: 0, identification: 0 };
+  
+  currentQuestions.forEach(question => {
+    const points = question.points || 1;
+    if (question.question_type === 'multiple_choice') {
+      totalPoints += points;
+      if (currentAnswers[question.id] === question.correct_answer) {
+        sectionScores.multiple_choice += points;
+        totalScore += points;
+      }
+    } else if (question.question_type === 'enumeration') {
+      const userAnswers = currentAnswers[question.id] || [];
+      try {
+        let items = [];
+        if (question.enumeration_items_json) items = JSON.parse(question.enumeration_items_json);
+        items.forEach((item, idx) => {
+          const itemPoints = item.points || 1;
+          totalPoints += itemPoints;
+          if (userAnswers[idx] && userAnswers[idx].toUpperCase().trim() === (item.answer || '').toUpperCase().trim()) {
+            sectionScores.enumeration += itemPoints;
+            totalScore += itemPoints;
+          }
+    } else if (question.question_type === 'identification') {
+      const userAnswers = currentAnswers[question.id] || [];
+      try {
+        let items = [];
+        if (question.identification_items_json) items = JSON.parse(question.identification_items_json);
+        items.forEach((item, idx) => {
+        if (question.enumeration_items_json) items = JSON.parse(question.enumeration_items_json);
+        items.forEach((item, idx) => {
+          const itemPoints = item.points || 1;
+          totalPoints += itemPoints;
+          if (userAnswers[idx] && userAnswers[idx].toUpperCase().trim() === (item.answer || '').toUpperCase().trim()) {
+            sectionScores.identification += itemPoints;
+            totalScore += itemPoints;
+          }
+        });
+      } catch (e) { totalPoints += points; }
+    } else if (question.question_type === 'procedure') {
+      totalPoints += points;
+    }
+  });
+  
+  const percentage = totalPoints > 0 ? Math.round((totalScore / totalPoints) * 100) : 0;
+  const passed = percentage >= 70;
+  
+  try {
+    const response = await fetch(`${API}/api/exam-results`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        employee_id: selectedEmployeeId,
+        exam_id: examId,
+        score: Math.round(totalScore * 100) / 100,
+        total_points: Math.round(totalPoints * 100) / 100,
+        percentage: percentage,
+        passed: passed,
+        answers: currentAnswers
+      })
+    });
+    const data = await response.json();
+    if (data.success) {
+      displayResults({ score: Math.round(totalScore * 100) / 100, total_points: Math.round(totalPoints * 100) / 100, percentage, passed });
+    }
+  } catch (err) {
+    console.error('Error submitting exam:', err);
+  }
+}
+
+
+function displayResults(results) {
+  const scorePercentage = results.percentage;
+  const passed = results.passed;
+  const mcQuestions = currentQuestions.filter(q => q.question_type === 'multiple_choice').length;
+  const enumQuestions = currentQuestions.filter(q => q.question_type === 'enumeration').length;
+  const procQuestions = currentQuestions.filter(q => q.question_type === 'procedure').length;
+  const idQuestions = currentQuestions.filter(q => q.question_type === 'identification').length;
+  
+  document.getElementById('questionsContainer').style.display = 'none';
+  document.querySelector('.exam-navigation').style.display = 'none';
+  
+  const resultHeader = document.getElementById('resultHeader');
+  resultHeader.innerHTML = passed ? '<h2 style="color: #28a745; margin: 0; font-size: 28px;">✓ Exam Passed!</h2>' : '<h2 style="color: #dc3545; margin: 0; font-size: 28px;">✗ Exam Failed</h2>';
+  
+  const resultMessage = document.getElementById('resultMessage');
+  resultMessage.innerHTML = `<div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+    <h3 style="margin: 0 0 20px 0; color: #333; font-size: 16px;">📊 Score Breakdown by Section:</h3>
+    ${mcQuestions > 0 ? `<div style="margin-bottom: 15px; padding: 15px; background: #e3f2fd; border-radius: 6px; border-left: 4px solid #2196f3;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-weight: 600; color: #1565c0;">📄 Multiple Choice (${mcQuestions} questions)</span>
+        <span style="font-size: 18px; font-weight: 700; color: #2196f3;">${sectionScores.multiple_choice}/${sectionTotals.multiple_choice}</span>
+      </div></div>` : ''}
+    ${enumQuestions > 0 ? `<div style="margin-bottom: 15px; padding: 15px; background: #f3e5f5; border-radius: 6px; border-left: 4px solid #9c27b0;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-weight: 600; color: #6a1b9a;">📋 Enumeration (${enumQuestions} questions)</span>
+        <span style="font-size: 18px; font-weight: 700; color: #9c27b0;">${sectionScores.enumeration}/${sectionTotals.enumeration}</span>
+      </div></div>` : ''}
+    ${procQuestions > 0 ? `<div style="margin-bottom: 15px; padding: 15px; background: #fff3e0; border-radius: 6px; border-left: 4px solid #ff9800;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-weight: 600; color: #e65100;">📝 Procedure (${procQuestions} questions)</span>
+        <span style="font-size: 18px; font-weight: 700; color: #ff9800;">0/${sectionTotals.procedure}</span>
+      </div><small style="display: block; margin-top: 8px; color: #999;">*Procedure questions require manual grading</small></div>` : ''}
+    ${idQuestions > 0 ? `<div style="margin-bottom: 15px; padding: 15px; background: #e0f2f1; border-radius: 6px; border-left: 4px solid #009688;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-weight: 600; color: #00695c;">🖼️ Identification (${idQuestions} questions)</span>
+        <span style="font-size: 18px; font-weight: 700; color: #009688;">${sectionScores.identification}/${sectionTotals.identification}</span>
+      </div></div>` : ''}
+    <div style="margin-top: 20px; padding: 20px; background: ${passed ? '#e8f5e9' : '#ffebee'}; border-radius: 8px; border: 2px solid ${passed ? '#4caf50' : '#f44336'};">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <span style="font-weight: 700; color: #333; font-size: 14px;">OVERALL TOTAL:</span>
+        <span style="font-size: 24px; font-weight: 700; color: ${passed ? '#4caf50' : '#f44336'};">${results.score}/${results.total_points}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-weight: 700; color: #333; font-size: 14px;">PERCENTAGE:</span>
+        <span style="font-size: 24px; font-weight: 700; color: ${passed ? '#4caf50' : '#f44336'};">${scorePercentage}%</span>
+      </div>
+    </div>
+  </div>`;
+  
+  document.getElementById('resultModal').style.display = 'flex';
+}
+
+function retakeExam() {
+  currentQuestion = 0;
+  currentAnswers = {};
+  examStarted = false;
+  sectionScores = { multiple_choice: 0, enumeration: 0, procedure: 0, identification: 0 };
+  document.getElementById('resultModal').style.display = 'none';
+  document.getElementById('questionsContainer').style.display = 'block';
+  document.querySelector('.exam-navigation').style.display = 'flex';
+  document.getElementById('employeeSelectionModal').style.display = 'flex';
+}
+
+function goBack() {
+  window.history.back();
+}
+
+function showPrioritySettings() {
+  document.getElementById('prioritySettingsModal').style.display = 'flex';
+}
+
+function closePrioritySettings() {
+  document.getElementById('prioritySettingsModal').style.display = 'none';
+}
+
+function printExamResults() {
+  const printWindow = window.open('', '', 'height=800,width=1000');
+  const scorePercentage = Math.round((sectionScores.multiple_choice + sectionScores.enumeration + sectionScores.identification) / (sectionTotals.multiple_choice + sectionTotals.enumeration + sectionTotals.identification) * 100) || 0;
+  const passed = scorePercentage >= 70;
+  
+  let html = `<!DOCTYPE html><html><head><title>Exam Results</title><style>body { font-family: Arial, sans-serif; margin: 20px; color: #333; } .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #2196f3; padding-bottom: 20px; } .header h1 { margin: 0; color: #2196f3; font-size: 28px; } .score-box { background: #f5f5f5; padding: 15px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; } .total-box { background: ${passed ? '#e8f5e9' : '#ffebee'}; border: 2px solid ${passed ? '#4caf50' : '#f44336'}; padding: 20px; border-radius: 8px; text-align: center; margin-top: 20px; } @media print { body { margin: 0; } }</style></head><body>
+    <div class="header"><h1>📊 EXAM RESULTS</h1><p><strong>Employee:</strong> ${selectedEmployeeName}</p><p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p></div>
+    <div class="total-box"><h2>${passed ? '✓ EXAM PASSED' : '✗ EXAM FAILED'}</h2><p><strong>Score:</strong> ${sectionScores.multiple_choice + sectionScores.enumeration + sectionScores.identification}/${sectionTotals.multiple_choice + sectionTotals.enumeration + sectionTotals.identification}</p><p><strong>Percentage:</strong> ${scorePercentage}%</p></div>
+  </body></html>`;
+  
+  printWindow.document.write(html);
+  printWindow.document.close();
+  printWindow.print();
+}

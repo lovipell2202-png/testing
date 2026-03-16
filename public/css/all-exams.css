@@ -721,3 +721,79 @@ select:focus {
 .btn-success:hover {
   background: linear-gradient(135deg, #20c997 0%, #28a745 100%);
 }
+
+
+/* ── TAB STYLES ── */
+.modal-tabs {
+  display: flex;
+  gap: 0;
+  background: #f8f9fa;
+  border-bottom: 2px solid #e9ecef;
+  padding: 0;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  color: #666;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  text-align: center;
+}
+
+.tab-btn:hover {
+  background: rgba(0, 0, 51, 0.05);
+  color: var(--navy);
+}
+
+.tab-btn.active {
+  color: white;
+  background: linear-gradient(135deg, var(--navy) 0%, #1a3a52 100%);
+  border-bottom-color: #28a745;
+  box-shadow: 0 2px 8px rgba(0, 0, 51, 0.15);
+}
+
+.tab-content {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── QUESTIONS SUMMARY ── */
+#questionsSummary {
+  background: linear-gradient(135deg, #e7f3ff 0%, #f0f8ff 100%);
+  border-left: 4px solid #007bff;
+  padding: 16px;
+  border-radius: 6px;
+  color: #004085;
+  font-size: 14px;
+}
+
+#questionsSummary p {
+  margin: 0;
+  line-height: 1.6;
+}

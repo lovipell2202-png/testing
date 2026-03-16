@@ -32,11 +32,6 @@
         </a>
       </div>
       <div style="padding: 0;">
-        <a href="dropdown-manager.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
-          ⚙️ Manage Dropdowns
-        </a>
-      </div>
-      <div style="padding: 0;">
         <a href="upload-test-result.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--navy); background: rgba(0,0,51,0.05); border-bottom: 1px solid var(--border); border-left: 4px solid var(--navy);">
           📝 Test Management
         </a>
@@ -65,15 +60,13 @@
           <h3>Upload Course Test Document</h3>
           <p style="color: var(--muted); font-size: 14px;">Upload a DOCX file to create a test for a course</p>
           
-          <!-- Document Type Selection -->
+          <!-- Document Type (Auto-filled) -->
           <div style="margin-bottom: 20px;">
-            <label style="font-weight: 600; display: block; margin-bottom: 8px;">Select Document Type:</label>
-            <select id="documentType" onchange="updateFileAccept(); updateFileUploadUI();" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px;">
-              <option value="">-- Select document type --</option>
-              <option value="W/EXAM">W/EXAM — With Examination (PDF only)</option>
-              <option value="W/TEEF">W/TEEF — With Training Effectiveness Form (Certificate: PDF, PNG, JPG)</option>
-              <option value="W/EXAM_TEEF">W/EXAM & TEEF — Both (PDF for Exam + Certificate)</option>
-            </select>
+            <label style="font-weight: 600; display: block; margin-bottom: 8px;">Document Type:</label>
+            <div id="documentTypeDisplay" style="padding: 10px; background: #f8f9fa; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; color: var(--muted);">
+              -- Auto-filled based on course selection --
+            </div>
+            <input type="hidden" id="documentType" value="">
           </div>
           
           <!-- Employee Selection -->
@@ -93,10 +86,10 @@
             <small style="color: var(--muted); display: block; margin-top: 5px;">Only courses taken by the selected employee are shown</small>
           </div>
           
-          <!-- Course Document Type Info -->
-          <div id="courseDocTypeInfo" style="display: none; margin-bottom: 20px; padding: 15px; background: #f0f7ff; border-radius: 8px; border-left: 4px solid #2196f3;">
-            <p style="margin: 0 0 10px 0; font-weight: 600; color: #1565c0;">📋 Available Document Types for this Course:</p>
-            <div id="courseDocTypeList" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
+          <!-- Attachment Types Display -->
+          <div id="attachmentTypesDisplay" style="display: none; margin-bottom: 20px; padding: 15px; background: #f0f7ff; border-radius: 8px; border-left: 4px solid #2196f3;">
+            <p style="margin: 0 0 12px 0; font-weight: 600; color: #1565c0;">📋 Attachments to Upload:</p>
+            <div id="attachmentTypesList" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
           </div>
           
           <!-- Current Attachment Info -->
@@ -107,6 +100,9 @@
               🗑️ Remove Attachment
             </button>
           </div>
+          
+          <!-- Hidden document type field -->
+          <input type="hidden" id="documentType" value="">
           
           <!-- Allowed File Types Info -->
           <div id="fileTypeInfo" style="display: none; margin-bottom: 15px; padding: 12px; background: #e3f2fd; border-radius: 6px; border-left: 4px solid #2196f3;">

@@ -185,18 +185,12 @@ function renderTrainings() {
       <td>${t.trainer || 'N/A'}</td>
       <td style="text-align:center;">${t.type_tb || 'N/A'}</td>
       <td>${t.training_provider || 'N/A'}</td>
-      <td style="text-align:center; cursor:pointer;" ${t.eff_form_file ? `ondblclick="openPdfPreview(${t.id})" title="Double-click to preview attachment"` : ''}>
-        ${t.eff_form_file
-          ? `<span style="display:inline-flex;align-items:center;gap:4px;">
-              <a href="${t.eff_form_file}" target="_blank" style="color:var(--red);font-weight:600;text-decoration:none;" title="View attachment">📎 ${t.effectiveness_form || 'N/A'}</a>
-              <button onclick="event.preventDefault();event.stopPropagation();removeEffFormFile(${t.id});return false;" style="border:none;background:none;color:#999;cursor:pointer;font-size:14px;padding:0;margin:0;line-height:1;" title="Remove attachment">✕</button>
-            </span>`
-          : t.effectiveness_form
-            ? `<span>${t.effectiveness_form}</span>
-               <label style="cursor:pointer;color:var(--red);font-size:11px;" title="Upload attachment">
-                 📎<input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none;" onchange="uploadEffForm(event,${t.id})">
-               </label>`
-            : '<span style="color:#999;">N/A</span>'}
+      <td style="text-align:center;">
+        ${t.effectiveness_form
+          ? t.eff_form_file
+            ? `<span style="color:#4caf50;font-weight:600;cursor:pointer;text-decoration:underline;" onclick="openPdfPreview(${t.id})" title="Click to view attachment">${t.effectiveness_form}</span>`
+            : `<span style="color:#f44336;font-weight:600;">${t.effectiveness_form}</span>`
+          : '<span style="color:#999;">N/A</span>'}
       </td>
     </tr>
   `).join('');
@@ -586,19 +580,67 @@ async function removeEffFormFile(trainingId) {
 
 // PDF Preview functions
 function openPdfPreview(trainingId) {
-  const t = localTrainings.find(x => x.id === trainingId);
-  if (!t || !t.eff_form_file) {
+  console.log('=== openPdfPreview called with id:', trainingId);
+  
+  // If localTrainings is empty, try to load it first
+  if (localTrainings.length === 0 && (!window.filteredTrainings || window.filteredTrainings.length === 0)) {
+    console.log('⏳ localTrainings is empty, loading from API...');
+    loadTrainings();
+  }
+  
+  // Search in all possible sources
+  let t = null;
+  
+  // Try window.filteredTrainings first
+  if (window.filteredTrainings && window.filteredTrainings.length > 0) {
+    t = window.filteredTrainings.find(x => x.id == trainingId);
+    if (t) console.log('✅ Found in window.filteredTrainings');
+  }
+  
+  // Try localTrainings
+  if (!t && localTrainings.length > 0) {
+    t = localTrainings.find(x => x.id == trainingId);
+    if (t) console.log('✅ Found in localTrainings');
+  }
+  
+  // Try window.trainings
+  if (!t && window.trainings && window.trainings.length > 0) {
+    t = window.trainings.find(x => x.id == trainingId);
+    if (t) console.log('✅ Found in window.trainings');
+  }
+  
+  if (!t) {
+    console.error('❌ Training record not found:', trainingId);
+    showNotification('Training record not found.', 'error');
+    return;
+  }
+  
+  if (!t.eff_form_file) {
+    console.error('❌ No attachment file:', t);
     showNotification('No attachment available for this record.', 'error');
     return;
   }
   
-  const iframe = document.getElementById('pdfIframe');
+  const iframe = document.getElementById('pdfPreviewFrame');
   const pdfPreviewModal = document.getElementById('pdfPreviewModal');
   const downloadLink = document.getElementById('pdfDownloadLink');
+  
+  if (!iframe) {
+    console.error('❌ PDF iframe not found');
+    showNotification('Error: PDF viewer not available.', 'error');
+    return;
+  }
   
   // Set iframe source and download link
   iframe.src = t.eff_form_file;
   downloadLink.href = t.eff_form_file;
+  
+  // Set custom download filename with employee name and course/exam info
+  const employeeName = (t.full_name || 'Employee').replace(/[^a-zA-Z0-9]/g, '_');
+  const courseName = (t.course_title || 'Exam').replace(/[^a-zA-Z0-9]/g, '_');
+  const downloadFileName = `${employeeName}_${courseName}.pdf`;
+  downloadLink.download = downloadFileName;
+  downloadLink.title = `Download ${downloadFileName}`;
   
   pdfPreviewModal.style.display = 'flex';
 }

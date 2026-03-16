@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Take Exam - NSB Training</title>
-  <link rel="stylesheet" href="../css/exam-form.css">
   <link rel="stylesheet" href="../css/take-exam.css">
 </head>
 <body>
@@ -55,7 +54,6 @@
         <p id="examDescription" class="exam-description"></p>
       </div>
       <div class="header-actions">
-        <button class="btn-secondary" onclick="showPrioritySettings()" title="Adjust question priority order">⚙️ Priority</button>
         <button class="btn-secondary" onclick="goBack()">← Back</button>
       </div>
     </div>
@@ -103,13 +101,9 @@
     <div id="resultModal" class="modal" style="display: none;">
       <div class="modal-content result-modal">
         <div class="result-header" id="resultHeader"></div>
-        <div class="result-details">
-          <p><strong>Your Score:</strong> <span id="scorePercentage">0</span>%</p>
-          <p><strong>Points:</strong> <span id="scorePoints">0</span> / <span id="totalPoints">0</span></p>
-          <p><strong>Status:</strong> <span id="passStatus">Failed</span></p>
-        </div>
         <div class="result-message" id="resultMessage"></div>
         <div class="result-actions">
+          <button class="btn-secondary" onclick="printExamResults()">🖨️ Print Results</button>
           <button class="btn-secondary" onclick="goBack()">Back to Exams</button>
           <button class="btn-primary" onclick="retakeExam()">Retake Exam</button>
         </div>
