@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Training Records - NSB Engineering</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/styles.css"/>
+  <link rel="stylesheet" href="/css/training-records.css"/>
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div style="padding: 20px; border-bottom: 2px solid var(--border);">
+        <h3 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: var(--navy);">MENU</h3>
+      </div>
+      <div style="padding: 0;">
+        <a href="/index.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+          📊 Dashboard
+        </a>
+      </div>
+      <div style="padding: 0;">
+        <a href="all-employees.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+          👥 All Employees
+        </a>
+      </div>
+      <div style="padding: 0;">
+        <a href="training-records.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--navy); background: rgba(0,0,51,0.05); border-bottom: 1px solid var(--border); border-left: 4px solid var(--navy);">
+          📚 Training Records
+        </a>
+      </div>
+      <div style="padding: 0;">
+        <a href="training-evaluation-form.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+          📋 Evaluation Form
+        </a>
+      </div>
+      <div style="padding: 0;">
+        <a href="upload-test-result.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+          📝 Test Management
+        </a>
+      </div>
+      <div style="padding: 0;">
+        <a href="all-exams.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+          📚 Exam Management
+        </a>
+      </div>
+      <div style="padding: 0;">
+        <a href="teef-management.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+          📄 TEEF Management
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="main">
+      <div class="page-header">
+        <h2>TRAINING RECORDS</h2>
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all" onclick="changeFilter('all')">
+          📋 All Records
+        </button>
+      </div>
+
+      <!-- Search Bar + Controls -->
+      <div class="search-bar">
+        <input type="text" id="trainingSearch" placeholder="Search by employee, course, provider, or trainer..." />
+        <select id="typeFilter">
+          <option value="all">All Types</option>
+          <option value="T">Technical (T)</option>
+          <option value="B">Behavioral (B)</option>
+        </select>
+        <div class="rows-per-page" style="display:flex;align-items:center;gap:8px;white-space:nowrap;">
+          <label style="font-size:13px;color:var(--muted);">Show</label>
+          <select id="rowsPerPageSelect" onchange="changeRowsPerPage(this.value)" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:'Barlow',sans-serif;outline:none;cursor:pointer;background:white;">
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+          <label style="font-size:13px;color:var(--muted);">rows</label>
+        </div>
+      </div>
+
+      <!-- Record count -->
+      <div style="padding: 10px 20px; font-size:13px; color:var(--muted);">
+        <span id="recordCount" class="count-badge">0 records</span>
+      </div>
+
+      <!-- Training Records Content -->
+      <div id="trainingContent">
+        <div class="table-section">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th onclick="sortTrainings('employee_name')" style="cursor: pointer; text-align: left;">Employee</th>
+                  <th onclick="sortTrainings('date_from')" style="cursor: pointer; text-align: left;">Date From</th>
+                  <th onclick="sortTrainings('date_to')" style="cursor: pointer; text-align: left;">Date To</th>
+                  <th onclick="sortTrainings('course_title')" style="cursor: pointer; text-align: left;">Course</th>
+                  <th onclick="sortTrainings('venue')" style="cursor: pointer; text-align: left;">Venue</th>
+                  <th onclick="sortTrainings('trainer')" style="cursor: pointer; text-align: left;">Trainer</th>
+                  <th onclick="sortTrainings('type_tb')" style="cursor: pointer; text-align: center;">Type</th>
+                  <th onclick="sortTrainings('training_provider')" style="cursor: pointer; text-align: left;">Provider</th>
+                  <th onclick="sortTrainings('effectiveness_form')" style="cursor: pointer; text-align: center;">Eff. Form</th>
+                </tr>
+              </thead>
+              <tbody id="trainingTableBody">
+                <tr>
+                  <td colspan="10" style="text-align: center; padding: 40px; color: var(--muted);">
+                    <div style="font-size: 48px; margin-bottom: 10px;">⏳</div>
+                    <p>Loading training records...</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="paginationContainer" class="pagination-container"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODALS -->
+  <!-- View Training Modal -->
+  <div class="modal-overlay" id="viewTrainModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Training Record Details</h3>
+        <button class="modal-close" onclick="closeModal('viewTrain')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full"><label>Employee</label><div style="padding: 10px 12px; background: #ffffff; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; min-height: 20px; color: #000; font-weight: 600;" id="v_employee_name">—</div></div>
+          <div class="form-group"><label>Date From</label><div style="padding: 10px 12px; background: #ffffff; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; min-height: 20px; color: #000; font-weight: 500;" id="v_date_from">—</div></div>
+          <div class="form-group"><label>Date To</label><div style="padding: 10px 12px; background: #ffffff; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; min-height: 20px; color: #000; font-weight: 500;" id="v_date_to">—</div></div>
+          <div class="form-group"><label>Duration</label><div style="padding: 10px 12px; background: #ffffff; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; min-height: 20px; color: #000; font-weight: 500;" id="v_duration">—</div></div>
+          <div class="form-group"><label>Type</label><div style="padding: 10px 12px; background: #ffffff; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; min-height: 20px; color: #000; font-weight: 500;" id="v_type_tb">—</div></div>
+          <div class="form-group full"><label>Course</label><div style="padding: 10px 12px; background: #ffffff; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; min-height: 20px; color: #000; font-weight: 500;" id="v_course_title">—</div></div>
+          <div class="form-group"><label>Provider</label><div style="padding: 10px 12px; background: #ffffff; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; min-height: 20px; color: #000; font-weight: 500;" id="v_training_provider">—</div></div>
+          <div class="form-group"><label>Venue</label><div style="padding: 10px 12px; background: #ffffff; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; min-height: 20px; color: #000; font-weight: 500;" id="v_venue">—</div></div>
+          <div class="form-group"><label>Trainer</label><div style="padding: 10px 12px; background: #ffffff; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; min-height: 20px; color: #000; font-weight: 500;" id="v_trainer">—</div></div>
+          <div class="form-group"><label>Effectiveness Form</label><div style="padding: 10px 12px; background: #ffffff; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; min-height: 20px; color: #000; font-weight: 500;" id="v_effectiveness_form">—</div></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button id="evaluationBtn" class="btn btn-primary" onclick="openEvaluationForm(window.currentViewingTrainingId)" style="display:none;">📋 Take Evaluation</button>
+        <button id="examBtn" class="btn btn-primary" onclick="openExamForm(window.currentViewingTrainingId)" style="display:none;">📝 Take Exam</button>
+        <button class="btn btn-outline btn-secondary" onclick="closeModal('viewTrain')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Training Modal -->
+  <div class="modal-overlay" id="trainModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="trainingModalTitle">Add Training Record</h3>
+        <button class="modal-close" onclick="closeModal('train')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full"><label>Employee</label><select id="t_employee_id"><option value="">Select Employee</option></select></div>
+          <div class="form-group"><label>Date From</label><input id="t_date_from" type="date" /></div>
+          <div class="form-group"><label>Date To</label><input id="t_date_to" type="date" /></div>
+          <div class="form-group"><label>Duration / No. of Hours</label><input id="t_duration" placeholder="e.g. 1 DAY, 30 MINS" /></div>
+          <div class="form-group"><label>Type (T/B)</label><select id="t_type_tb"><option value="T">T – Technical</option><option value="B">B – Behavioral</option></select></div>
+          <div class="form-group full"><label>Course / Title Description</label><input id="t_course_title" list="courseList" placeholder="Select or type course title" /><datalist id="courseList"></datalist></div>
+          <div class="form-group"><label>Training Provider</label><select id="t_training_provider"><option value="">-- Select Provider --</option></select><input id="t_training_provider_other" placeholder="Type provider name" style="display:none;margin-top:6px;" /></div>
+          <div class="form-group"><label>Venue</label><select id="t_venue"><option value="">-- Select Venue --</option></select><input id="t_venue_other" placeholder="Type venue name" style="display:none;margin-top:6px;" /></div>
+          <div class="form-group"><label>Trainer</label><select id="t_trainer"><option value="">-- Select Trainer --</option></select><input id="t_trainer_other" placeholder="Type trainer name" style="display:none;margin-top:6px;" /></div>
+          <div class="form-group"><label>Training Effectiveness Form</label><select id="t_effectiveness_form"><option value="N/A">N/A</option><option value="W/EXAM">W/EXAM — With Examination</option><option value="W/TEEF">W/TEEF — With Training Effectiveness Evaluation Form</option><option value="W/EXAM_TEEF">W/EXAM & TEEF — Both</option></select></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline btn-secondary" onclick="closeModal('train')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveTraining()">Save Record</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Modal -->
+  <div class="modal-overlay" id="notificationModal">
+    <div class="modal notification-modal">
+      <div class="modal-head" id="notificationHead">
+        <h3 id="notificationTitle">Success</h3>
+        <button class="modal-close" onclick="closeNotification()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align: center; padding: 20px;">
+          <div id="notificationIcon" style="font-size: 48px; margin-bottom: 15px;">✅</div>
+          <p id="notificationMessage" style="font-size: 16px; color: var(--text); margin: 0; line-height: 1.5;"></p>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" onclick="closeNotification()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF Preview Modal -->
+  <div class="modal-overlay" id="pdfPreviewModal">
+    <div class="modal pdf-preview-modal">
+      <div class="modal-head">
+        <h3 id="pdfPreviewTitle">Attachment Preview</h3>
+        <button class="modal-close" onclick="closePdfPreview()">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 0; background: #333; min-height: 500px;">
+        <iframe id="pdfPreviewFrame" src="" style="width: 100%; height: 70vh; border: none;"></iframe>
+      </div>
+      <div class="modal-foot">
+        <a id="pdfDownloadLink" href="" target="_blank" class="btn btn-primary">📥 Download</a>
+        <button class="btn btn-secondary" onclick="closePdfPreview()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exam Modal -->
+  <div class="modal-overlay" id="examModal">
+    <div class="modal exam-modal">
+      <div class="modal-head">
+        <h3 id="examModalTitle">Exam Record</h3>
+        <button class="modal-close" onclick="closeExamModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="exam_training_id" />
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Course Title</label>
+            <div id="exam_course_title" style="padding: 10px 12px; background: #f7f9fd; border-radius: 6px; font-size: 14px;"></div>
+          </div>
+          <div class="form-group">
+            <label>Exam/TEEF Status</label>
+            <select id="exam_status" onchange="toggleExamFields()">
+              <option value="NOT_TAKEN">Not Taken</option>
+              <option value="PASSED">Passed ✅ (EXAM)</option>
+              <option value="FAILED">Failed ❌ (EXAM)</option>
+              <option value="COMPLETED">Completed ✅ (TEEF)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Exam Date</label>
+            <input type="date" id="exam_date" />
+          </div>
+          <div class="form-group">
+            <label>Grade / Score</label>
+            <input type="text" id="exam_grade" placeholder="e.g. 95%, A, PASS" />
+          </div>
+          <div class="form-group">
+            <label>Exam Form Attachment</label>
+            <div id="exam_form_display" style="display: none; padding: 10px; background: #e8f5e9; border-radius: 6px; margin-bottom: 10px;">
+              <a href="#" id="exam_form_link" target="_blank" style="color: var(--green); font-weight: 600;">📎 View Exam Form</a>
+              <button onclick="deleteExamForm()" style="margin-left: 10px; border: none; background: none; color: #999; cursor: pointer;">✕ Remove</button>
+            </div>
+            <label id="exam_form_upload" style="cursor:pointer; color: var(--red); display: none;">
+              📎 Upload Exam Form
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none;" onchange="uploadExamForm(event)">
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-danger" onclick="deleteExamRecord()">🗑️ Delete</button>
+        <button class="btn btn-secondary" onclick="closeExamModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveExamRecord()">💾 Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load modules in order -->
+  <script src="/src/modules/ui-helpers.js?v=2"></script>
+  <script src="/src/modules/dropdown-manager.js?v=2"></script>
+  <script src="/src/modules/data-loader.js?v=2"></script>
+  <script src="/src/modules/employee-manager.js?v=2"></script>
+  <script src="/src/modules/training-manager.js?v=2"></script>
+  
+  <!-- Main app entry point -->
+  <script src="/src/app-refactored.js?v=2"></script>
+  
+  <!-- Page-specific script -->
+  <script src="/src/training-records.js?v=2"></script>
+</body>
+</html>

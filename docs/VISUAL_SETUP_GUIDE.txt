@@ -1,0 +1,268 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                   CROSS-SUBNET NETWORK ACCESS SETUP                           ║
+║              Ubuntu (10.x subnet) ↔ Windows (20.x subnet)                     ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ NETWORK DIAGRAM                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+                    ┌─────────────────────────────┐
+                    │   ROUTER/GATEWAY            │
+                    │   192.168.1.1 (typical)     │
+                    │   Connects 10.x & 20.x      │
+                    └─────────────────────────────┘
+                           ↓              ↓
+        ┌──────────────────────┐  ┌──────────────────────┐
+        │   UBUNTU SERVER      │  │   WINDOWS CLIENT     │
+        │   Subnet: 10.x       │  │   Subnet: 20.x       │
+        │   IP: 192.168.10.50  │  │   IP: 192.168.20.100 │
+        │   Port: 3001         │  │   Browser            │
+        │   Node.js App        │  │                      │
+        │   ✓ Listening        │  │   http://192.168.10.50:3001
+        │   ✓ Firewall Open    │  │                      │
+        └──────────────────────┘  └──────────────────────┘
+                    ↑                      ↓
+                    └──────────────────────┘
+                    HTTP Request (Port 3001)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ STEP-BY-STEP SETUP                                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+STEP 1: UBUNTU SERVER CONFIGURATION
+═══════════════════════════════════════════════════════════════════════════════
+
+  1.1 Restart Node.js Server
+      ┌─────────────────────────────────────────────────────────┐
+      │ $ pkill -f "node server.js"                             │
+      │ $ node server.js                                        │
+      │                                                         │
+      │ Expected Output:                                        │
+      │ 🚀 Server running at http://0.0.0.0:3001              │
+      │ 📊 Database: NSB_Training                              │
+      │ 🌐 Accessible from other machines                      │
+      └─────────────────────────────────────────────────────────┘
+
+  1.2 Configure Firewall
+      ┌─────────────────────────────────────────────────────────┐
+      │ $ sudo ufw allow 3001/tcp                               │
+      │ $ sudo ufw reload                                       │
+      │ $ sudo ufw status                                       │
+      │                                                         │
+      │ Expected Output:                                        │
+      │ Status: active                                          │
+      │ 3001/tcp  ALLOW  Anywhere                              │
+      └─────────────────────────────────────────────────────────┘
+
+  1.3 Get Ubuntu IP Address
+      ┌─────────────────────────────────────────────────────────┐
+      │ $ hostname -I                                           │
+      │                                                         │
+      │ Expected Output:                                        │
+      │ 192.168.10.50                                           │
+      │                                                         │
+      │ ⚠️  NOTE THIS IP ADDRESS - YOU'LL NEED IT!             │
+      └─────────────────────────────────────────────────────────┘
+
+
+STEP 2: WINDOWS MACHINE TESTING
+═══════════════════════════════════════════════════════════════════════════════
+
+  2.1 Get Windows IP Address
+      ┌─────────────────────────────────────────────────────────┐
+      │ C:\> ipconfig                                           │
+      │                                                         │
+      │ Expected Output:                                        │
+      │ IPv4 Address. . . . . . . . . . : 192.168.20.100       │
+      │ Subnet Mask . . . . . . . . . . : 255.255.255.0        │
+      │ Default Gateway . . . . . . . . : 192.168.20.1         │
+      └─────────────────────────────────────────────────────────┘
+
+  2.2 Test Ping (Network Connectivity)
+      ┌─────────────────────────────────────────────────────────┐
+      │ C:\> ping 192.168.10.50                                 │
+      │                                                         │
+      │ Expected Output:                                        │
+      │ Pinging 192.168.10.50 with 32 bytes of data:           │
+      │ Reply from 192.168.10.50: bytes=32 time=5ms TTL=64     │
+      │ Reply from 192.168.10.50: bytes=32 time=4ms TTL=64     │
+      │ Reply from 192.168.10.50: bytes=32 time=4ms TTL=64     │
+      │ Reply from 192.168.10.50: bytes=32 time=5ms TTL=64     │
+      │                                                         │
+      │ ✅ If successful: Network is connected                 │
+      │ ❌ If fails: Check router routing                      │
+      └─────────────────────────────────────────────────────────┘
+
+  2.3 Test Port Connectivity (Telnet)
+      ┌─────────────────────────────────────────────────────────┐
+      │ C:\> telnet 192.168.10.50 3001                          │
+      │                                                         │
+      │ Expected Result:                                        │
+      │ Connected to 192.168.10.50                              │
+      │ (blank screen - this is normal)                         │
+      │                                                         │
+      │ ✅ If successful: Port 3001 is open                    │
+      │ ❌ If fails: Check firewall                            │
+      │                                                         │
+      │ To exit: Press Ctrl+] then type "quit"                 │
+      └─────────────────────────────────────────────────────────┘
+
+  2.4 Test HTTP Request (PowerShell)
+      ┌─────────────────────────────────────────────────────────┐
+      │ C:\> powershell                                         │
+      │ PS> Invoke-WebRequest -Uri "http://192.168.10.50:3001" │
+      │                                                         │
+      │ Expected Output:                                        │
+      │ StatusCode        : 200                                 │
+      │ StatusDescription : OK                                  │
+      │ Content           : <!DOCTYPE html>...                  │
+      │                                                         │
+      │ ✅ If successful: Server is responding                 │
+      │ ❌ If fails: Check server logs                         │
+      └─────────────────────────────────────────────────────────┘
+
+  2.5 Open in Browser
+      ┌─────────────────────────────────────────────────────────┐
+      │ 1. Open any web browser (Chrome, Firefox, Edge, etc.)   │
+      │ 2. Type in address bar:                                 │
+      │    http://192.168.10.50:3001                            │
+      │ 3. Press Enter                                          │
+      │                                                         │
+      │ Expected Result:                                        │
+      │ HR Training Management System homepage loads            │
+      │                                                         │
+      │ ✅ If successful: You're done!                         │
+      │ ❌ If fails: Check troubleshooting guide               │
+      └─────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ QUICK REFERENCE COMMANDS                                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+UBUNTU COMMANDS:
+═══════════════════════════════════════════════════════════════════════════════
+  Check server running:     ps aux | grep node
+  Check port listening:     sudo netstat -tlnp | grep 3001
+  Get IP address:           hostname -I
+  Allow firewall:           sudo ufw allow 3001/tcp
+  Reload firewall:          sudo ufw reload
+  Check firewall status:    sudo ufw status
+  Restart server:           pkill -f "node server.js" && node server.js
+  Run diagnostics:          bash network-troubleshoot.sh
+
+
+WINDOWS COMMANDS:
+═══════════════════════════════════════════════════════════════════════════════
+  Get IP address:           ipconfig
+  Ping Ubuntu:              ping 192.168.10.50
+  Test port:                telnet 192.168.10.50 3001
+  Test HTTP:                powershell -Command "Invoke-WebRequest -Uri 'http://192.168.10.50:3001'"
+  Flush DNS:                ipconfig /flushdns
+  Renew IP:                 ipconfig /release && ipconfig /renew
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ TROUBLESHOOTING FLOWCHART                                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+                            START
+                              ↓
+                    ┌─────────────────┐
+                    │ Ping Ubuntu IP? │
+                    └─────────────────┘
+                      ↙ NO        YES ↘
+                      ↓                ↓
+            ┌──────────────────┐  ┌──────────────────┐
+            │ Network Issue    │  │ Telnet Port 3001?│
+            │ - Check router   │  └──────────────────┘
+            │ - Check cables   │    ↙ NO        YES ↘
+            │ - Check firewall │    ↓                ↓
+            └──────────────────┘  ┌──────────────┐  ┌──────────────┐
+                                  │ Firewall     │  │ Browser Test │
+                                  │ Issue        │  └──────────────┘
+                                  │ - Check UFW  │    ↙ NO    YES ↘
+                                  │ - Allow 3001 │    ↓          ✅ SUCCESS!
+                                  └──────────────┘  ┌──────────────┐
+                                                    │ Server Issue │
+                                                    │ - Check logs │
+                                                    │ - Restart    │
+                                                    └──────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ SUCCESS CHECKLIST                                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  ☐ Node.js server restarted and running
+  ☐ Server listening on 0.0.0.0:3001
+  ☐ UFW firewall enabled
+  ☐ Port 3001 allowed in firewall
+  ☐ Ubuntu IP address identified (e.g., 192.168.10.50)
+  ☐ Windows IP address identified (e.g., 192.168.20.100)
+  ☐ Ping test successful
+  ☐ Telnet test successful
+  ☐ HTTP test successful
+  ☐ Browser access working
+  ☐ HR Training System homepage loads
+  ☐ Can navigate to different pages
+  ☐ Forms are interactive
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ DOCUMENTATION FILES                                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  📄 NETWORK_SETUP_GUIDE.md
+     → Complete step-by-step instructions
+     → Detailed explanations
+     → Router configuration
+     → All troubleshooting steps
+
+  📄 WINDOWS_TROUBLESHOOTING.md
+     → Windows-specific commands
+     → Common Windows issues
+     → Windows firewall configuration
+     → PowerShell examples
+
+  📄 NETWORK_QUICK_REFERENCE.md
+     → Quick commands
+     → Common issues and fixes
+     → Checklist
+     → Emergency restart
+
+  📄 network-troubleshoot.sh
+     → Automated diagnostic script
+     → Shows current status
+     → Provides quick fixes
+     → Generates summary
+
+  📄 NETWORK_SETUP_SUMMARY.md
+     → Overview of all changes
+     → Next steps
+     → Testing sequence
+     → Support resources
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ FINAL NOTES                                                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  ✨ Your HR Training Management System is now accessible across subnets!
+
+  🎯 Access URL:
+     http://192.168.10.50:3001
+     (Replace 192.168.10.50 with your actual Ubuntu IP)
+
+  💡 Tips:
+     • Bookmark the URL for quick access
+     • Test from multiple browsers if one fails
+     • Check server logs for errors
+     • Restart router if network issues persist
+     • Contact IT if router settings need changes
+
+  🚀 You're all set! Enjoy your cross-subnet network setup!
+
+═══════════════════════════════════════════════════════════════════════════════

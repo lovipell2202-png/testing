@@ -28,39 +28,39 @@
       </a>
     </div>
     <div style="padding: 0;">
-      <a href="all-employees.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+      <a href="pages/all-employees.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
         👥 All Employees
       </a>
     </div>
     <div style="padding: 0;">
-      <a href="training-records.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+      <a href="pages/training-records.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
         📚 Training Records
       </a>
     </div>
     <div style="padding: 0;">
-      <a href="upload-test-result.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+      <a href="pages/training-evaluation-form.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+        📋 Evaluation Form
+      </a>
+    </div>
+    <div style="padding: 0;">
+      <a href="pages/upload-test-result.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
         📝 Test Management
       </a>
     </div>
     <div style="padding: 0;">
-      <a href="exams/all-exams.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+      <a href="/pages/all-exams.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
         📚 Exam Management
+      </a>
+    </div>
+    <div style="padding: 0;">
+      <a href="pages/teef-management.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+        📄 TEEF Management
       </a>
     </div>
   </aside>
 
     <!-- DASHBOARD SECTION -->
     <div id="dashboardSection" style="display: none;">
-      <!-- User Info & Logout Bar -->
-      <div style="padding: 15px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <span style="font-weight: 600;">Welcome, <span id="userName">User</span></span>
-          <span style="margin-left: 20px; opacity: 0.9;">Role: <span id="userRole">EMPLOYEE</span></span>
-          <span style="margin-left: 20px; opacity: 0.9;">Dept: <span id="userDepartment">-</span></span>
-        </div>
-        <button id="logoutBtn" style="padding: 8px 16px; background: rgba(255,255,255,0.2); color: white; border: 1px solid white; border-radius: 4px; cursor: pointer; font-weight: 600;">Logout</button>
-      </div>
-
       <div style="padding: 20px 32px; border-bottom: 2px solid var(--border); background: var(--navy);">
         <h2 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: white; letter-spacing: 1px;">TRAINING DASHBOARD</h2>
       </div>
@@ -84,32 +84,6 @@
         <!-- EMPLOYEE DETAILS (Hidden by default) -->
         <div id="employeeDetails" style="display: none; margin-top: 20px; padding: 20px; background: white; border-radius: 8px; border: 1px solid var(--border);">
           <h3 id="empDetailsName" style="margin: 0 0 15px 0; font-size: 18px; font-weight: 700; color: var(--navy);"></h3>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px;">
-            <div class="stat-card">
-              <div class="stat-label">Total Trainings</div>
-              <div class="stat-value" id="empTotalTrainings">0</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">📎 With Attachments</div>
-              <div class="stat-value" id="empWithAttachments">0</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">📄 PDF Files</div>
-              <div class="stat-value" id="empPdfCount">0</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">📋 Certificates</div>
-              <div class="stat-value" id="empCertCount">0</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">📝 With Exams</div>
-              <div class="stat-value" id="empExamCount">0</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">📋 With TEEF</div>
-              <div class="stat-value" id="empTeefCount">0</div>
-            </div>
-          </div>
           <div>
             <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 600; color: var(--navy);">All Training Records:</h4>
             <div style="max-height: 300px; overflow-y: auto;">
@@ -325,47 +299,18 @@
         </div>
         <div class="form-group">
           <label>Training Provider</label>
-          <input id="t_training_provider" list="providerList" placeholder="Select or type provider name" />
-          <datalist id="providerList">
-            <option value="NSB ENGINEERING">
-            <option value="THINKSAFE">
-            <option value="QUALITEX MANAGEMENT CONSULTANCY">
-            <option value="ENVIA CONSULTANCY">
-            <option value="CAAT ENGINEERING SOLUTIONS ASIA">
-            <option value="BUREAU OF FIRE PROTECTION">
-            <option value="KEYENCE">
-            <option value="CYTEK">
-            <option value="HSSLLC">
-            <option value="TESDA">
-            <option value="TUV RHEINLAND">
-          </datalist>
+          <select id="t_training_provider"><option value="">-- Select Provider --</option></select>
+          <input id="t_training_provider_other" placeholder="Type provider name" style="display:none;margin-top:6px;" />
         </div>
         <div class="form-group">
           <label>Venue</label>
-          <input id="t_venue" list="venueList" placeholder="Select or type venue name" />
-          <datalist id="venueList">
-            <option value="NSB CMM AREA">
-            <option value="CONFERENCE ROOM">
-            <option value="NSB ENGINEERING">
-            <option value="NSB CONFERENCE ROOM">
-            <option value="SAFETY ROOM">
-            <option value="MAKATI CITY">
-            <option value="HSSLLC TRAINING CENTER">
-            <option value="WEBINAR">
-          </datalist>
+          <select id="t_venue"><option value="">-- Select Venue --</option></select>
+          <input id="t_venue_other" placeholder="Type venue name" style="display:none;margin-top:6px;" />
         </div>
         <div class="form-group">
           <label>Trainer</label>
-          <input id="t_trainer" list="trainerList" placeholder="Select or type trainer name" />
-          <datalist id="trainerList">
-            <option value="J. RENZALES">
-            <option value="S. TORIBIO">
-            <option value="D. CRUZ">
-            <option value="M. NONO">
-            <option value="E. PIKE">
-            <option value="V. OSORIO">
-            <option value="EXTERNAL TRAINER">
-          </datalist>
+          <select id="t_trainer"><option value="">-- Select Trainer --</option></select>
+          <input id="t_trainer_other" placeholder="Type trainer name" style="display:none;margin-top:6px;" />
         </div>
         <div class="form-group">
           <label>Training Effectiveness Form</label>
@@ -450,7 +395,7 @@
       <!-- Print Header (hidden on screen, visible on print) -->
       <div class="print-modal-header" style="display: none;">
         <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 3px solid #000;">
-          <img src="NSB-LOGO.png" alt="NSB Logo" style="width: 320px; height: auto; object-fit: contain;">
+          <img src="/images/NSB-LOGO.png" alt="NSB Logo" style="width: 320px; height: auto; object-fit: contain;">
         </div>
         <div style="text-align: center; font-size: 14px; font-weight: 700; margin: 10px 0; padding: 6px; border: 2px solid #000; letter-spacing: 1px;">
           EMPLOYEE TRAINING RECORD

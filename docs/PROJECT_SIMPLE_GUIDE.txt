@@ -1,0 +1,213 @@
+# NSB Engineering HR Training System - Simple Guide
+
+## What is this system?
+
+A web application to manage employee training records, exams, and evaluations for NSB Engineering.
+
+---
+
+## How the System Works (Simple Flow)
+
+```
+User's Browser          Server (Node.js)          Database (SQL Server)
+     │                        │                           │
+     │  1. Open page         │                           │
+     │──────────────────────>│                           │
+     │                       │                           │
+     │  2. Load HTML/CSS/JS  │                           │
+     │<──────────────────────│                           │
+     │                       │                           │
+     │  3. User clicks       │                           │
+     │──────────────────────>│                           │
+     │                       │  4. API Request            │
+     │                       │──────────────────────────>│
+     │                       │                           │
+     │                       │  5. SQL Query             │
+     │                       │──────────────────────────>│
+     │                       │                           │
+     │                       │  6. Return Data           │
+     │                       │<─────────────────────────│
+     │                       │                           │
+     │  7. Show Result       │                           │
+     │<──────────────────────│                           │
+```
+
+---
+
+## File Types
+
+| Type | Location | What it does |
+|------|----------|--------------|
+| **.html** | `public/` | Pages user sees |
+| **.js** | `public/src/` | Page logic/actions |
+| **.css** | `public/css/` | Styling/colors |
+| **.js** | Root | Server backend |
+| **.sql** | Root | Database setup |
+
+---
+
+## Main Pages
+
+### 1. Dashboard (`index.html`)
+- **Purpose:** Main entry point, shows statistics
+- **JS:** `dashboard/dashboard.js`
+- **Features:** Employee counts, training stats
+
+### 2. All Employees (`all-employees.html`)
+- **Purpose:** View/manage employee list
+- **JS:** `src/all-employees.js`
+- **Features:** Add, edit, search employees
+
+### 3. Training Records (`training-records.html`)
+- **Purpose:** Track employee training attendance
+- **JS:** `src/training-records.js`
+- **Features:** CRUD training records
+
+### 4. Evaluation Form (`training-evaluation-form.html`)
+- **Purpose:** Training effectiveness evaluation
+- **JS:** `src/training-evaluation-form.js`
+- **Features:** Rate training (5-scale), add comments
+
+### 5. Test Management (`upload-test-result.html`)
+- **Purpose:** Upload test/quiz files
+- **JS:** `src/upload-test-result.js`
+- **Features:** File upload, test results
+
+### 6. Exam Management (`exams/all-exams.html`)
+- **Purpose:** Create and manage exams
+- **JS:** `src/all-exams.js`
+- **Features:** Create questions, set passing score
+
+### 7. Take Exam (`exams/take-exam.html`)
+- **Purpose:** Students take exams
+- **JS:** `src/take-exam.js`
+- **Features:** Answer questions, submit
+
+---
+
+## What are MODULES? (public/src/modules/)
+
+Modules are **shared JavaScript files** that contain reusable functions. Instead of writing the same code in every page, modules let you write it once and use it everywhere.
+
+### Module Files Explained
+
+| Module File | What it Does | Functions it Provides |
+|------------|--------------|----------------------|
+| **training-manager.js** | Manages training records | openAddTraining(), saveTraining(), deleteTraining(), printEmployeeTraining() |
+| **employee-manager.js** | Manages employees | openAddEmp(), openEditEmp(), saveEmployee(), deleteEmployee() |
+| **dropdown-manager.js** | Fills dropdown lists | loadCoursesFromAPI(), updateDatalistOptions(), loadDropdownOptions() |
+| **data-loader.js** | Gets data from server | loadEmployees(), loadTrainings() |
+| **ui-helpers.js** | UI utilities (popups, notifications) | showNotification(), toast(), openModal(), closeModal() |
+
+### How Modules Work
+
+1. **Page loads** → includes a module file
+2. **Module functions** → become available to use
+3. **Call function** → module does the work
+4. **Result returned** → page shows the data
+
+Example:
+```javascript
+// In a page, you can call:
+window.UIHelpers.showNotification('Success', 'Training saved!');
+window.DataLoader.loadEmployees();
+window.DropdownManager.updateDatalistOptions();
+```
+
+### Loading Modules in HTML
+
+```html
+<script src="src/modules/ui-helpers.js"></script>
+<script src="src/modules/data-loader.js"></script>
+<script src="src/modules/training-manager.js"></script>
+```
+
+---
+
+## Backend Files
+
+| File | Purpose |
+|------|---------|
+| `server.js` | Main server - handles all API requests |
+| `exam-server.js` | Exam-specific operations |
+| `auth-server.js` | Login/logout handling |
+
+---
+
+## Database Tables
+
+### Core Tables
+
+| Table | Stores |
+|-------|--------|
+| **Employees** | Employee info (name, department, position) |
+| **TrainingRecords** | Training attendance (who, when, what course) |
+| **Courses** | Available training courses |
+| **Exams** | Exam configurations |
+| **ExamQuestions** | Questions for each exam |
+| **ExamResults** | Student test scores |
+| **Users** | Login accounts |
+| **Sessions** | Active login sessions |
+| **TrainingEvaluationForms** | Evaluation form responses |
+
+### Table Relationships
+
+```
+Employees (1) ──────< TrainingRecords
+Employees (1) ──────< ExamResults
+Courses (1) ────────< Exams
+Exams (1) ─────────< ExamQuestions
+Exams (1) ─────────< ExamResults
+Users (1) ─────────< Sessions
+```
+
+---
+
+## API Endpoints (How JS talks to Server)
+
+| URL | Methods | What it does |
+|-----|---------|--------------|
+| `/api/employees` | GET, POST | Get all employees, Add new |
+| `/api/trainings` | GET, POST | Get trainings, Add training |
+| `/api/courses` | GET | Get all courses |
+| `/api/exams` | GET, POST | Get exams, Create exam |
+| `/api/exam-results` | GET, POST | Save/get exam scores |
+| `/api/tests/upload` | POST | Upload test files |
+| `/api/evaluation-forms` | GET, POST | Get/save evaluations |
+
+---
+
+## How to Run
+
+1. **Start SQL Server** - Make sure database exists
+2. **Run server:**
+   ```bash
+   node server.js
+   ```
+3. **Open browser:** `http://localhost:3001`
+4. **Login:** admin / ADMIN123
+
+---
+
+## Quick Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| Page not loading | Check server is running on port 3001 |
+| No data showing | Check SQL Server connection in server.js |
+| Login fails | Check Users table has admin account |
+| CSS not applied | Clear browser cache |
+
+---
+
+## Sidebar Navigation
+
+All pages share this sidebar structure:
+- 📊 Dashboard
+- 👥 All Employees
+- 📚 Training Records
+- 📋 Evaluation Form (current page highlighted)
+- 📝 Test Management
+- 📚 Exam Management
+
+The sidebar links to all main pages for easy navigation.

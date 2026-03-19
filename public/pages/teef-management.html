@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TEEF Management - NSB Engineering</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/styles.css"/>
+  <style>
+    .teef-header { padding: 20px 32px; border-bottom: 2px solid var(--border); background: var(--navy); }
+    .teef-header h2 { margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: white; letter-spacing: 1px; }
+    .teef-toolbar { display: flex; gap: 12px; align-items: center; padding: 16px 24px; background: #f8f9fa; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .teef-toolbar input { flex: 1; min-width: 220px; padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px; font-family: 'Barlow', sans-serif; }
+    .teef-count { font-size: 13px; color: var(--muted); padding: 8px 24px; }
+    .teef-table-wrap { overflow-x: auto; padding: 0 24px 24px; }
+    table.teef-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table.teef-table thead { background: var(--navy); color: white; }
+    table.teef-table th { padding: 10px 12px; text-align: left; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.5px; white-space: nowrap; }
+    table.teef-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    table.teef-table tbody tr:hover { background: #f0f4ff; }
+    .badge-teef { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .btn-edit { padding: 5px 12px; background: var(--navy); color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: 600; }
+    .btn-edit:hover { opacity: 0.85; }
+    .btn-delete { padding: 5px 12px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: 600; margin-left: 5px; }
+    .btn-delete:hover { opacity: 0.85; }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty-state div { font-size: 48px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <!-- Sidebar -->
+  <aside id="sidebar">
+    <div style="padding: 20px; border-bottom: 2px solid var(--border);">
+      <h3 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: var(--navy);">MENU</h3>
+    </div>
+    <div style="padding: 0;">
+      <a href="/index.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+        📊 Dashboard
+      </a>
+    </div>
+    <div style="padding: 0;">
+      <a href="all-employees.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+        👥 All Employees
+      </a>
+    </div>
+    <div style="padding: 0;">
+      <a href="training-records.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+        📚 Training Records
+      </a>
+    </div>
+    <div style="padding: 0;">
+      <a href="training-evaluation-form.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+        📋 Evaluation Form
+      </a>
+    </div>
+    <div style="padding: 0;">
+      <a href="upload-test-result.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+        📝 Test Management
+      </a>
+    </div>
+    <div style="padding: 0;">
+      <a href="/exams/all-exams.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+        📚 Exam Management
+      </a>
+    </div>
+    <div style="padding: 0;">
+      <a href="teef-management.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--navy); background: rgba(0,0,51,0.05); border-bottom: 1px solid var(--border); border-left: 4px solid var(--navy);">
+        📄 TEEF Management
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main id="main">
+    <div class="teef-header">
+      <h2>📄 TEEF MANAGEMENT</h2>
+    </div>
+
+    <div class="teef-toolbar">
+      <input type="text" id="teefSearch" placeholder="🔍 Search by employee, course, or date..." oninput="filterTeef()">
+      <span id="teefCount" class="teef-count">Loading...</span>
+    </div>
+
+    <div class="teef-table-wrap">
+      <table class="teef-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Employee</th>
+            <th>Course</th>
+            <th>Training Date</th>
+            <th>Resource Speaker</th>
+            <th>Venue</th>
+            <th>Status</th>
+            <th>Saved On</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="teefTableBody">
+          <tr><td colspan="9" class="empty-state"><div>⏳</div>Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script>
+let allTeefs = [];
+
+async function loadTeefs() {
+  try {
+    const res = await fetch('/api/evaluation-forms');
+    const data = await res.json();
+    if (data.success) {
+      allTeefs = data.data;
+      renderTeef(allTeefs);
+    }
+  } catch (err) {
+    document.getElementById('teefTableBody').innerHTML =
+      `<tr><td colspan="9" style="text-align:center;padding:40px;color:#dc3545;">❌ Failed to load: ${err.message}</td></tr>`;
+  }
+}
+
+function formatDate(val) {
+  if (!val) return '—';
+  const d = new Date(val);
+  if (isNaN(d)) return val;
+  return `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}-${d.getFullYear()}`;
+}
+
+function renderTeef(list) {
+  const tbody = document.getElementById('teefTableBody');
+  document.getElementById('teefCount').textContent = `${list.length} record(s)`;
+
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div>📄</div><p>No TEEF records found.</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map((t, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td style="font-weight:600;">${t.employee_name || t.participant_name || '—'}</td>
+      <td>${t.course_title || '—'}</td>
+      <td>${formatDate(t.training_date)}</td>
+      <td>${t.resource_speaker || '—'}</td>
+      <td>${t.venue || '—'}</td>
+      <td><span class="badge-teef">✅ W/TEEF</span></td>
+      <td>${formatDate(t.created_at)}</td>
+      <td>
+        <button class="btn-edit" onclick="editTeef(${t.training_id})">✏️ Edit</button>
+        <button class="btn-delete" onclick="deleteTeef(${t.id})">🗑️ Delete</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterTeef() {
+  const q = document.getElementById('teefSearch').value.toLowerCase();
+  const filtered = allTeefs.filter(t =>
+    (t.employee_name || '').toLowerCase().includes(q) ||
+    (t.participant_name || '').toLowerCase().includes(q) ||
+    (t.course_title || '').toLowerCase().includes(q) ||
+    (t.training_date || '').toLowerCase().includes(q)
+  );
+  renderTeef(filtered);
+}
+
+function editTeef(trainingId) {
+  window.location.href = `training-evaluation-form.html?id=${trainingId}`;
+}
+
+async function deleteTeef(trainingId) {
+  if (!confirm('Are you sure you want to delete this TEEF record? This action cannot be undone.')) {
+    return;
+  }
+  
+  try {
+    const res = await fetch(`/api/evaluation-forms/${trainingId}`, {
+      method: 'DELETE'
+    });
+    const data = await res.json();
+    
+    if (data.success) {
+      alert('TEEF record deleted successfully!');
+      loadTeefs(); // Reload the table
+    } else {
+      alert('Failed to delete: ' + (data.message || 'Unknown error'));
+    }
+  } catch (err) {
+    alert('Error deleting: ' + err.message);
+  }
+}
+
+loadTeefs();
+</script>
+</body>
+</html>

@@ -35,6 +35,31 @@ function switchTab(tabName) {
   }
 }
 
+// Set question priority
+function setPriority(button, priority) {
+  // Find the hidden input field
+  const container = button.closest('.form-group');
+  const priorityInput = container.querySelector('input[type="hidden"]');
+  
+  // Update hidden input value
+  if (priorityInput) {
+    priorityInput.value = priority;
+  }
+  
+  // Update button styles
+  const buttons = container.querySelectorAll('.priority-btn');
+  buttons.forEach(btn => {
+    btn.style.borderColor = '#ddd';
+    btn.style.background = 'white';
+    btn.style.color = '#333';
+  });
+  
+  // Highlight selected button
+  button.style.borderColor = 'var(--navy)';
+  button.style.background = 'var(--navy)';
+  button.style.color = 'white';
+}
+
 // Update questions summary
 function updateQuestionsSummary() {
   const summary = document.getElementById('questionsSummary');
@@ -201,10 +226,14 @@ function renderExams() {
 function setupSearch() {
   document.getElementById('searchInput').addEventListener('input', (e) => {
     const searchTerm = e.target.value.toLowerCase().trim();
-    filteredExams = searchTerm ? allExams.filter(exam => 
-      exam.title.toLowerCase().includes(searchTerm) ||
-      exam.course_title.toLowerCase().includes(searchTerm)
-    ) : allExams;
+    filteredExams = searchTerm ? allExams.filter(exam => {
+      const title = (exam.title || '').toLowerCase();
+      const courseTitle = (exam.course_title || '').toLowerCase();
+      const description = (exam.description || '').toLowerCase();
+      return title.includes(searchTerm) || 
+             courseTitle.includes(searchTerm) ||
+             description.includes(searchTerm);
+    }) : allExams;
     renderExams();
     updateExamCount();
   });
@@ -226,10 +255,7 @@ function openCreateModal() {
   document.getElementById('examPassingScore').value = '70';
   
   // Reset priority to defaults
-  document.getElementById('priority_multiple_choice').value = '1';
-  document.getElementById('priority_enumeration').value = '2';
-  document.getElementById('priority_procedure').value = '3';
-  document.getElementById('priority_video').value = '4';
+  // (priority fields not present in HTML)
   
   document.getElementById('questionsContainer').innerHTML = '';
   document.getElementById('questionTypeMenu').style.display = 'none';
@@ -395,9 +421,15 @@ function addQuestionForm(type) {
     formHTML = `
       <div class="form-group">
         <label>Question Priority (Display Order) *</label>
-        <select id="mcPriority">
-          <option value="multiple_choice" selected>Multiple Choice (Default First)</option>
-          <option value="enumeration">Enumeration</option>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+          <button type="button" class="priority-btn" data-priority="1" onclick="setPriority(this, 1)" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s;">1st</button>
+          <button type="button" class="priority-btn" data-priority="2" onclick="setPriority(this, 2)" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s;">2nd</button>
+          <button type="button" class="priority-btn" data-priority="3" onclick="setPriority(this, 3)" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s;">3rd</button>
+          <button type="button" class="priority-btn" data-priority="last" onclick="setPriority(this, 'last')" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s;">Last</button>
+        </div>
+        <input type="hidden" id="mcPriority" value="1">
+        <small style="color: #666; margin-top: 8px; display: block;">Select when this question should appear during exam</small>
+      </div>
           <option value="procedure">Procedure Details</option>
           <option value="video">Optional Video</option>
         </select>
@@ -446,13 +478,14 @@ function addQuestionForm(type) {
     formHTML = `
       <div class="form-group">
         <label>Question Priority (Display Order) *</label>
-        <select id="enumPriority">
-          <option value="multiple_choice">Multiple Choice</option>
-          <option value="enumeration" selected>Enumeration (Default Second)</option>
-          <option value="procedure">Procedure Details</option>
-          <option value="video">Optional Video</option>
-        </select>
-        <small style="color: #666; margin-top: 5px; display: block;">Set when this question type should appear during exam</small>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+          <button type="button" class="priority-btn" data-priority="1" onclick="setPriority(this, 1)" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s;">1st</button>
+          <button type="button" class="priority-btn" data-priority="2" onclick="setPriority(this, 2)" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s;">2nd</button>
+          <button type="button" class="priority-btn" data-priority="3" onclick="setPriority(this, 3)" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s;">3rd</button>
+          <button type="button" class="priority-btn" data-priority="last" onclick="setPriority(this, 'last')" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s;">Last</button>
+        </div>
+        <input type="hidden" id="enumPriority" value="2">
+        <small style="color: #666; margin-top: 8px; display: block;">Select when this question should appear during exam</small>
       </div>
       <div class="form-group">
         <label>Enumeration Title *</label>
@@ -487,13 +520,14 @@ function addQuestionForm(type) {
     formHTML = `
       <div class="form-group">
         <label>Question Priority (Display Order) *</label>
-        <select id="procPriority">
-          <option value="multiple_choice">Multiple Choice</option>
-          <option value="enumeration">Enumeration</option>
-          <option value="procedure" selected>Procedure Details (Default Third)</option>
-          <option value="video">Optional Video</option>
-        </select>
-        <small style="color: #666; margin-top: 5px; display: block;">Set when this question type should appear during exam</small>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+          <button type="button" class="priority-btn" data-priority="1" onclick="setPriority(this, 1)" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s;">1st</button>
+          <button type="button" class="priority-btn" data-priority="2" onclick="setPriority(this, 2)" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s;">2nd</button>
+          <button type="button" class="priority-btn" data-priority="3" onclick="setPriority(this, 3)" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s;">3rd</button>
+          <button type="button" class="priority-btn" data-priority="last" onclick="setPriority(this, 'last')" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s;">Last</button>
+        </div>
+        <input type="hidden" id="procPriority" value="3">
+        <small style="color: #666; margin-top: 8px; display: block;">Select when this question should appear during exam</small>
       </div>
       <div class="form-group">
         <label>Procedure Title *</label>
@@ -974,13 +1008,14 @@ function editQuestion(idx) {
     formHTML = `
       <div class="form-group">
         <label>Question Priority (Display Order) *</label>
-        <select id="mcPriority">
-          <option value="multiple_choice" ${q.priority === 'multiple_choice' ? 'selected' : ''}>Multiple Choice (Default First)</option>
-          <option value="enumeration" ${q.priority === 'enumeration' ? 'selected' : ''}>Enumeration</option>
-          <option value="procedure" ${q.priority === 'procedure' ? 'selected' : ''}>Procedure Details</option>
-          <option value="video" ${q.priority === 'video' ? 'selected' : ''}>Optional Video</option>
-        </select>
-        <small style="color: #666; margin-top: 5px; display: block;">Set when this question type should appear during exam</small>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+          <button type="button" class="priority-btn" data-priority="1" onclick="setPriority(this, 1)" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s; ${q.priority === 1 || q.priority === '1' ? 'border-color: var(--navy); background: var(--navy); color: white;' : ''}">1st</button>
+          <button type="button" class="priority-btn" data-priority="2" onclick="setPriority(this, 2)" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s; ${q.priority === 2 || q.priority === '2' ? 'border-color: var(--navy); background: var(--navy); color: white;' : ''}">2nd</button>
+          <button type="button" class="priority-btn" data-priority="3" onclick="setPriority(this, 3)" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s; ${q.priority === 3 || q.priority === '3' ? 'border-color: var(--navy); background: var(--navy); color: white;' : ''}">3rd</button>
+          <button type="button" class="priority-btn" data-priority="last" onclick="setPriority(this, 'last')" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s; ${q.priority === 'last' ? 'border-color: var(--navy); background: var(--navy); color: white;' : ''}">Last</button>
+        </div>
+        <input type="hidden" id="mcPriority" value="${q.priority || 1}">
+        <small style="color: #666; margin-top: 8px; display: block;">Select when this question should appear during exam</small>
       </div>
       <div class="form-group">
         <label>Question Text *</label>
@@ -1027,13 +1062,14 @@ function editQuestion(idx) {
     formHTML = `
       <div class="form-group">
         <label>Question Priority (Display Order) *</label>
-        <select id="enumPriority">
-          <option value="multiple_choice" ${q.priority === 'multiple_choice' ? 'selected' : ''}>Multiple Choice</option>
-          <option value="enumeration" ${q.priority === 'enumeration' ? 'selected' : ''}>Enumeration (Default Second)</option>
-          <option value="procedure" ${q.priority === 'procedure' ? 'selected' : ''}>Procedure Details</option>
-          <option value="video" ${q.priority === 'video' ? 'selected' : ''}>Optional Video</option>
-        </select>
-        <small style="color: #666; margin-top: 5px; display: block;">Set when this question type should appear during exam</small>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+          <button type="button" class="priority-btn" data-priority="1" onclick="setPriority(this, 1)" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s; ${q.priority === 1 || q.priority === '1' ? 'border-color: var(--navy); background: var(--navy); color: white;' : ''}">1st</button>
+          <button type="button" class="priority-btn" data-priority="2" onclick="setPriority(this, 2)" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s; ${q.priority === 2 || q.priority === '2' ? 'border-color: var(--navy); background: var(--navy); color: white;' : ''}">2nd</button>
+          <button type="button" class="priority-btn" data-priority="3" onclick="setPriority(this, 3)" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s; ${q.priority === 3 || q.priority === '3' ? 'border-color: var(--navy); background: var(--navy); color: white;' : ''}">3rd</button>
+          <button type="button" class="priority-btn" data-priority="last" onclick="setPriority(this, 'last')" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s; ${q.priority === 'last' ? 'border-color: var(--navy); background: var(--navy); color: white;' : ''}">Last</button>
+        </div>
+        <input type="hidden" id="enumPriority" value="${q.priority || 2}">
+        <small style="color: #666; margin-top: 8px; display: block;">Select when this question should appear during exam</small>
       </div>
       <div class="form-group">
         <label>Enumeration Title *</label>
@@ -1071,13 +1107,14 @@ function editQuestion(idx) {
     formHTML = `
       <div class="form-group">
         <label>Question Priority (Display Order) *</label>
-        <select id="procPriority">
-          <option value="multiple_choice" ${q.priority === 'multiple_choice' ? 'selected' : ''}>Multiple Choice</option>
-          <option value="enumeration" ${q.priority === 'enumeration' ? 'selected' : ''}>Enumeration</option>
-          <option value="procedure" ${q.priority === 'procedure' ? 'selected' : ''}>Procedure Details (Default Third)</option>
-          <option value="video" ${q.priority === 'video' ? 'selected' : ''}>Optional Video</option>
-        </select>
-        <small style="color: #666; margin-top: 5px; display: block;">Set when this question type should appear during exam</small>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+          <button type="button" class="priority-btn" data-priority="1" onclick="setPriority(this, 1)" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s; ${q.priority === 1 || q.priority === '1' ? 'border-color: var(--navy); background: var(--navy); color: white;' : ''}">1st</button>
+          <button type="button" class="priority-btn" data-priority="2" onclick="setPriority(this, 2)" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s; ${q.priority === 2 || q.priority === '2' ? 'border-color: var(--navy); background: var(--navy); color: white;' : ''}">2nd</button>
+          <button type="button" class="priority-btn" data-priority="3" onclick="setPriority(this, 3)" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s; ${q.priority === 3 || q.priority === '3' ? 'border-color: var(--navy); background: var(--navy); color: white;' : ''}">3rd</button>
+          <button type="button" class="priority-btn" data-priority="last" onclick="setPriority(this, 'last')" style="padding: 10px; border: 2px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s; ${q.priority === 'last' ? 'border-color: var(--navy); background: var(--navy); color: white;' : ''}">Last</button>
+        </div>
+        <input type="hidden" id="procPriority" value="${q.priority || 3}">
+        <small style="color: #666; margin-top: 8px; display: block;">Select when this question should appear during exam</small>
       </div>
       <div class="form-group">
         <label>Procedure Title *</label>
@@ -1764,6 +1801,7 @@ async function viewExam(examId) {
         }
       });
 
+      currentViewingExamId = examId;
       document.getElementById('viewModalTitle').textContent = exam.title;
       document.getElementById('modalBody').innerHTML = `
         <div style="background: linear-gradient(135deg, var(--navy) 0%, #1a3a52 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
@@ -1806,13 +1844,14 @@ async function viewExam(examId) {
   }
 }
 
-// Edit from view modal
+// Edit from view modal — opens the Edit Questions modal directly
+let currentViewingExamId = null;
+
 function editFromView() {
+  const examId = currentViewingExamId;
   closeViewModal();
-  const examTitle = document.getElementById('viewModalTitle').textContent;
-  const exam = allExams.find(e => e.title === examTitle);
-  if (exam) {
-    editExam(exam.id);
+  if (examId) {
+    openEditQuestionsModal(examId);
   }
 }
 
@@ -1823,6 +1862,8 @@ function closeViewModal() {
 
 // Take exam
 function takeExam(examId, examTitle) {
+  console.log('🔍 takeExam called with examId:', examId, 'type:', typeof examId, 'examTitle:', examTitle);
+  
   // Get priority settings from the form
   const prioritySettings = {
     'multiple_choice': parseInt(document.getElementById('priority_multiple_choice')?.value || 1),
@@ -1835,8 +1876,10 @@ function takeExam(examId, examTitle) {
   localStorage.setItem(`exam_priority_${examId}`, JSON.stringify(prioritySettings));
   console.log('✅ Priority settings saved for exam', examId, ':', prioritySettings);
   
-  // Use the universal take-exam page for all exams
-  window.location.href = `take-exam.html?id=${examId}`;
+  // Use the universal take-exam page for all exams - use absolute path
+  const url = `/pages/take-exam.html?id=${examId}`;
+  console.log('🔗 Navigating to:', url);
+  window.location.href = url;
 }
 
 // Show success message
@@ -1848,7 +1891,7 @@ function showNotification(message, type = 'success') {
   if (!container) {
     const newContainer = document.createElement('div');
     newContainer.id = 'notificationContainer';
-    newContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 3000;';
+    newContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 99999;';
     document.body.appendChild(newContainer);
   }
   
@@ -1899,3 +1942,487 @@ function showModalNotification(message, type = 'success') {
     showNotification(message, type);
   }
 }
+
+/* ══════════════════════════════════════
+   EDIT QUESTIONS MODAL (eqXxx namespace)
+══════════════════════════════════════ */
+let eqExamId = null;
+let eqExamData = null;
+let eqQuestions = [];
+let eqCurrentIdx = null;   // null=none, -1=new
+let eqCurrentType = null;
+let eqEnumItems = [], eqProcItems = [], eqIdItems = [];
+let eqFilterType = 'all';
+let eqHasUnsaved = false;
+
+// ── OPEN / CLOSE ──
+async function openEditQuestionsModal(examId) {
+  eqExamId = examId;
+  eqQuestions = [];
+  eqCurrentIdx = null;
+  eqCurrentType = null;
+  eqHasUnsaved = false;
+  eqFilterType = 'all';
+
+  document.getElementById('eqModalTitle').textContent = 'Edit Questions';
+  document.getElementById('eqModalMeta').textContent = 'Loading...';
+  document.getElementById('eqQList').innerHTML = '<div class="eq-q-empty">Loading questions...</div>';
+  eqShowEmpty();
+
+  document.getElementById('eqModalOverlay').classList.add('open');
+
+  try {
+    const res = await fetch(`/api/exams/${examId}`);
+    const data = await res.json();
+    if (!data.success) { showNotification('Failed to load exam', 'error'); return; }
+    eqExamData = data.exam;
+    document.getElementById('eqModalTitle').textContent = `Edit Questions — ${eqExamData.title}`;
+    eqQuestions = (data.questions || []).map(eqNormalize);
+    eqUpdateMeta();
+    eqRenderList();
+  } catch (e) {
+    showNotification('Error loading exam: ' + e.message, 'error');
+  }
+}
+
+function eqClose() {
+  if (eqHasUnsaved && !confirm('You have unsaved changes. Close anyway?')) return;
+  document.getElementById('eqModalOverlay').classList.remove('open');
+}
+
+// ── NORMALIZE ──
+function eqNormalize(q) {
+  const t = q.question_type || q.type;
+  if (t === 'multiple_choice') return { type:t, question_text:q.question_text||'', option_a:q.option_a||'', option_b:q.option_b||'', option_c:q.option_c||'', option_d:q.option_d||'', correct_answer:q.correct_answer||'', video_url:q.video_url||'', priority:q.priority||1 };
+  if (t === 'enumeration') { let items=[]; try{items=q.enumeration_items_json?JSON.parse(q.enumeration_items_json):(q.items||[]);}catch(e){} return { type:t, question_text:q.question_text||'', title:q.enumeration_title||q.title||'', instruction:q.enumeration_instruction||q.instruction||'', items, answer:q.enumeration_answer||'', video_url:q.video_url||'', priority:q.priority||2 }; }
+  if (t === 'procedure') { let items=[]; try{items=q.procedure_items_json?JSON.parse(q.procedure_items_json):(q.items||[]);}catch(e){} return { type:t, question_text:q.question_text||'', title:q.procedure_title||q.title||'', instruction:q.procedure_instructions||q.instruction||'', items, answer:q.procedure_answer||'', video_url:q.video_url||'', priority:q.priority||3 }; }
+  if (t === 'identification') { let items=[]; try{items=q.identification_items_json?JSON.parse(q.identification_items_json):(q.items||[]);}catch(e){} return { type:t, question_text:q.question_text||'', title:q.identification_title||q.title||'', instruction:q.identification_instruction||q.instruction||'', image_url:q.identification_image_url||q.image_url||'', image_base64:'', items, answer:q.identification_answer||'' }; }
+  return { type:t, question_text:q.question_text||'' };
+}
+
+// ── META ──
+function eqUpdateMeta() {
+  const counts = {};
+  eqQuestions.forEach(q => { counts[q.type]=(counts[q.type]||0)+1; });
+  const parts = Object.entries(counts).map(([t,c])=>`${c} ${eqTypeShort(t)}`);
+  document.getElementById('eqModalMeta').textContent = `${eqQuestions.length} question${eqQuestions.length!==1?'s':''} · ${parts.join(', ')||'none'}`;
+}
+
+function eqTypeShort(t) { return {multiple_choice:'MC',enumeration:'Enum',procedure:'Proc',identification:'ID'}[t]||t; }
+function eqTypeName(t) { return {multiple_choice:'Multiple Choice',enumeration:'Enumeration',procedure:'Procedure',identification:'Identification'}[t]||t; }
+function eqTypeEmoji(t) { return {multiple_choice:'📝',enumeration:'📋',procedure:'📖',identification:'🖼️'}[t]||'❓'; }
+function eqBadgeClass(t) { return {multiple_choice:'eq-badge-mc',enumeration:'eq-badge-enum',procedure:'eq-badge-proc',identification:'eq-badge-id'}[t]||''; }
+
+// ── LIST ──
+function eqRenderList() {
+  const search = (document.getElementById('eqSearch')?.value||'').toLowerCase();
+  const list = document.getElementById('eqQList');
+  const filtered = eqQuestions.map((q,i)=>({q,i})).filter(({q})=>{
+    if (eqFilterType!=='all' && q.type!==eqFilterType) return false;
+    if (search) { const txt=(q.question_text||q.title||'').toLowerCase(); if(!txt.includes(search)) return false; }
+    return true;
+  });
+  if (filtered.length===0) { list.innerHTML='<div class="eq-q-empty">No questions found</div>'; return; }
+  list.innerHTML = filtered.map(({q,i})=>`
+    <div class="eq-q-item ${eqCurrentIdx===i?'eq-active':''}" onclick="eqSelectQ(${i})">
+      <span class="eq-q-num">${i+1}</span>
+      <div class="eq-q-info">
+        <span class="eq-q-badge ${eqBadgeClass(q.type)}">${eqTypeEmoji(q.type)} ${eqTypeShort(q.type)}</span>
+        <div class="eq-q-text">${eqEsc(q.question_text||q.title||'(no text)')}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function eqFilterList() { eqRenderList(); }
+function eqSetTab(type, btn) {
+  eqFilterType = type;
+  document.querySelectorAll('.eq-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  eqRenderList();
+}
+
+// ── PANEL STATES ──
+function eqShowEmpty() {
+  document.getElementById('eqEmpty').style.display='block';
+  document.getElementById('eqTypePicker').style.display='none';
+  document.getElementById('eqFormWrap').style.display='none';
+}
+function eqShowTypePicker() {
+  eqCurrentIdx = -1;
+  eqCurrentType = null;
+  eqRenderList();
+  document.getElementById('eqEmpty').style.display='none';
+  document.getElementById('eqTypePicker').style.display='block';
+  document.getElementById('eqFormWrap').style.display='none';
+}
+function eqShowForm() {
+  document.getElementById('eqEmpty').style.display='none';
+  document.getElementById('eqTypePicker').style.display='none';
+  document.getElementById('eqFormWrap').style.display='flex';
+}
+
+// ── SELECT / NEW ──
+function eqSelectQ(idx) {
+  eqCurrentIdx = idx;
+  eqRenderList();
+  eqRenderForm(eqQuestions[idx], idx);
+}
+function eqStartNew(type) {
+  eqCurrentType = type;
+  eqCurrentIdx = -1;
+  eqRenderForm(eqBlank(type), -1);
+}
+function eqBlank(t) {
+  if (t==='multiple_choice') return {type:t,question_text:'',option_a:'',option_b:'',option_c:'',option_d:'',correct_answer:'',video_url:'',priority:1};
+  if (t==='enumeration') return {type:t,question_text:'',title:'',instruction:'',items:[],answer:'',video_url:'',priority:2};
+  if (t==='procedure') return {type:t,question_text:'',title:'',instruction:'',items:[],answer:'',video_url:'',priority:3};
+  if (t==='identification') return {type:t,question_text:'',title:'',instruction:'',image_url:'',image_base64:'',items:[],answer:''};
+  return {type:t,question_text:''};
+}
+
+// ── RENDER FORM ──
+function eqRenderForm(q, idx) {
+  eqShowForm();
+  const t = q.type;
+  const badge = document.getElementById('eqFormBadge');
+  badge.className = `eq-form-badge ${eqBadgeClass(t)}`;
+  badge.textContent = `${eqTypeEmoji(t)} ${eqTypeName(t)}`;
+  document.getElementById('eqFormTitle').textContent = idx===-1 ? 'New Question' : `Question #${idx+1}`;
+  document.getElementById('eqDeleteBtn').style.display = idx>=0 ? 'inline-block' : 'none';
+
+  if (t==='multiple_choice') eqRenderMC(q);
+  else if (t==='enumeration') eqRenderEnum(q);
+  else if (t==='procedure') eqRenderProc(q);
+  else if (t==='identification') eqRenderId(q);
+}
+
+function eqPriBtns(sel) {
+  return ['1st','2nd','3rd','Last'].map((lbl,i)=>{
+    const v = i<3?i+1:'last';
+    const a = String(sel)===String(v)?'eq-pri-active':'';
+    return `<button type="button" class="eq-pri-btn ${a}" onclick="eqPickPri(this,'${v}')">${lbl}</button>`;
+  }).join('');
+}
+function eqPickPri(btn, val) {
+  btn.closest('.eq-priority-row').querySelectorAll('.eq-pri-btn').forEach(b=>b.classList.remove('eq-pri-active'));
+  btn.classList.add('eq-pri-active');
+  btn.closest('.eq-priority-row').nextElementSibling.value = val;
+}
+
+function eqRenderMC(q) {
+  document.getElementById('eqFormBody').innerHTML = `
+    <div class="eq-field"><label>Question Priority</label>
+      <div class="eq-priority-row">${eqPriBtns(q.priority||1)}</div>
+      <input type="hidden" id="eq_priority" value="${q.priority||1}"/>
+    </div>
+    <div class="eq-field"><label>Question Text *</label>
+      <textarea id="eq_question_text" placeholder="Enter the question...">${eqEsc(q.question_text)}</textarea>
+    </div>
+    <div class="eq-field"><label>Answer Options *</label>
+      <div class="eq-options-grid">
+        <div class="eq-opt-row"><span class="eq-opt-lbl">A</span><input id="eq_option_a" placeholder="Option A" value="${eqEsc(q.option_a)}"/></div>
+        <div class="eq-opt-row"><span class="eq-opt-lbl">B</span><input id="eq_option_b" placeholder="Option B" value="${eqEsc(q.option_b)}"/></div>
+        <div class="eq-opt-row"><span class="eq-opt-lbl">C</span><input id="eq_option_c" placeholder="Option C (optional)" value="${eqEsc(q.option_c||'')}"/></div>
+        <div class="eq-opt-row"><span class="eq-opt-lbl">D</span><input id="eq_option_d" placeholder="Option D (optional)" value="${eqEsc(q.option_d||'')}"/></div>
+      </div>
+    </div>
+    <div class="eq-field"><label>Correct Answer *</label>
+      <select id="eq_correct_answer">
+        <option value="">Select correct answer...</option>
+        ${['A','B','C','D'].map(v=>`<option value="${v}" ${q.correct_answer===v?'selected':''}>${v}</option>`).join('')}
+      </select>
+    </div>
+    <div class="eq-field"><label>Video URL (Optional)</label>
+      <input id="eq_video_url" type="url" placeholder="https://..." value="${eqEsc(q.video_url||'')}"/>
+    </div>
+  `;
+}
+
+function eqRenderEnum(q) {
+  eqEnumItems = JSON.parse(JSON.stringify(q.items||[]));
+  document.getElementById('eqFormBody').innerHTML = `
+    <div class="eq-field"><label>Question Priority</label>
+      <div class="eq-priority-row">${eqPriBtns(q.priority||2)}</div>
+      <input type="hidden" id="eq_priority" value="${q.priority||2}"/>
+    </div>
+    <div class="eq-row">
+      <div class="eq-field"><label>Enumeration Title *</label><input id="eq_title" placeholder="e.g., List the 5S steps..." value="${eqEsc(q.title||'')}"/></div>
+      <div class="eq-field"><label>Question Text *</label><input id="eq_question_text" placeholder="Enter the question..." value="${eqEsc(q.question_text||'')}"/></div>
+    </div>
+    <div class="eq-field"><label>Instruction *</label><textarea id="eq_instruction" placeholder="Enter instructions...">${eqEsc(q.instruction||'')}</textarea></div>
+    <div class="eq-items-box">
+      <div class="eq-items-head eq-enum-h">📋 Enumeration Items <span id="eqEnumCnt" style="font-weight:400;font-size:11px;"></span></div>
+      <div class="eq-items-body" id="eqEnumList"></div>
+      <button class="eq-add-item-btn" onclick="eqAddEnumItem()">➕ Add Item</button>
+    </div>
+    <div class="eq-field"><label>Video URL (Optional)</label><input id="eq_video_url" type="url" placeholder="https://..." value="${eqEsc(q.video_url||'')}"/></div>
+  `;
+  eqRenderEnumItems();
+}
+
+function eqRenderProc(q) {
+  eqProcItems = JSON.parse(JSON.stringify(q.items||[]));
+  document.getElementById('eqFormBody').innerHTML = `
+    <div class="eq-field"><label>Question Priority</label>
+      <div class="eq-priority-row">${eqPriBtns(q.priority||3)}</div>
+      <input type="hidden" id="eq_priority" value="${q.priority||3}"/>
+    </div>
+    <div class="eq-row">
+      <div class="eq-field"><label>Procedure Title *</label><input id="eq_title" placeholder="e.g., Assembly Procedure..." value="${eqEsc(q.title||'')}"/></div>
+      <div class="eq-field"><label>Question Text *</label><input id="eq_question_text" placeholder="Enter the question..." value="${eqEsc(q.question_text||'')}"/></div>
+    </div>
+    <div class="eq-field"><label>Instruction *</label><textarea id="eq_instruction" placeholder="Enter instructions...">${eqEsc(q.instruction||'')}</textarea></div>
+    <div class="eq-items-box">
+      <div class="eq-items-head eq-proc-h">📖 Procedure Steps <span id="eqProcCnt" style="font-weight:400;font-size:11px;"></span></div>
+      <div class="eq-items-body" id="eqProcList"></div>
+      <button class="eq-add-item-btn" onclick="eqAddProcItem()">➕ Add Step</button>
+    </div>
+    <div class="eq-field"><label>Video URL (Optional)</label><input id="eq_video_url" type="url" placeholder="https://..." value="${eqEsc(q.video_url||'')}"/></div>
+  `;
+  eqRenderProcItems();
+}
+
+function eqRenderId(q) {
+  eqIdItems = JSON.parse(JSON.stringify(q.items||[]));
+  document.getElementById('eqFormBody').innerHTML = `
+    <div class="eq-row">
+      <div class="eq-field"><label>Identification Title *</label><input id="eq_title" placeholder="e.g., Identify the parts..." value="${eqEsc(q.title||'')}"/></div>
+      <div class="eq-field"><label>Question Text *</label><input id="eq_question_text" placeholder="Enter the question..." value="${eqEsc(q.question_text||'')}"/></div>
+    </div>
+    <div class="eq-field"><label>Instruction *</label><textarea id="eq_instruction" placeholder="Enter instructions...">${eqEsc(q.instruction||'')}</textarea></div>
+    <div class="eq-field"><label>Reference Image (Optional)</label>
+      <input type="file" id="eq_image_file" accept="image/*" onchange="eqHandleImage(event)"/>
+      <div id="eqImgPreview" class="eq-img-preview">${q.image_url?`<img src="${q.image_url}"/>`:(q.image_base64?`<img src="${q.image_base64}"/>`:'')}</div>
+      <input type="hidden" id="eq_image_url" value="${eqEsc(q.image_url||'')}"/>
+      <input type="hidden" id="eq_image_base64" value=""/>
+    </div>
+    <div class="eq-items-box">
+      <div class="eq-items-head eq-id-h">🖼️ Identification Items <span id="eqIdCnt" style="font-weight:400;font-size:11px;"></span></div>
+      <div class="eq-items-body" id="eqIdList"></div>
+      <button class="eq-add-item-btn" onclick="eqAddIdItem()">➕ Add Item</button>
+    </div>
+  `;
+  eqRenderIdItems();
+}
+
+// ── ITEMS ──
+function eqAddEnumItem() { eqEnumItems.push({id:Date.now(),number:eqEnumItems.length+1,text:'',answer:''}); eqRenderEnumItems(); }
+function eqRemoveEnumItem(i) { eqEnumItems.splice(i,1); eqEnumItems.forEach((it,j)=>it.number=j+1); eqRenderEnumItems(); }
+function eqUpdateEnumItem(i,f,v) { if(eqEnumItems[i]) eqEnumItems[i][f]=v; }
+function eqRenderEnumItems() {
+  const c=document.getElementById('eqEnumList'); if(!c) return;
+  const cnt=document.getElementById('eqEnumCnt'); if(cnt) cnt.textContent=`${eqEnumItems.length} item${eqEnumItems.length!==1?'s':''}`;
+  if(!eqEnumItems.length){c.innerHTML='<p style="color:#999;text-align:center;padding:10px;font-size:12px;">No items yet</p>';return;}
+  c.innerHTML=eqEnumItems.map((it,i)=>`
+    <div class="eq-item-row eq-2col">
+      <div><div class="eq-item-lbl">Item ${it.number} — Text</div><input placeholder="e.g., SORT OR SEIRI" value="${eqEsc(it.text)}" oninput="eqUpdateEnumItem(${i},'text',this.value)" style="width:100%;"/></div>
+      <div><div class="eq-item-lbl">Answer</div><input placeholder="e.g., SEIRI" value="${eqEsc(it.answer)}" oninput="eqUpdateEnumItem(${i},'answer',this.value)" style="width:100%;"/></div>
+      <button class="eq-rm-btn" onclick="eqRemoveEnumItem(${i})">✕</button>
+    </div>`).join('');
+}
+
+function eqAddProcItem() { eqProcItems.push({id:Date.now(),number:eqProcItems.length+1,text:'',answer:''}); eqRenderProcItems(); }
+function eqRemoveProcItem(i) { eqProcItems.splice(i,1); eqProcItems.forEach((it,j)=>it.number=j+1); eqRenderProcItems(); }
+function eqUpdateProcItem(i,f,v) { if(eqProcItems[i]) eqProcItems[i][f]=f==='answer'?v.toUpperCase():v; }
+function eqRenderProcItems() {
+  const c=document.getElementById('eqProcList'); if(!c) return;
+  const cnt=document.getElementById('eqProcCnt'); if(cnt) cnt.textContent=`${eqProcItems.length} step${eqProcItems.length!==1?'s':''}`;
+  if(!eqProcItems.length){c.innerHTML='<p style="color:#999;text-align:center;padding:10px;font-size:12px;">No steps yet</p>';return;}
+  c.innerHTML=eqProcItems.map((it,i)=>`
+    <div class="eq-item-row eq-2col">
+      <div><div class="eq-item-lbl">Step ${it.number} — Description</div><textarea placeholder="Describe this step..." oninput="eqUpdateProcItem(${i},'text',this.value)">${eqEsc(it.text)}</textarea></div>
+      <div><div class="eq-item-lbl">Answer (UPPERCASE)</div><input placeholder="e.g., A1, B2" value="${eqEsc(it.answer)}" oninput="eqUpdateProcItem(${i},'answer',this.value.toUpperCase());this.value=this.value.toUpperCase();" style="width:100%;text-transform:uppercase;"/></div>
+      <button class="eq-rm-btn" onclick="eqRemoveProcItem(${i})">✕</button>
+    </div>`).join('');
+}
+
+function eqAddIdItem() { eqIdItems.push({id:Date.now(),number:eqIdItems.length+1,text:'',answer:'',points:1}); eqRenderIdItems(); }
+function eqRemoveIdItem(i) { eqIdItems.splice(i,1); eqIdItems.forEach((it,j)=>it.number=j+1); eqRenderIdItems(); }
+function eqUpdateIdItem(i,f,v) { if(eqIdItems[i]) eqIdItems[i][f]=f==='answer'?v.toUpperCase():v; }
+function eqRenderIdItems() {
+  const c=document.getElementById('eqIdList'); if(!c) return;
+  const cnt=document.getElementById('eqIdCnt'); if(cnt) cnt.textContent=`${eqIdItems.length} item${eqIdItems.length!==1?'s':''}`;
+  if(!eqIdItems.length){c.innerHTML='<p style="color:#999;text-align:center;padding:10px;font-size:12px;">No items yet</p>';return;}
+  c.innerHTML=eqIdItems.map((it,i)=>`
+    <div class="eq-item-row eq-2col">
+      <div><div class="eq-item-lbl">Item ${it.number} — Label</div><input placeholder="e.g., Part A" value="${eqEsc(it.text)}" oninput="eqUpdateIdItem(${i},'text',this.value)" style="width:100%;"/></div>
+      <div><div class="eq-item-lbl">Answer (UPPERCASE)</div><input placeholder="e.g., BOLT" value="${eqEsc(it.answer)}" oninput="eqUpdateIdItem(${i},'answer',this.value.toUpperCase());this.value=this.value.toUpperCase();" style="width:100%;text-transform:uppercase;"/></div>
+      <button class="eq-rm-btn" onclick="eqRemoveIdItem(${i})">✕</button>
+    </div>`).join('');
+}
+
+function eqHandleImage(event) {
+  const file=event.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    document.getElementById('eqImgPreview').innerHTML=`<img src="${e.target.result}"/>`;
+    document.getElementById('eq_image_base64').value=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── SAVE CURRENT QUESTION ──
+function eqSaveCurrent() {
+  const type = eqCurrentIdx===-1 ? eqCurrentType : eqQuestions[eqCurrentIdx]?.type;
+  if (!type) { showNotification('No question type selected','error'); return; }
+  let q = null;
+
+  if (type==='multiple_choice') {
+    const text=document.getElementById('eq_question_text')?.value.trim();
+    const optA=document.getElementById('eq_option_a')?.value.trim();
+    const optB=document.getElementById('eq_option_b')?.value.trim();
+    const correct=document.getElementById('eq_correct_answer')?.value;
+    if (!text||!optA||!optB||!correct) { showNotification('Please fill in all required fields','error'); return; }
+    q={type,question_text:text,option_a:optA,option_b:optB,option_c:document.getElementById('eq_option_c')?.value.trim()||'',option_d:document.getElementById('eq_option_d')?.value.trim()||'',correct_answer:correct,video_url:document.getElementById('eq_video_url')?.value.trim()||'',priority:document.getElementById('eq_priority')?.value||1};
+  } else if (type==='enumeration') {
+    const title=document.getElementById('eq_title')?.value.trim();
+    const text=document.getElementById('eq_question_text')?.value.trim();
+    const instr=document.getElementById('eq_instruction')?.value.trim();
+    if (!title||!text||!instr) { showNotification('Please fill in all required fields','error'); return; }
+    if (!eqEnumItems.length) { showNotification('Please add at least one item','error'); return; }
+    for (const it of eqEnumItems) { if (!it.text.trim()||!it.answer.trim()) { showNotification('All items must have text and answer','error'); return; } }
+    q={type,title,question_text:text,instruction:instr,items:eqEnumItems,count:eqEnumItems.length,answer:eqEnumItems.map(i=>i.answer).join(' | '),video_url:document.getElementById('eq_video_url')?.value.trim()||'',priority:document.getElementById('eq_priority')?.value||2};
+  } else if (type==='procedure') {
+    const title=document.getElementById('eq_title')?.value.trim();
+    const text=document.getElementById('eq_question_text')?.value.trim();
+    const instr=document.getElementById('eq_instruction')?.value.trim();
+    if (!title||!text||!instr) { showNotification('Please fill in all required fields','error'); return; }
+    if (!eqProcItems.length) { showNotification('Please add at least one step','error'); return; }
+    for (const it of eqProcItems) { if (!it.text.trim()||!it.answer.trim()) { showNotification('All steps must have description and answer','error'); return; } }
+    q={type,title,question_text:text,instruction:instr,items:eqProcItems,count:eqProcItems.length,answer:eqProcItems.map(i=>i.answer).join(' | '),video_url:document.getElementById('eq_video_url')?.value.trim()||'',priority:document.getElementById('eq_priority')?.value||3};
+  } else if (type==='identification') {
+    const title=document.getElementById('eq_title')?.value.trim();
+    const text=document.getElementById('eq_question_text')?.value.trim();
+    const instr=document.getElementById('eq_instruction')?.value.trim();
+    if (!title||!text||!instr) { showNotification('Please fill in all required fields','error'); return; }
+    if (!eqIdItems.length) { showNotification('Please add at least one item','error'); return; }
+    for (const it of eqIdItems) { if (!it.text.trim()||!it.answer.trim()) { showNotification('All items must have label and answer','error'); return; } }
+    q={type,title,question_text:text,instruction:instr,image_url:document.getElementById('eq_image_url')?.value||'',image_base64:document.getElementById('eq_image_base64')?.value||'',items:eqIdItems,count:eqIdItems.length,answer:eqIdItems.map(i=>i.answer).join(' | ')};
+  }
+
+  if (!q) return;
+  if (eqCurrentIdx===-1) {
+    // Duplicate check: prevent adding a question with identical text
+    const isDuplicate = eqQuestions.some((existing, idx) => {
+      const existingText = (existing.question_text || existing.title || '').trim().toLowerCase();
+      const newText = (q.question_text || q.title || '').trim().toLowerCase();
+      return existing.type === q.type && existingText && existingText === newText;
+    });
+    if (isDuplicate) { showNotification('A question with the same text already exists', 'error'); return; }
+    eqQuestions.push(q); eqCurrentIdx=eqQuestions.length-1;
+  } else { eqQuestions[eqCurrentIdx]=q; }
+  eqHasUnsaved=true;
+  eqUpdateMeta();
+  eqRenderList();
+  eqRenderForm(eqQuestions[eqCurrentIdx], eqCurrentIdx);
+  showNotification('Question saved — click "Save All Changes" to persist','info');
+}
+
+function eqDeleteCurrent() {
+  if (eqCurrentIdx<0||eqCurrentIdx>=eqQuestions.length) return;
+  if (!confirm(`Delete Question #${eqCurrentIdx+1}?`)) return;
+  eqQuestions.splice(eqCurrentIdx,1);
+  eqCurrentIdx=null; eqHasUnsaved=true;
+  eqUpdateMeta(); eqRenderList(); eqShowEmpty();
+  showNotification('Question deleted — click "Save All Changes" to persist','info');
+}
+
+function eqCancelEdit() { eqCurrentIdx=null; eqRenderList(); eqShowEmpty(); }
+
+// ── SAVE ALL ──
+async function eqSaveAll() {
+  if (!eqExamId) { showNotification('No exam selected', 'error'); return; }
+  if (!eqExamData) { showNotification('Exam data not loaded', 'error'); return; }
+  const btn = document.querySelector('.eq-save-all-btn');
+  btn.textContent = '⏳ Saving...'; btn.disabled = true;
+  try {
+    const converted = eqQuestions.map(q => {
+      if (q.type === 'multiple_choice') {
+        return {
+          type: 'multiple_choice',
+          question: q.question_text || '',
+          options: [q.option_a || '', q.option_b || '', q.option_c || '', q.option_d || ''],
+          correctAnswer: q.correct_answer || 'A',
+          video_url: q.video_url || ''
+        };
+      }
+      if (q.type === 'enumeration') {
+        const items = q.items || [];
+        return {
+          type: 'enumeration',
+          question: q.question_text || '',
+          title: q.title || '',
+          instruction: q.instruction || '',
+          items,
+          count: items.length,
+          answer: items.map(i => i.answer).join(' | '),
+          items_json: JSON.stringify(items)
+        };
+      }
+      if (q.type === 'procedure') {
+        const items = q.items || [];
+        return {
+          type: 'procedure',
+          question: q.question_text || '',
+          title: q.title || '',
+          content: q.instruction || '',
+          instructions: q.instruction || '',
+          items,
+          count: items.length,
+          answer: items.map(i => i.answer).join(' | '),
+          items_json: JSON.stringify(items)
+        };
+      }
+      if (q.type === 'identification') {
+        const items = q.items || [];
+        return {
+          type: 'identification',
+          question_text: q.question_text || '',
+          title: q.title || '',
+          instruction: q.instruction || '',
+          image_base64: q.image_base64 || '',
+          image_url: q.image_url || '',
+          items,
+          count: items.length,
+          answer: items.map(i => i.answer).join(' | '),
+          items_json: JSON.stringify(items)
+        };
+      }
+      return q;
+    });
+
+    const payload = {
+      title: eqExamData.title,
+      course_title: eqExamData.title,
+      description: eqExamData.description || '',
+      question_count: converted.length,
+      questions: converted
+    };
+
+    const res = await fetch(`/api/exams/${eqExamId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      eqHasUnsaved = false;
+      showNotification('All changes saved successfully!', 'success');
+      loadAllExams();
+    } else {
+      showNotification('Save failed: ' + (data.message || 'Unknown error'), 'error');
+      console.error('Save failed:', data);
+    }
+  } catch (e) {
+    showNotification('Error saving: ' + e.message, 'error');
+    console.error('Save error:', e);
+  } finally {
+    btn.textContent = '💾 Save All Changes';
+    btn.disabled = false;
+  }
+}
+
+// ── UTIL ──
+function eqEsc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }

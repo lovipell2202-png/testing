@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   examId = urlParams.get('id');
   if (!examId) {
     alert('No exam ID provided');
-    window.location.href = '/exams/all-exams.html';
+    window.location.href = '/pages/all-exams.html';
     return;
   }
   loadEmployees();

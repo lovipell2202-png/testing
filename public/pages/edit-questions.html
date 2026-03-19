@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit Questions - NSB Engineering</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/styles.css"/>
+  <link rel="stylesheet" href="/css/edit-questions.css"/>
+</head>
+<body>
+<div class="eq-layout">
+  <!-- SIDEBAR -->
+  <aside class="eq-sidebar">
+    <div class="eq-sidebar-header">
+      <a href="/pages/all-exams.html" class="eq-back-btn">← Back to Exams</a>
+      <h2 class="eq-sidebar-title" id="examNameLabel">Loading...</h2>
+      <div class="eq-sidebar-meta" id="examMeta"></div>
+    </div>
+    <div class="eq-sidebar-toolbar">
+      <input type="text" id="qSearch" class="eq-search" placeholder="🔍 Search questions..."/>
+      <div class="eq-type-filters">
+        <button class="eq-filter-btn active" data-type="all" onclick="filterByType('all',this)">All</button>
+        <button class="eq-filter-btn" data-type="multiple_choice" onclick="filterByType('multiple_choice',this)">MC</button>
+        <button class="eq-filter-btn" data-type="enumeration" onclick="filterByType('enumeration',this)">Enum</button>
+        <button class="eq-filter-btn" data-type="procedure" onclick="filterByType('procedure',this)">Proc</button>
+        <button class="eq-filter-btn" data-type="identification" onclick="filterByType('identification',this)">ID</button>
+      </div>
+    </div>
+    <div class="eq-q-list" id="questionList"></div>
+    <div class="eq-sidebar-footer">
+      <button class="eq-add-btn" onclick="openAddPanel()">➕ Add Question</button>
+      <button class="eq-save-btn" onclick="saveAllChanges()">💾 Save All Changes</button>
+    </div>
+  </aside>
+  <!-- MAIN EDITOR PANEL -->
+  <main class="eq-main" id="editorMain">
+    <div class="eq-empty-state" id="emptyState">
+      <div class="eq-empty-icon">✏️</div>
+      <h3>Select a question to edit</h3>
+      <p>Click any question from the list on the left, or add a new one.</p>
+    </div>
+    <!-- ADD TYPE PICKER -->
+    <div class="eq-type-picker" id="typePicker" style="display:none;">
+      <h3 class="eq-panel-title">Choose Question Type</h3>
+      <div class="eq-type-grid">
+        <button class="eq-type-card mc" onclick="startNewQuestion('multiple_choice')">
+          <span class="eq-type-icon">📝</span>
+          <span class="eq-type-label">Multiple Choice</span>
+          <span class="eq-type-desc">4 options, 1 correct answer</span>
+        </button>
+        <button class="eq-type-card enum" onclick="startNewQuestion('enumeration')">
+          <span class="eq-type-icon">📋</span>
+          <span class="eq-type-label">Enumeration</span>
+          <span class="eq-type-desc">List items with answers</span>
+        </button>
+        <button class="eq-type-card proc" onclick="startNewQuestion('procedure')">
+          <span class="eq-type-icon">📖</span>
+          <span class="eq-type-label">Procedure</span>
+          <span class="eq-type-desc">Step-by-step procedure</span>
+        </button>
+        <button class="eq-type-card id" onclick="startNewQuestion('identification')">
+          <span class="eq-type-icon">🖼️</span>
+          <span class="eq-type-label">Identification</span>
+          <span class="eq-type-desc">Image-based identification</span>
+        </button>
+      </div>
+    </div>
+    <!-- QUESTION EDITOR FORM -->
+    <div class="eq-editor" id="questionEditor" style="display:none;">
+      <div class="eq-editor-header">
+        <div class="eq-editor-badge" id="editorBadge"></div>
+        <h3 class="eq-panel-title" id="editorTitle">Edit Question</h3>
+        <div class="eq-editor-actions">
+          <button class="eq-btn eq-btn-danger" id="deleteQBtn" onclick="deleteCurrentQuestion()" style="display:none;">🗑️ Delete</button>
+          <button class="eq-btn eq-btn-success" onclick="saveCurrentQuestion()">✓ Save Question</button>
+          <button class="eq-btn eq-btn-secondary" onclick="cancelEdit()">✕ Cancel</button>
+        </div>
+      </div>
+      <div class="eq-editor-body" id="editorBody"></div>
+    </div>
+  </main>
+</div>
+<!-- TOAST -->
+<div id="eqToast" class="eq-toast"></div>
+<script src="/src/edit-questions.js"></script>
+</body>
+</html>

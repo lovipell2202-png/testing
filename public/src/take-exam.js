@@ -20,16 +20,53 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+// Load logo as base64 data URL for PDF embedding
+async function getLogoAsBase64() {
+  try {
+    const response = await fetch('/images/NSB-LOGO.png');
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (err) {
+    console.error('❌ Error loading logo:', err);
+    return null;
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('📄 take-exam.js DOMContentLoaded event fired');
+  console.log('🔗 Current URL:', window.location.href);
+  console.log('🔍 Search params:', window.location.search);
+  
   const urlParams = new URLSearchParams(window.location.search);
+  console.log('📋 URLSearchParams object:', urlParams);
+  
+  // Try to get exam ID first, then fall back to course name
   examId = urlParams.get('id');
-  if (!examId) {
-    alert('No exam ID provided');
-    window.location.href = '/exams/all-exams.html';
+  courseName = urlParams.get('course');
+  
+  console.log('✅ Extracted examId:', examId, 'type:', typeof examId);
+  console.log('✅ Extracted courseName:', courseName, 'type:', typeof courseName);
+  
+  if (!examId && !courseName) {
+    console.error('❌ No exam ID or course name found in URL');
+    alert('No exam ID or course provided');
+    window.location.href = '/pages/all-exams.html';
     return;
   }
+  
+  console.log('✅ Exam parameters are valid, proceeding with loading');
   loadEmployees();
-  loadExamDetails();
+  
+  if (examId) {
+    loadExamDetails();
+  } else if (courseName) {
+    loadExamByCourse();
+  }
 });
 
 async function loadEmployees() {
@@ -68,6 +105,42 @@ async function loadExamDetails() {
     }
   } catch (err) {
     console.error('Error loading exam details:', err);
+  }
+}
+
+async function loadExamByCourse() {
+  try {
+    console.log('📚 Loading exam by course name:', courseName);
+    // Fetch all exams and find the one matching the course name
+    const response = await fetch(API + '/api/exams');
+    const data = await response.json();
+    
+    if (data.success && Array.isArray(data.data)) {
+      // Find exam by course title
+      const exam = data.data.find(e => e.title === courseName || e.title === decodeURIComponent(courseName));
+      
+      if (exam) {
+        console.log('✅ Found exam:', exam);
+        examId = exam.id;
+        document.getElementById('examTitle').textContent = exam.title || 'Exam';
+        document.getElementById('examDescription').textContent = exam.description || '';
+        examTitle = exam.title || 'Exam';
+        // Now load the questions
+        loadExamQuestions();
+      } else {
+        console.error('❌ No exam found for course:', courseName);
+        alert('No exam found for course: ' + courseName);
+        window.location.href = '/pages/all-exams.html';
+      }
+    } else {
+      console.error('❌ Failed to load exams');
+      alert('Failed to load exams');
+      window.location.href = '/pages/all-exams.html';
+    }
+  } catch (err) {
+    console.error('❌ Error loading exam by course:', err);
+    alert('Error loading exam: ' + err.message);
+    window.location.href = '/pages/all-exams.html';
   }
 }
 
@@ -332,8 +405,8 @@ async function submitExam() {
         items.forEach((item, idx) => {
           const itemPoints = 1;
           totalPoints += itemPoints;
-          sectionScores.procedure += itemPoints;
           if (userAnswers[idx] && userAnswers[idx].toUpperCase().trim() === (item.answer || '').toUpperCase().trim()) {
+            sectionScores.procedure += itemPoints;
             totalScore += itemPoints;
           }
         });
@@ -343,7 +416,84 @@ async function submitExam() {
   
   const percentage = totalPoints > 0 ? Math.round((totalScore / totalPoints) * 100) : 0;
   const passed = percentage >= 70;
-  
+
+  // Build per-question detail for review
+  const questionDetails = [];
+  currentQuestions.forEach(question => {
+    const qType = question.question_type;
+    if (qType === 'multiple_choice') {
+      const userAns = currentAnswers[question.id] || '';
+      const correct = question.correct_answer || '';
+      questionDetails.push({
+        question_id: question.id,
+        question_type: qType,
+        question_text: question.question_text,
+        user_answer: userAns,
+        correct_answer: correct,
+        is_correct: userAns === correct,
+        option_a: question.option_a,
+        option_b: question.option_b,
+        option_c: question.option_c,
+        option_d: question.option_d,
+        points: question.points || 1
+      });
+    } else if (qType === 'enumeration') {
+      const userAnswers = currentAnswers[question.id] || [];
+      try {
+        const items = question.enumeration_items_json ? JSON.parse(question.enumeration_items_json) : [];
+        items.forEach((item, idx) => {
+          const userAns = (userAnswers[idx] || '').toUpperCase().trim();
+          const correct = (item.answer || '').toUpperCase().trim();
+          questionDetails.push({
+            question_id: question.id,
+            question_type: qType,
+            question_text: (question.enumeration_title || question.question_text) + ' — Item ' + (idx + 1) + ': ' + (item.text || ''),
+            user_answer: userAns,
+            correct_answer: correct,
+            is_correct: userAns === correct,
+            points: item.points || 1
+          });
+        });
+      } catch (e) {}
+    } else if (qType === 'identification') {
+      const userAnswers = currentAnswers[question.id] || [];
+      try {
+        const items = question.identification_items_json ? JSON.parse(question.identification_items_json) : [];
+        items.forEach((item, idx) => {
+          const userAns = (userAnswers[idx] || '').toUpperCase().trim();
+          const correct = (item.answer || '').toUpperCase().trim();
+          questionDetails.push({
+            question_id: question.id,
+            question_type: qType,
+            question_text: (question.identification_title || question.question_text) + ' — Item ' + (idx + 1) + ': ' + (item.text || ''),
+            user_answer: userAns,
+            correct_answer: correct,
+            is_correct: userAns === correct,
+            points: item.points || 1
+          });
+        });
+      } catch (e) {}
+    } else if (qType === 'procedure') {
+      const userAnswers = currentAnswers[question.id] || [];
+      try {
+        const items = question.procedure_items_json ? JSON.parse(question.procedure_items_json) : [];
+        items.forEach((item, idx) => {
+          const userAns = (userAnswers[idx] || '').toUpperCase().trim();
+          const correct = (item.answer || '').toUpperCase().trim();
+          questionDetails.push({
+            question_id: question.id,
+            question_type: qType,
+            question_text: (question.procedure_title || question.question_text) + ' — Step ' + (idx + 1) + ': ' + (item.text || ''),
+            user_answer: userAns,
+            correct_answer: correct,
+            is_correct: userAns === correct,
+            points: 1
+          });
+        });
+      } catch (e) {}
+    }
+  });
+
   try {
     const response = await fetch(API + '/api/exam-results', {
       method: 'POST',
@@ -355,7 +505,8 @@ async function submitExam() {
         total_points: Math.round(totalPoints * 100) / 100,
         percentage: percentage,
         passed: passed,
-        answers: currentAnswers
+        answers: currentAnswers,
+        question_details: questionDetails
       })
     });
     const data = await response.json();
@@ -370,20 +521,26 @@ async function submitExam() {
 function displayResults(results) {
   const scorePercentage = results.percentage;
   const passed = results.passed;
-  const mcQuestions = currentQuestions.filter(q => q.question_type === 'multiple_choice').length;
-  const enumQuestions = currentQuestions.filter(q => q.question_type === 'enumeration').length;
-  const procQuestions = currentQuestions.filter(q => q.question_type === 'procedure').length;
-  const idQuestions = currentQuestions.filter(q => q.question_type === 'identification').length;
   
-  // Calculate total items for enumeration and identification
+  // Calculate total items for each section
+  let mcItems = 0;
   let enumItems = 0;
+  let procItems = 0;
   let idItems = 0;
+  
   currentQuestions.forEach(q => {
-    if (q.question_type === 'enumeration') {
+    if (q.question_type === 'multiple_choice') {
+      mcItems += 1;
+    } else if (q.question_type === 'enumeration') {
       try {
         const items = q.enumeration_items_json ? JSON.parse(q.enumeration_items_json) : [];
         enumItems += items.length || 0;
       } catch(e) { enumItems += 0; }
+    } else if (q.question_type === 'procedure') {
+      try {
+        const items = q.procedure_items_json ? JSON.parse(q.procedure_items_json) : [];
+        procItems += items.length || 0;
+      } catch(e) { procItems += 0; }
     } else if (q.question_type === 'identification') {
       try {
         const items = q.identification_items_json ? JSON.parse(q.identification_items_json) : [];
@@ -401,18 +558,31 @@ function displayResults(results) {
   const resultMessage = document.getElementById('resultMessage');
   let resultHtml = '<div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px;">';
   resultHtml += '<h3 style="margin: 0 0 20px 0; color: #333; font-size: 16px;">Score Breakdown by Section:</h3>';
-  if (mcQuestions > 0) {
-    resultHtml += '<div style="margin-bottom: 15px; padding: 15px; background: #e3f2fd; border-radius: 6px; border-left: 4px solid #2196f3;"><div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-weight: 600; color: #1565c0;">Multiple Choice (' + mcQuestions + ' questions)</span><span style="font-size: 18px; font-weight: 700; color: #2196f3;">' + sectionScores.multiple_choice + '/' + sectionTotals.multiple_choice + '</span></div></div>';
+  
+  if (mcItems > 0) {
+    resultHtml += '<div style="margin-bottom: 15px; padding: 15px; background: #e3f2fd; border-radius: 6px; border-left: 4px solid #2196f3;">';
+    resultHtml += '<div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-weight: 600; color: #1565c0;">Multiple Choice ' + mcItems + ' Items</span><span style="font-size: 18px; font-weight: 700; color: #2196f3;">' + sectionScores.multiple_choice + '/' + sectionTotals.multiple_choice + '</span></div>';
+    resultHtml += '</div>';
   }
-  if (enumQuestions > 0) {
-    resultHtml += '<div style="margin-bottom: 15px; padding: 15px; background: #f3e5f5; border-radius: 6px; border-left: 4px solid #9c27b0;"><div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-weight: 600; color: #6a1b9a;">Enumeration (' + enumQuestions + ' questions)</span><span style="font-size: 18px; font-weight: 700; color: #9c27b0;">' + sectionScores.enumeration + '/' + sectionTotals.enumeration + '</span></div></div>';
+  
+  if (enumItems > 0) {
+    resultHtml += '<div style="margin-bottom: 15px; padding: 15px; background: #f3e5f5; border-radius: 6px; border-left: 4px solid #9c27b0;">';
+    resultHtml += '<div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-weight: 600; color: #6a1b9a;">Enumeration ' + enumItems + ' Items</span><span style="font-size: 18px; font-weight: 700; color: #9c27b0;">' + sectionScores.enumeration + '/' + sectionTotals.enumeration + '</span></div>';
+    resultHtml += '</div>';
   }
-  if (procQuestions > 0) {
-    resultHtml += '<div style="margin-bottom: 15px; padding: 15px; background: #fff3e0; border-radius: 6px; border-left: 4px solid #ff9800;"><div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-weight: 600; color: #e65100;">Procedure (' + procQuestions + ' questions)</span><span style="font-size: 18px; font-weight: 700; color: #ff9800;">' + sectionScores.procedure + '/' + sectionTotals.procedure + '</span></div></div>';
+  
+  if (procItems > 0) {
+    resultHtml += '<div style="margin-bottom: 15px; padding: 15px; background: #fff3e0; border-radius: 6px; border-left: 4px solid #ff9800;">';
+    resultHtml += '<div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-weight: 600; color: #e65100;">Procedure Details ' + procItems + ' Items</span><span style="font-size: 18px; font-weight: 700; color: #ff9800;">' + sectionScores.procedure + '/' + sectionTotals.procedure + '</span></div>';
+    resultHtml += '</div>';
   }
-  if (idQuestions > 0) {
-    resultHtml += '<div style="margin-bottom: 15px; padding: 15px; background: #e0f2f1; border-radius: 6px; border-left: 4px solid #009688;"><div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-weight: 600; color: #00695c;">Identification (' + idQuestions + ' questions, ' + idItems + ' items)</span><span style="font-size: 18px; font-weight: 700; color: #009688;">' + sectionScores.identification + '/' + sectionTotals.identification + '</span></div></div>';
+  
+  if (idItems > 0) {
+    resultHtml += '<div style="margin-bottom: 15px; padding: 15px; background: #e0f2f1; border-radius: 6px; border-left: 4px solid #009688;">';
+    resultHtml += '<div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-weight: 600; color: #00695c;">Identification ' + idItems + ' Items</span><span style="font-size: 18px; font-weight: 700; color: #009688;">' + sectionScores.identification + '/' + sectionTotals.identification + '</span></div>';
+    resultHtml += '</div>';
   }
+  
   resultHtml += '<div style="margin-top: 20px; padding: 20px; background: ' + (passed ? '#e8f5e9' : '#ffebee') + '; border-radius: 8px; border: 2px solid ' + (passed ? '#4caf50' : '#f44336') + ';">';
   resultHtml += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;"><span style="font-weight: 700; color: #333; font-size: 14px;">OVERALL TOTAL:</span><span style="font-size: 24px; font-weight: 700; color: ' + (passed ? '#4caf50' : '#f44336') + ';">' + results.score + '/' + results.total_points + '</span></div>';
   resultHtml += '<div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-weight: 700; color: #333; font-size: 14px;">PERCENTAGE:</span><span style="font-size: 24px; font-weight: 700; color: ' + (passed ? '#4caf50' : '#f44336') + ';">' + scorePercentage + '%</span></div>';
@@ -443,6 +613,92 @@ function showPrioritySettings() {
 
 function closePrioritySettings() {
   document.getElementById('prioritySettingsModal').style.display = 'none';
+}
+
+
+function generateExamResultsHTML() {
+  const totalScore = sectionScores.multiple_choice + sectionScores.enumeration + sectionScores.procedure + sectionScores.identification;
+  const totalPoints = sectionTotals.multiple_choice + sectionTotals.enumeration + sectionTotals.procedure + sectionTotals.identification;
+  const scorePercentage = totalPoints > 0 ? Math.round((totalScore / totalPoints) * 100) : 0;
+  const passed = scorePercentage >= 70;
+  const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  
+  const passColor = passed ? '#28a745' : '#dc3545';
+  const passBg = passed ? '#e8f5e9' : '#ffebee';
+  const passText = passed ? 'PASSED' : 'FAILED';
+  
+  let html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Exam Results</title><style>' +
+    '* { margin: 0; padding: 0; box-sizing: border-box; }' +
+    'body { font-family: Arial, sans-serif; padding: 0.5in; font-size: 11px; color: #000; background: white; }' +
+    '.container { width: 100%; max-width: 8.5in; margin: 0 auto; }' +
+    '.header { text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid #000; }' +
+    '.logo { height: 50px; margin-bottom: 10px; }' +
+    '.title-box { border: 2px solid #000; padding: 10px; margin-bottom: 20px; text-align: center; }' +
+    '.title-box h1 { font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin: 0; }' +
+    '.info-box { border: 2px solid #000; padding: 12px; margin-bottom: 20px; }' +
+    '.info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 10px; }' +
+    '.info-row:last-child { margin-bottom: 0; }' +
+    '.info-field { display: flex; justify-content: space-between; font-size: 10px; }' +
+    '.info-label { font-weight: 700; }' +
+    '.info-value { font-weight: 600; }' +
+    '.results-box { border: 3px solid ' + passColor + '; background: ' + passBg + '; padding: 20px; margin-bottom: 20px; text-align: center; -webkit-print-color-adjust: exact; print-color-adjust: exact; }' +
+    '.results-box h2 { font-size: 24px; font-weight: 900; color: ' + passColor + '; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 2px; }' +
+    '.results-box .score { font-size: 12px; font-weight: 700; margin-bottom: 8px; }' +
+    '.results-box .percentage { font-size: 32px; font-weight: 900; color: ' + passColor + '; }' +
+    '.breakdown-box { border: 2px solid #000; padding: 12px; margin-bottom: 20px; }' +
+    '.breakdown-title { font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 10px; border-bottom: 2px solid #000; padding-bottom: 8px; }' +
+    '.breakdown-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 10px; border-bottom: 1px solid #ddd; }' +
+    '.breakdown-row:last-child { border-bottom: none; }' +
+    '.breakdown-row:nth-child(even) { background: #f5f5f5; -webkit-print-color-adjust: exact; print-color-adjust: exact; }' +
+    '.breakdown-label { font-weight: 600; }' +
+    '.breakdown-value { font-weight: 700; color: ' + passColor + '; }' +
+    '.footer { font-size: 8px; text-align: center; color: #666; border-top: 1px solid #ddd; padding-top: 10px; margin-top: 20px; }' +
+    '.footer-text { margin: 3px 0; }' +
+    '@media print { body { margin: 0; padding: 0; } .container { max-width: 100%; } }' +
+    '</style></head><body>' +
+    '<div class="container">' +
+    '<div class="header"><div class="logo-section"><img src="/images/NSB-LOGO.png" alt="NSB Logo" /></div></div>' +
+    '</div>' +
+    '<div class="title-box"><h1>EXAM RESULTS</h1></div>' +
+    '<div class="info-box">' +
+    '<div class="info-row">' +
+    '<div class="info-field"><span class="info-label">Employee Name:</span><span class="info-value">' + selectedEmployeeName + '</span></div>' +
+    '<div class="info-field"><span class="info-label">Exam Date:</span><span class="info-value">' + currentDate + '</span></div>' +
+    '</div>' +
+    '<div class="info-row">' +
+    '<div class="info-field"><span class="info-label">Course/Exam:</span><span class="info-value">' + (examTitle || 'N/A') + '</span></div>' +
+    '<div class="info-field"><span class="info-label">Passing Score:</span><span class="info-value">70%</span></div>' +
+    '</div>' +
+    '</div>' +
+    '<div class="results-box">' +
+    '<h2>' + passText + '</h2>' +
+    '<div class="score">Score: ' + totalScore + ' / ' + totalPoints + '</div>' +
+    '<div class="percentage">' + scorePercentage + '%</div>' +
+    '</div>' +
+    '<div class="breakdown-box">' +
+    '<div class="breakdown-title">SCORE BREAKDOWN</div>';
+  
+  if (sectionTotals.multiple_choice > 0) {
+    html += '<div class="breakdown-row"><span class="breakdown-label">Multiple Choice</span><span class="breakdown-value">' + sectionScores.multiple_choice + ' / ' + sectionTotals.multiple_choice + '</span></div>';
+  }
+  if (sectionTotals.enumeration > 0) {
+    html += '<div class="breakdown-row"><span class="breakdown-label">Enumeration</span><span class="breakdown-value">' + sectionScores.enumeration + ' / ' + sectionTotals.enumeration + '</span></div>';
+  }
+  if (sectionTotals.procedure > 0) {
+    html += '<div class="breakdown-row"><span class="breakdown-label">Procedure</span><span class="breakdown-value">' + sectionScores.procedure + ' / ' + sectionTotals.procedure + '</span></div>';
+  }
+  if (sectionTotals.identification > 0) {
+    html += '<div class="breakdown-row"><span class="breakdown-label">Identification</span><span class="breakdown-value">' + sectionScores.identification + ' / ' + sectionTotals.identification + '</span></div>';
+  }
+  
+  html += '</div>' +
+    '<div class="footer">' +
+    '<div class="footer-text"><strong>Document ID:</strong> F-EXAM-' + examId + '-' + new Date().getTime() + '</div>' +
+    '<div class="footer-text">Generated on: ' + currentDate + '</div>' +
+    '</div>' +
+    '</div></body></html>';
+  
+  return html;
 }
 
 function printExamResults() {
@@ -495,7 +751,7 @@ function printExamResults() {
     '@media print { body { margin: 0; } }' +
     '</style></head><body>' +
     '<div class="container">' +
-    '<div class="header"><div class="logo-section"><img src="../NSB-LOGO.png" alt="NSB Logo" /></div></div>' +
+    '<div class="header"><div class="logo-section"><img src="/images/NSB-LOGO.png" alt="NSB Logo" /></div></div>' +
     '<div class="title">EXAM RESULTS</div>' +
     '<div class="exam-info">' +
     '<div class="info-field"><label>Employee Name:</label><span>' + selectedEmployeeName + '</span></div>' +
@@ -539,4 +795,175 @@ function printExamResults() {
     printWindow.focus();
     printWindow.print();
   };
+}
+
+async function saveResultsAsPDF() {
+  try {
+    console.log('💾 Saving exam results as PDF...');
+
+    const totalScore = sectionScores.multiple_choice + sectionScores.enumeration + sectionScores.procedure + sectionScores.identification;
+    const totalPoints = sectionTotals.multiple_choice + sectionTotals.enumeration + sectionTotals.procedure + sectionTotals.identification;
+    const scorePercentage = totalPoints > 0 ? Math.round((totalScore / totalPoints) * 100) : 0;
+    const passed = scorePercentage >= 70;
+    const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    const lastName = selectedEmployeeLastName || 'Employee';
+    const sanitizedLastName = lastName.replace(/[^a-zA-Z0-9]/g, '_');
+    const examIdForFilename = examId || 'exam';
+    const filename = `${sanitizedLastName}_${examIdForFilename}_ExamResult.pdf`;
+
+    const passColor = passed ? '#28a745' : '#dc3545';
+    const passBg = passed ? '#e8f5e9' : '#ffebee';
+    const passText = passed ? 'PASSED' : 'FAILED';
+
+    // Load logo as base64 for PDF embedding
+    const logoBase64 = await getLogoAsBase64();
+    const logoSrc = logoBase64 || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
+    let htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Exam Results</title><style>' +
+      '* { margin: 0; padding: 0; box-sizing: border-box; }' +
+      'body { font-family: Arial, sans-serif; padding: 0.5in; font-size: 11px; color: #000; background: white; }' +
+      '.container { width: 100%; max-width: 8.5in; margin: 0 auto; }' +
+      '.header { text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid #000; }' +
+      '.logo { height: 50px; margin-bottom: 10px; }' +
+      '.title-box { border: 2px solid #000; padding: 10px; margin-bottom: 20px; text-align: center; }' +
+      '.title-box h1 { font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin: 0; }' +
+      '.info-box { border: 2px solid #000; padding: 12px; margin-bottom: 20px; }' +
+      '.info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 10px; }' +
+      '.info-row:last-child { margin-bottom: 0; }' +
+      '.info-field { display: flex; justify-content: space-between; font-size: 10px; }' +
+      '.info-label { font-weight: 700; }' +
+      '.info-value { font-weight: 600; }' +
+      '.results-box { border: 3px solid ' + passColor + '; background: ' + passBg + '; padding: 20px; margin-bottom: 20px; text-align: center; -webkit-print-color-adjust: exact; print-color-adjust: exact; }' +
+      '.results-box h2 { font-size: 24px; font-weight: 900; color: ' + passColor + '; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 2px; }' +
+      '.results-box .score { font-size: 12px; font-weight: 700; margin-bottom: 8px; }' +
+      '.results-box .percentage { font-size: 32px; font-weight: 900; color: ' + passColor + '; }' +
+      '.breakdown-box { border: 2px solid #000; padding: 12px; margin-bottom: 20px; }' +
+      '.breakdown-title { font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 10px; border-bottom: 2px solid #000; padding-bottom: 8px; }' +
+      '.breakdown-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 10px; border-bottom: 1px solid #ddd; }' +
+      '.breakdown-row:last-child { border-bottom: none; }' +
+      '.breakdown-row:nth-child(even) { background: #f5f5f5; -webkit-print-color-adjust: exact; print-color-adjust: exact; }' +
+      '.breakdown-label { font-weight: 600; }' +
+      '.breakdown-value { font-weight: 700; color: ' + passColor + '; }' +
+      '.footer { font-size: 8px; text-align: center; color: #666; border-top: 1px solid #ddd; padding-top: 10px; margin-top: 20px; }' +
+      '.footer-text { margin: 3px 0; }' +
+      '@media print { body { margin: 0; padding: 0; } .container { max-width: 100%; } }' +
+      '</style></head><body>' +
+      '<div class="container">' +
+      '<div class="header"><img src="' + logoSrc + '" alt="NSB Logo" class="logo" /></div>' +
+      '<div class="title-box"><h1>EXAM RESULTS</h1></div>' +
+      '<div class="info-box">' +
+      '<div class="info-row">' +
+      '<div class="info-field"><span class="info-label">Employee Name:</span><span class="info-value">' + selectedEmployeeName + '</span></div>' +
+      '<div class="info-field"><span class="info-label">Exam Date:</span><span class="info-value">' + currentDate + '</span></div>' +
+      '</div>' +
+      '<div class="info-row">' +
+      '<div class="info-field"><span class="info-label">Course/Exam:</span><span class="info-value">' + (examTitle || 'N/A') + '</span></div>' +
+      '<div class="info-field"><span class="info-label">Passing Score:</span><span class="info-value">70%</span></div>' +
+      '</div>' +
+      '</div>' +
+      '<div class="results-box">' +
+      '<h2>' + passText + '</h2>' +
+      '<div class="score">Score: ' + totalScore + ' / ' + totalPoints + '</div>' +
+      '<div class="percentage">' + scorePercentage + '%</div>' +
+      '</div>' +
+      '<div class="breakdown-box">' +
+      '<div class="breakdown-title">SCORE BREAKDOWN</div>';
+
+    if (sectionTotals.multiple_choice > 0) {
+      htmlContent += '<div class="breakdown-row"><span class="breakdown-label">Multiple Choice</span><span class="breakdown-value">' + sectionScores.multiple_choice + ' / ' + sectionTotals.multiple_choice + '</span></div>';
+    }
+    if (sectionTotals.enumeration > 0) {
+      htmlContent += '<div class="breakdown-row"><span class="breakdown-label">Enumeration</span><span class="breakdown-value">' + sectionScores.enumeration + ' / ' + sectionTotals.enumeration + '</span></div>';
+    }
+    if (sectionTotals.procedure > 0) {
+      htmlContent += '<div class="breakdown-row"><span class="breakdown-label">Procedure</span><span class="breakdown-value">' + sectionScores.procedure + ' / ' + sectionTotals.procedure + '</span></div>';
+    }
+    if (sectionTotals.identification > 0) {
+      htmlContent += '<div class="breakdown-row"><span class="breakdown-label">Identification</span><span class="breakdown-value">' + sectionScores.identification + ' / ' + sectionTotals.identification + '</span></div>';
+    }
+
+    htmlContent += '</div>' +
+      '<div class="footer">' +
+      '<div class="footer-text"><strong>Document ID:</strong> F-EXAM-' + examId + '-' + new Date().getTime() + '</div>' +
+      '<div class="footer-text">Generated on: ' + currentDate + '</div>' +
+      '</div>' +
+      '</div></body></html>';
+
+    uploadExamResultPDF(htmlContent, filename);
+
+  } catch (err) {
+    console.error('❌ Error saving PDF:', err);
+    alert('Error saving PDF: ' + err.message);
+  }
+}
+
+async function uploadExamResultPDF(htmlContent, filename) {
+  try {
+    console.log('📤 Uploading exam result PDF to server...');
+    
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const formData = new FormData();
+    formData.append('file', blob, filename.replace('.pdf', '.html'));
+    formData.append('employee_id', selectedEmployeeId);
+    formData.append('course_title', examTitle || 'Exam');
+    formData.append('document_type', 'W/EXAM');
+    formData.append('file_type', 'exam');
+    formData.append('upload_path', 'uploads/tests/EXAM');
+    
+    const response = await fetch(API + '/api/tests/upload', {
+      method: 'POST',
+      body: formData
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      console.log('✅ PDF uploaded successfully');
+      console.log('📎 File URL:', data.file_url);
+      updateTrainingRecordWithExamURL(data.file_url);
+      alert('✅ Exam results saved successfully!\n\nFile: ' + filename);
+    } else {
+      console.error('❌ Upload failed:', data.message);
+      alert('Failed to upload PDF: ' + data.message);
+    }
+  } catch (err) {
+    console.error('❌ Error uploading PDF:', err);
+    alert('Error uploading PDF: ' + err.message);
+  }
+}
+
+async function updateTrainingRecordWithExamURL(fileUrl) {
+  try {
+    console.log('🔄 Updating training record with exam URL...');
+    
+    const trainingId = sessionStorage.getItem('examTrainingId');
+    
+    if (!trainingId) {
+      console.warn('⚠️ No training ID found in sessionStorage');
+      return;
+    }
+    
+    // Mark that exam was completed
+    sessionStorage.setItem('completedAssessmentType', 'exam');
+    sessionStorage.setItem('completedTrainingId', trainingId);
+    
+    const response = await fetch(API + '/api/trainings/' + trainingId, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        exam_form_url: fileUrl
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      console.log('✅ Training record updated with exam URL');
+    } else {
+      console.warn('⚠️ Failed to update training record:', data.message);
+    }
+  } catch (err) {
+    console.error('❌ Error updating training record:', err);
+  }
 }

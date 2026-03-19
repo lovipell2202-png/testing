@@ -62,7 +62,10 @@ function renderDashboard() {
   const allTrainings = trainings;
   const technicalCount = allTrainings.filter(t => t.type_tb === 'T').length;
   const behavioralCount = allTrainings.filter(t => t.type_tb === 'B').length;
-  const attachmentCount = allTrainings.filter(t => t.eff_form_file).length;
+  const attachmentCount = allTrainings.filter(t =>
+    (t.exam_form_url && t.exam_form_url.startsWith('/')) ||
+    (t.eff_form_file && (t.eff_form_file.startsWith('/') || t.eff_form_file === 'W/TEEF'))
+  ).length;
 
   console.log('Stats calculated:', { totalEmployees, totalTrainings: allTrainings.length, technicalCount, behavioralCount });
 
@@ -312,33 +315,49 @@ function selectEmployee(empId, empName) {
   
   const emp = employees.find(e => e.id === empId);
   
-  // Calculate stats based on effectiveness form type
+  // Calculate stats based on effectiveness form type and attachments
   const totalTrainings = empTrainings.length;
-  const withAttachments = empTrainings.filter(t => t.eff_form_file).length;
+  const withAttachments = empTrainings.filter(t => t.eff_form_file || t.exam_form_url).length;
   
-  // W/EXAM = PDF files, W/TEEF = Certificate files
-  const examCount = empTrainings.filter(t => t.effectiveness_form === 'W/EXAM').length;
-  const teefCount = empTrainings.filter(t => t.effectiveness_form === 'W/TEEF').length;
-  const pdfCount = examCount; // W/EXAM uses PDF files
-  const certCount = teefCount; // W/TEEF uses Certificate files
+  // Count W/EXAM trainings with attachments
+  const examTrainings = empTrainings.filter(t => t.effectiveness_form === 'W/EXAM');
+  const examWithAttachments = examTrainings.filter(t => t.exam_form_url && t.exam_form_url.trim() !== '').length;
   
-  console.log('Stats:', { totalTrainings, withAttachments, examCount, teefCount });
+  // Count W/TEEF trainings with attachments
+  const teefTrainings = empTrainings.filter(t => t.effectiveness_form === 'W/TEEF');
+  const teefWithAttachments = teefTrainings.filter(t => t.eff_form_file && t.eff_form_file.trim() !== '').length;
   
-  // Update display with enhanced formatting
-  document.getElementById('empDetailsName').textContent = empName + (emp ? ` - ${emp.department || ''}` : '');
-  document.getElementById('empTotalTrainings').textContent = totalTrainings;
+  // Count W/EXAM_TEEF trainings
+  const examTeefTrainings = empTrainings.filter(t => t.effectiveness_form === 'W/EXAM_TEEF');
+  const examTeefExamAttachments = examTeefTrainings.filter(t => t.exam_form_url && t.exam_form_url.trim() !== '').length;
+  const examTeefTeefAttachments = examTeefTrainings.filter(t => t.eff_form_file && t.eff_form_file.trim() !== '').length;
   
-  // Show "X out of Y" format for attachments
-  document.getElementById('empWithAttachments').innerHTML = `${withAttachments}<br><small style="font-size: 12px; color: var(--muted);">out of ${totalTrainings}</small>`;
-  document.getElementById('empPdfCount').innerHTML = `${pdfCount}<br><small style="font-size: 12px; color: var(--muted);">W/EXAM (PDF)</small>`;
-  document.getElementById('empCertCount').innerHTML = `${certCount}<br><small style="font-size: 12px; color: var(--muted);">W/TEEF (Cert)</small>`;
-  document.getElementById('empExamCount').innerHTML = `${examCount}<br><small style="font-size: 12px; color: var(--muted);">out of ${totalTrainings}</small>`;
-  document.getElementById('empTeefCount').innerHTML = `${teefCount}<br><small style="font-size: 12px; color: var(--muted);">out of ${totalTrainings}</small>`;
+  // Total counts
+  const totalExamAttachments = examWithAttachments + examTeefExamAttachments;
+  const totalTeefAttachments = teefWithAttachments + examTeefTeefAttachments;
+  const totalExamTrainings = examTrainings.length + examTeefTrainings.length;
+  const totalTeefTrainingsCount = teefTrainings.length + examTeefTrainings.length;
+  
+  console.log('Stats:', { totalTrainings, withAttachments, examWithAttachments, teefWithAttachments, totalExamAttachments, totalTeefAttachments });
+  
+  // Update display - skip stat cards since they were removed
+  const empDetailsName = document.getElementById('empDetailsName');
+  if (empDetailsName) {
+    empDetailsName.textContent = empName + (emp ? ` - ${emp.department || ''}` : '');
+  }
+  
+  // These elements no longer exist - stat cards were removed
+  // document.getElementById('empTotalTrainings').textContent = totalTrainings;
+  // document.getElementById('empWithAttachments').innerHTML = ...
+
   
   // Render training list
   const tbody = document.getElementById('empTrainingsList');
   tbody.innerHTML = empTrainings.map(t => {
-    const hasAttachment = t.eff_form_file ? '✅' : '❌';
+    const hasAttachment = (
+      (t.exam_form_url && t.exam_form_url.startsWith('/')) ||
+      (t.eff_form_file && (t.eff_form_file.startsWith('/') || t.eff_form_file === 'W/TEEF'))
+    ) ? '✅' : '❌';
     return `
       <tr style="border-bottom: 1px solid #eee;">
         <td style="padding: 8px 10px;">${formatDate(t.date_from)}</td>

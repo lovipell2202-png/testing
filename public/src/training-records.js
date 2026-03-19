@@ -158,7 +158,7 @@ function renderTrainings() {
   
   const data = window.filteredTrainings || localTrainings || [];
   console.log('Rendering trainings:', data.length);
-  
+
   if (data.length === 0) {
     tbody.innerHTML = `
       <tr>
@@ -175,7 +175,42 @@ function renderTrainings() {
   const start = (currentPage - 1) * rowsPerPage;
   const pageData = data.slice(start, start + rowsPerPage);
   
-  tbody.innerHTML = pageData.map(t => `
+  tbody.innerHTML = pageData.map(t => {
+    // Check what attachments actually exist
+    // exam_form_url: must be a real path starting with /
+    // eff_form_file: either a real path (starts with /) OR the flag 'W/TEEF' meaning a TEEF form was saved in DB
+    const hasExamAttachment = !!(t.exam_form_url && t.exam_form_url.startsWith('/'));
+    const hasTeefAttachment = !!(t.eff_form_file && (t.eff_form_file.startsWith('/') || t.eff_form_file === 'W/TEEF'));
+
+    // Helper: render a label span — green+clickable if has file, red if not
+    const examSpan = (id) => hasExamAttachment
+      ? `<span style="color:#4caf50;font-weight:600;cursor:pointer;text-decoration:underline;" onclick="openPdfPreview(${id})" title="View EXAM attachment">W/EXAM</span>`
+      : `<span style="color:#f44336;font-weight:600;" title="No EXAM attachment yet">W/EXAM</span>`;
+
+    // For TEEF: if eff_form_file is the flag 'W/TEEF', open the evaluation form viewer; if it's a real path, open PDF preview
+    const teefClickAction = (t.eff_form_file && t.eff_form_file.startsWith('/'))
+      ? `openPdfPreview(${t.id}, 'teef')`
+      : `openTeefForm(${t.id})`;
+    const teefSpan = (id) => hasTeefAttachment
+      ? `<span style="color:#4caf50;font-weight:600;cursor:pointer;text-decoration:underline;" onclick="${teefClickAction}" title="View TEEF form">W/TEEF</span>`
+      : `<span style="color:#f44336;font-weight:600;" title="No TEEF attachment yet">W/TEEF</span>`;
+
+    let effFormDisplay = '';
+    const ef = t.effectiveness_form;
+
+    if (!ef || ef === 'N/A') {
+      effFormDisplay = '<span style="color:#999;">N/A</span>';
+    } else if (ef === 'W/EXAM') {
+      effFormDisplay = examSpan(t.id);
+    } else if (ef === 'W/TEEF') {
+      effFormDisplay = teefSpan(t.id);
+    } else if (ef === 'W/EXAM_TEEF' || (ef.includes('W/EXAM') && ef.includes('W/TEEF'))) {
+      effFormDisplay = `<span style="font-weight:600;">${examSpan(t.id)} &amp; ${teefSpan(t.id)}</span>`;
+    } else {
+      effFormDisplay = `<span style="color:#999;">${ef}</span>`;
+    }
+    
+    return `
     <tr ondblclick="viewTraining(${t.id})" style="cursor:pointer;">
       <td>${t.full_name || 'N/A'}</td>
       <td>${window.UIHelpers ? window.UIHelpers.formatDate(t.date_from) : t.date_from}</td>
@@ -186,14 +221,11 @@ function renderTrainings() {
       <td style="text-align:center;">${t.type_tb || 'N/A'}</td>
       <td>${t.training_provider || 'N/A'}</td>
       <td style="text-align:center;">
-        ${t.effectiveness_form
-          ? t.eff_form_file
-            ? `<span style="color:#4caf50;font-weight:600;cursor:pointer;text-decoration:underline;" onclick="openPdfPreview(${t.id})" title="Click to view attachment">${t.effectiveness_form}</span>`
-            : `<span style="color:#f44336;font-weight:600;">${t.effectiveness_form}</span>`
-          : '<span style="color:#999;">N/A</span>'}
+        ${effFormDisplay}
       </td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
   
   renderPagination(data.length);
 }
@@ -330,12 +362,76 @@ async function viewTraining(id) {
   if (v_training_provider) v_training_provider.textContent = t.training_provider || 'N/A';
   if (v_venue) v_venue.textContent = t.venue || 'N/A';
   if (v_trainer) v_trainer.textContent = t.trainer || 'N/A';
-  if (v_effectiveness_form) v_effectiveness_form.textContent = t.effectiveness_form || 'N/A';
+  
+  // Apply color coding to effectiveness form based on completed assessment
+  const completedAssessmentType = sessionStorage.getItem('completedAssessmentType');
+  const completedTrainingId = sessionStorage.getItem('completedTrainingId');
+  
+  if (v_effectiveness_form) {
+    const effectivenessText = t.effectiveness_form || 'N/A';
+    
+    // Apply color coding if this training just had an assessment completed
+    // Check both direct ID match and employee+course format
+    const isMatch = (completedTrainingId == t.id) || 
+                    (completedTrainingId === t.employee_id + '_' + t.course_title);
+    
+    if (isMatch && completedAssessmentType) {
+      if (completedAssessmentType === 'exam') {
+        // Exam completed: W/EXAM green, W/TEEF red
+        if (effectivenessText.includes('W/EXAM') && effectivenessText.includes('W/TEEF')) {
+          v_effectiveness_form.innerHTML = '<span style="color: #28a745; font-weight: 700; white-space: nowrap;">W/EXAM</span><br/><span style="color: #dc3545; font-weight: 700; white-space: nowrap;">W/TEEF</span>';
+        } else if (effectivenessText.includes('W/EXAM')) {
+          v_effectiveness_form.innerHTML = '<span style="color: #28a745; font-weight: 700;">W/EXAM</span>';
+        }
+      } else if (completedAssessmentType === 'evaluation') {
+        // Evaluation completed: W/TEEF green, W/EXAM red
+        if (effectivenessText.includes('W/EXAM') && effectivenessText.includes('W/TEEF')) {
+          v_effectiveness_form.innerHTML = '<span style="color: #dc3545; font-weight: 700; white-space: nowrap;">W/EXAM</span><br/><span style="color: #28a745; font-weight: 700; white-space: nowrap;">W/TEEF</span>';
+        } else if (effectivenessText.includes('W/TEEF')) {
+          v_effectiveness_form.innerHTML = '<span style="color: #28a745; font-weight: 700;">W/TEEF</span>';
+        }
+      }
+      
+      // Clear the session storage after applying colors
+      sessionStorage.removeItem('completedAssessmentType');
+      sessionStorage.removeItem('completedTrainingId');
+    } else {
+      // No color coding, just display the text
+      v_effectiveness_form.textContent = effectivenessText;
+    }
+  }
   
   console.log('✅ Modal fields populated');
   
   // Store the training ID for edit functionality
   window.currentViewingTrainingId = id;
+  
+  // Show appropriate button based on effectiveness_form
+  const evaluationBtn = document.getElementById('evaluationBtn');
+  const examBtn = document.getElementById('examBtn');
+  
+  if (evaluationBtn) evaluationBtn.style.display = 'none';
+  if (examBtn) examBtn.style.display = 'none';
+  
+  // Show buttons based on effectiveness form type
+  // Check if both W/EXAM and W/TEEF are present (handles "W/EXAM TEEF", "W/EXAM & TEEF", "W/EXAM_TEEF", etc.)
+  const effectivenessForm = t.effectiveness_form || '';
+  const hasExam = effectivenessForm.includes('W/EXAM');
+  const hasTeef = effectivenessForm.includes('W/TEEF') || effectivenessForm.includes('TEEF');
+  const hasBothExamAndTeef = hasExam && hasTeef;
+  
+  if (hasBothExamAndTeef) {
+    // Show both buttons when both are present
+    if (evaluationBtn) evaluationBtn.style.display = 'inline-block';
+    if (examBtn) examBtn.style.display = 'inline-block';
+    console.log('✅ Showing both Evaluation and Exam buttons for W/EXAM & W/TEEF');
+  } else if (hasTeef) {
+    if (evaluationBtn) evaluationBtn.style.display = 'inline-block';
+    console.log('✅ Showing Evaluation button for W/TEEF');
+  } else if (hasExam) {
+    if (examBtn) examBtn.style.display = 'inline-block';
+    console.log('✅ Showing Exam button for W/EXAM');
+  }
   
   // Show modal
   const modal = document.getElementById('viewTrainModal');
@@ -579,8 +675,8 @@ async function removeEffFormFile(trainingId) {
 }
 
 // PDF Preview functions
-function openPdfPreview(trainingId) {
-  console.log('=== openPdfPreview called with id:', trainingId);
+function openPdfPreview(trainingId, fileType) {
+  console.log('=== openPdfPreview called with id:', trainingId, 'fileType:', fileType);
   
   // If localTrainings is empty, try to load it first
   if (localTrainings.length === 0 && (!window.filteredTrainings || window.filteredTrainings.length === 0)) {
@@ -615,15 +711,29 @@ function openPdfPreview(trainingId) {
     return;
   }
   
-  if (!t.eff_form_file) {
-    console.error('❌ No attachment file:', t);
-    showNotification('No attachment available for this record.', 'error');
-    return;
+  // Determine which file to show based on fileType parameter
+  let fileUrl = null;
+  
+  if (fileType === 'teef') {
+    // Show TEEF file (uses eff_form_file column)
+    fileUrl = t.eff_form_file;
+    if (!fileUrl) {
+      showNotification('No TEEF attachment available for this record.', 'error');
+      return;
+    }
+  } else {
+    // Show EXAM file (default) - use exam_form_url column
+    fileUrl = t.exam_form_url;
+    if (!fileUrl) {
+      showNotification('No EXAM attachment available for this record.', 'error');
+      return;
+    }
   }
   
   const iframe = document.getElementById('pdfPreviewFrame');
   const pdfPreviewModal = document.getElementById('pdfPreviewModal');
   const downloadLink = document.getElementById('pdfDownloadLink');
+  const pdfPreviewTitle = document.getElementById('pdfPreviewTitle');
   
   if (!iframe) {
     console.error('❌ PDF iframe not found');
@@ -632,22 +742,36 @@ function openPdfPreview(trainingId) {
   }
   
   // Set iframe source and download link
-  iframe.src = t.eff_form_file;
-  downloadLink.href = t.eff_form_file;
+  iframe.src = fileUrl;
+  downloadLink.href = fileUrl;
   
   // Set custom download filename with employee name and course/exam info
   const employeeName = (t.full_name || 'Employee').replace(/[^a-zA-Z0-9]/g, '_');
   const courseName = (t.course_title || 'Exam').replace(/[^a-zA-Z0-9]/g, '_');
-  const downloadFileName = `${employeeName}_${courseName}.pdf`;
+  const fileTypeSuffix = fileType === 'teef' ? '_TEEF' : '_EXAM';
+  const downloadFileName = `${employeeName}_${courseName}${fileTypeSuffix}.pdf`;
   downloadLink.download = downloadFileName;
   downloadLink.title = `Download ${downloadFileName}`;
+  
+  // Update modal title to show which file is being viewed
+  if (pdfPreviewTitle) {
+    const fileTypeLabel = fileType === 'teef' ? 'TEEF Form' : 'EXAM';
+    pdfPreviewTitle.textContent = `${fileTypeLabel} - ${courseName}`;
+  }
   
   pdfPreviewModal.style.display = 'flex';
 }
 
 function closePdfPreview() {
-  document.getElementById('pdfPreviewModal').style.display = 'none';
-  document.getElementById('pdfIframe').src = '';
+  const pdfPreviewModal = document.getElementById('pdfPreviewModal');
+  const pdfIframe = document.getElementById('pdfIframe');
+  
+  if (pdfPreviewModal) {
+    pdfPreviewModal.style.display = 'none';
+  }
+  if (pdfIframe) {
+    pdfIframe.src = '';
+  }
 }
 
 // Convert view modal to edit modal
@@ -792,6 +916,22 @@ async function openEditTraining(trainingId) {
   if (t_effectiveness_form) {
     t_effectiveness_form.value = t.effectiveness_form || 'N/A';
     console.log('✅ Set effectiveness_form:', t_effectiveness_form.value);
+    
+    // Add change event listener for attachment validation
+    t_effectiveness_form.addEventListener('change', async function() {
+      console.log('📝 Effectiveness form changed to:', this.value);
+      
+      if (this.value === 'W/EXAM_TEEF') {
+        // Show warning for W/EXAM_TEEF
+        console.log('⚠️ W/EXAM_TEEF selected - contains both EXAM and TEEF');
+        showEffectivenessFormWarning('⚠️ Warning: This training contains BOTH TEEF Form AND EXAM - Please ensure both attachments are uploaded');
+      } else if (this.value === 'W/TEEF') {
+        // Check for TEEF attachment
+        const courseTitle = t_course_title ? t_course_title.value : '';
+        console.log('🔎 Checking TEEF attachment for:', courseTitle);
+        await checkTeefAttachmentModal(courseTitle, trainingId);
+      }
+    });
   }
   
   console.log('✅ Edit form fully populated');
@@ -821,3 +961,268 @@ function closeNotification() {
   }
 }
 
+
+// Check TEEF attachment and show modal notification
+async function checkTeefAttachmentModal(courseTitle, trainingId) {
+  try {
+    console.log('🔍 Checking TEEF attachment for:', courseTitle);
+    
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('teef_attachment_modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'teef_attachment_modal';
+      modal.style.cssText = `
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.4);
+      `;
+      
+      const modalContent = document.createElement('div');
+      modalContent.style.cssText = `
+        background-color: #fefefe;
+        margin: 10% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 400px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      `;
+      
+      const modalMessage = document.createElement('p');
+      modalMessage.id = 'teef_modal_message';
+      modalMessage.style.cssText = `
+        font-size: 14px;
+        margin: 0 0 15px 0;
+        font-weight: 500;
+      `;
+      
+      const closeBtn = document.createElement('button');
+      closeBtn.textContent = 'OK';
+      closeBtn.style.cssText = `
+        padding: 8px 20px;
+        background-color: #4169e1;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      `;
+      closeBtn.onclick = function() {
+        modal.style.display = 'none';
+      };
+      
+      modalContent.appendChild(modalMessage);
+      modalContent.appendChild(closeBtn);
+      modal.appendChild(modalContent);
+      document.body.appendChild(modal);
+    }
+    
+    const modalMessage = document.getElementById('teef_modal_message');
+    
+    // Check for attachment
+    const url = `/api/test-form-attachment?title=${encodeURIComponent(courseTitle)}`;
+    console.log('📡 Fetching from:', url);
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    console.log('📥 Response:', data);
+    
+    if (data.success && data.hasAttachment === true) {
+      // Green notification - has attachment
+      console.log('✅ GREEN - TEEF Attachment found');
+      modalMessage.textContent = '✅ TEEF Form Attachment: Found';
+      modalMessage.style.color = '#155724';
+      modal.style.display = 'block';
+    } else if (data.success && data.hasAttachment === false) {
+      // Red notification - no attachment
+      console.log('❌ RED - TEEF Attachment not found');
+      modalMessage.textContent = '❌ TEEF Form Attachment: Not Found - Please upload TEEF form';
+      modalMessage.style.color = '#721c24';
+      modal.style.display = 'block';
+    } else {
+      console.warn('⚠️ Unexpected response format:', data);
+    }
+  } catch (err) {
+    console.error('❌ Error checking TEEF attachment:', err);
+  }
+}
+
+// Show effectiveness form warning modal
+function showEffectivenessFormWarning(message) {
+  try {
+    console.log('⚠️ Showing effectiveness form warning:', message);
+    
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('effectiveness_warning_modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'effectiveness_warning_modal';
+      modal.style.cssText = `
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.4);
+      `;
+      
+      const modalContent = document.createElement('div');
+      modalContent.style.cssText = `
+        background-color: #fefefe;
+        margin: 10% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 400px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      `;
+      
+      const modalMessage = document.createElement('p');
+      modalMessage.id = 'effectiveness_warning_message';
+      modalMessage.style.cssText = `
+        font-size: 14px;
+        margin: 0 0 15px 0;
+        font-weight: 500;
+        color: #ff9800;
+      `;
+      
+      const closeBtn = document.createElement('button');
+      closeBtn.textContent = 'OK';
+      closeBtn.style.cssText = `
+        padding: 8px 20px;
+        background-color: #ff9800;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      `;
+      closeBtn.onclick = function() {
+        modal.style.display = 'none';
+      };
+      
+      modalContent.appendChild(modalMessage);
+      modalContent.appendChild(closeBtn);
+      modal.appendChild(modalContent);
+      document.body.appendChild(modal);
+    }
+    
+    const modalMessage = document.getElementById('effectiveness_warning_message');
+    modalMessage.textContent = message;
+    modal.style.display = 'block';
+  } catch (err) {
+    console.error('❌ Error showing effectiveness form warning:', err);
+  }
+}
+
+
+// Open evaluation form for a training record
+function openEvaluationForm(trainingId) {
+  if (!trainingId) {
+    showNotification('No training record selected', 'error');
+    return;
+  }
+  
+  console.log('Opening evaluation form for training ID:', trainingId);
+  
+  // Store the training ID in sessionStorage so the evaluation form can access it
+  sessionStorage.setItem('evaluationTrainingId', trainingId);
+  
+  // Close the current modal
+  closeModal('viewTrain');
+  
+  // Redirect to the evaluation form with the training ID
+  window.location.href = `/pages/training-evaluation-form.html?id=${trainingId}`;
+}
+
+// Open TEEF form in read-only view mode (called from green W/TEEF link in table)
+function openTeefForm(trainingId) {
+  if (!trainingId) return;
+  window.location.href = `/pages/training-evaluation-form.html?id=${trainingId}&view=1`;
+}
+
+// Open exam form for a training record
+function openExamForm(trainingId) {
+  if (!trainingId) {
+    showNotification('No training record selected', 'error');
+    return;
+  }
+  
+  console.log('🔍 Opening exam form for training ID:', trainingId);
+  
+  // Find the training record to get the course title
+  let trainingRecord = null;
+  
+  if (window.filteredTrainings && window.filteredTrainings.length > 0) {
+    trainingRecord = window.filteredTrainings.find(x => x.id == trainingId);
+  }
+  
+  if (!trainingRecord && localTrainings && localTrainings.length > 0) {
+    trainingRecord = localTrainings.find(x => x.id == trainingId);
+  }
+  
+  if (!trainingRecord && window.trainings && window.trainings.length > 0) {
+    trainingRecord = window.trainings.find(x => x.id == trainingId);
+  }
+  
+  if (!trainingRecord) {
+    console.error('❌ Training record not found');
+    showNotification('Training record not found', 'error');
+    return;
+  }
+  
+  const courseTitle = trainingRecord.course_title;
+  console.log('📚 Opening exam for course:', courseTitle);
+  
+  // Store the training data in sessionStorage
+  sessionStorage.setItem('examTrainingId', trainingId);
+  sessionStorage.setItem('examCourseName', courseTitle);
+  
+  // Close the current modal
+  closeModal('viewTrain');
+  
+  // Fetch exams to find the matching one
+  fetch('/api/exams')
+    .then(res => res.json())
+    .then(data => {
+      if (data.success && Array.isArray(data.data)) {
+        // Try to find exam by course title
+        let exam = data.data.find(e => e.title === courseTitle);
+        
+        if (!exam) {
+          exam = data.data.find(e => e.title.toLowerCase() === courseTitle.toLowerCase());
+        }
+        
+        if (!exam) {
+          const courseNameLower = courseTitle.toLowerCase();
+          exam = data.data.find(e => e.title.toLowerCase().includes(courseNameLower) || courseNameLower.includes(e.title.toLowerCase()));
+        }
+        
+        if (exam) {
+          console.log('✅ Found exam ID:', exam.id);
+          // Navigate with exam ID
+          window.location.href = `/pages/take-exam.html?id=${exam.id}`;
+        } else {
+          console.log('⚠️ No exact exam match found, navigating with course name');
+          // Fall back to course name
+          window.location.href = `/pages/take-exam.html?course=${encodeURIComponent(courseTitle)}`;
+        }
+      }
+    })
+    .catch(err => {
+      console.error('❌ Error fetching exams:', err);
+      // Fall back to course name
+      window.location.href = `/pages/take-exam.html?course=${encodeURIComponent(courseTitle)}`;
+    });
+}

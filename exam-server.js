@@ -233,16 +233,17 @@ async function updateExam(req, res) {
         
         if (q.type === 'multiple_choice') {
           questionNum = mcNum++;
+          const correctAns = (q.correctAnswer || 'A').toString().trim().charAt(0) || 'A';
           await pool.request()
             .input('course_id', sql.BigInt, courseId)
             .input('question_number', sql.Int, questionNum)
             .input('question_type', sql.VarChar(50), 'multiple_choice')
             .input('question_text', sql.VarChar(sql.MAX), q.question || '')
-            .input('option_a', sql.VarChar(sql.MAX), q.options[0] || '')
-            .input('option_b', sql.VarChar(sql.MAX), q.options[1] || '')
-            .input('option_c', sql.VarChar(sql.MAX), q.options[2] || '')
-            .input('option_d', sql.VarChar(sql.MAX), q.options[3] || '')
-            .input('correct_answer', sql.Char(1), q.correctAnswer || '')
+            .input('option_a', sql.VarChar(sql.MAX), (q.options && q.options[0]) || '')
+            .input('option_b', sql.VarChar(sql.MAX), (q.options && q.options[1]) || '')
+            .input('option_c', sql.VarChar(sql.MAX), (q.options && q.options[2]) || '')
+            .input('option_d', sql.VarChar(sql.MAX), (q.options && q.options[3]) || '')
+            .input('correct_answer', sql.Char(1), correctAns)
             .input('points', sql.Int, 1)
             .query(`INSERT INTO ExamQuestions (course_id, question_number, question_type, question_text, option_a, option_b, option_c, option_d, correct_answer, points, created_at)
                     VALUES (@course_id, @question_number, @question_type, @question_text, @option_a, @option_b, @option_c, @option_d, @correct_answer, @points, GETDATE())`);
@@ -255,9 +256,9 @@ async function updateExam(req, res) {
             .input('question_text', sql.VarChar(sql.MAX), q.question || '')
             .input('enumeration_title', sql.VarChar(sql.MAX), q.title || '')
             .input('enumeration_instruction', sql.VarChar(sql.MAX), q.instruction || '')
-            .input('enumeration_items', sql.VarChar(sql.MAX), q.count?.toString() || '')
+            .input('enumeration_items', sql.VarChar(sql.MAX), (q.count || 0).toString())
             .input('enumeration_answer', sql.VarChar(sql.MAX), q.answer || '')
-            .input('enumeration_items_json', sql.VarChar(sql.MAX), q.items_json || '')
+            .input('enumeration_items_json', sql.VarChar(sql.MAX), q.items_json || '[]')
             .input('points', sql.Int, 1)
             .query(`INSERT INTO ExamQuestions (course_id, question_number, question_type, question_text, enumeration_title, enumeration_instruction, enumeration_items, enumeration_answer, enumeration_items_json, points, created_at)
                     VALUES (@course_id, @question_number, @question_type, @question_text, @enumeration_title, @enumeration_instruction, @enumeration_items, @enumeration_answer, @enumeration_items_json, @points, GETDATE())`);
@@ -272,22 +273,18 @@ async function updateExam(req, res) {
             .input('procedure_content', sql.VarChar(sql.MAX), q.content || '')
             .input('procedure_instructions', sql.VarChar(sql.MAX), q.instructions || '')
             .input('procedure_answer', sql.VarChar(sql.MAX), q.answer || '')
-            .input('procedure_items_json', sql.VarChar(sql.MAX), q.items_json || '')
+            .input('procedure_items_json', sql.VarChar(sql.MAX), q.items_json || '[]')
             .input('points', sql.Int, 1)
             .query(`INSERT INTO ExamQuestions (course_id, question_number, question_type, question_text, procedure_title, procedure_content, procedure_instructions, procedure_answer, procedure_items_json, points, created_at)
                     VALUES (@course_id, @question_number, @question_type, @question_text, @procedure_title, @procedure_content, @procedure_instructions, @procedure_answer, @procedure_items_json, @points, GETDATE())`);
         } else if (q.type === 'identification') {
           questionNum = idNum++;
-          // If no new image uploaded but existing image_url provided, preserve the existing image
           let imageUrl = null;
           if (q.image_base64 && q.image_base64.startsWith('data:image')) {
-            // New image uploaded - save it
             imageUrl = saveBase64Image(q.image_base64);
           } else if (q.image_url && q.image_url.includes('/uploads/')) {
-            // No new image, but existing URL provided - preserve it
             imageUrl = q.image_url;
           }
-          
           await pool.request()
             .input('course_id', sql.BigInt, courseId)
             .input('question_number', sql.Int, questionNum)
@@ -298,7 +295,7 @@ async function updateExam(req, res) {
             .input('identification_image_url', sql.VarChar(sql.MAX), imageUrl || '')
             .input('identification_answer', sql.VarChar(sql.MAX), q.answer || '')
             .input('identification_items_json', sql.VarChar(sql.MAX), JSON.stringify(q.items || []))
-            .input('points', sql.Int, q.count || q.items?.length || 1)
+            .input('points', sql.Int, q.count || (q.items && q.items.length) || 1)
             .query(`INSERT INTO ExamQuestions (course_id, question_number, question_type, question_text, identification_title, identification_instruction, identification_image_url, identification_answer, identification_items_json, points, created_at)
                     VALUES (@course_id, @question_number, @question_type, @question_text, @identification_title, @identification_instruction, @identification_image_url, @identification_answer, @identification_items_json, @points, GETDATE())`);
         }
@@ -307,7 +304,7 @@ async function updateExam(req, res) {
 
     res.json({ success: true, message: 'Exam questions updated successfully' });
   } catch (err) {
-    console.error('Error updating exam:', err.message);
+    console.error('Error updating exam:', err.message, err.stack);
     res.status(500).json({ success: false, message: 'Error updating exam: ' + err.message });
   }
 }
@@ -326,41 +323,28 @@ async function deleteExam(req, res) {
 
 async function saveExamResult(req, res) {
   try {
-    const { employee_id, exam_id, score, total_points, percentage, passed, answers } = req.body;
+    const { employee_id, exam_id, score, total_points, percentage, passed, answers, question_details } = req.body;
     
     if (!employee_id || !exam_id) {
       return res.status(400).json({ success: false, message: 'Missing fields' });
     }
 
-    // Fetch employee full name
     let employeeFullName = '';
     try {
       const empResult = await pool.request()
         .input('employee_id', sql.BigInt, employee_id)
         .query('SELECT full_name FROM Employees WHERE id = @employee_id');
-      
-      if (empResult.recordset.length > 0) {
-        employeeFullName = empResult.recordset[0].full_name || '';
-      }
-    } catch (empErr) {
-      console.error('Error fetching employee name:', empErr.message);
-    }
+      if (empResult.recordset.length > 0) employeeFullName = empResult.recordset[0].full_name || '';
+    } catch (e) {}
 
-    // Fetch course title from exam (exam_id refers to course_id)
     let courseTitle = '';
     try {
       const courseResult = await pool.request()
         .input('exam_id', sql.BigInt, exam_id)
         .query('SELECT course_title FROM Courses WHERE id = @exam_id');
-      
-      if (courseResult.recordset.length > 0) {
-        courseTitle = courseResult.recordset[0].course_title || '';
-      }
-    } catch (courseErr) {
-      console.error('Error fetching course title:', courseErr.message);
-    }
+      if (courseResult.recordset.length > 0) courseTitle = courseResult.recordset[0].course_title || '';
+    } catch (e) {}
 
-    // Insert exam result with employee name and course title
     const result = await pool.request()
       .input('employee_id', sql.BigInt, employee_id)
       .input('exam_id', sql.BigInt, exam_id)
@@ -369,13 +353,104 @@ async function saveExamResult(req, res) {
       .input('percentage', sql.Decimal(5, 2), percentage || 0)
       .input('passed', sql.Bit, passed || 0)
       .input('answers', sql.NVarChar(sql.MAX), JSON.stringify(answers) || null)
+      .input('question_details', sql.NVarChar(sql.MAX), JSON.stringify(question_details || []))
       .input('employee_full_name', sql.NVarChar(255), employeeFullName)
       .input('course_title', sql.NVarChar(255), courseTitle)
-      .query(`INSERT INTO ExamResults (employee_id, exam_id, score, total_points, percentage, passed, answers, employee_full_name, course_title, submitted_at)
-              VALUES (@employee_id, @exam_id, @score, @total_points, @percentage, @passed, @answers, @employee_full_name, @course_title, GETDATE());
+      .query(`INSERT INTO ExamResults (employee_id, exam_id, score, total_points, percentage, passed, answers, question_details, employee_full_name, course_title, submitted_at)
+              VALUES (@employee_id, @exam_id, @score, @total_points, @percentage, @passed, @answers, @question_details, @employee_full_name, @course_title, GETDATE());
               SELECT SCOPE_IDENTITY() as id`);
     
     res.status(201).json({ success: true, id: result.recordset[0].id });
+  } catch (err) {
+    // If question_details column doesn't exist yet, fall back without it
+    try {
+      const { employee_id, exam_id, score, total_points, percentage, passed, answers } = req.body;
+      let employeeFullName = '', courseTitle = '';
+      try { const e = await pool.request().input('employee_id', sql.BigInt, employee_id).query('SELECT full_name FROM Employees WHERE id = @employee_id'); employeeFullName = e.recordset[0]?.full_name || ''; } catch(e2){}
+      try { const c = await pool.request().input('exam_id', sql.BigInt, exam_id).query('SELECT course_title FROM Courses WHERE id = @exam_id'); courseTitle = c.recordset[0]?.course_title || ''; } catch(e2){}
+      const result = await pool.request()
+        .input('employee_id', sql.BigInt, employee_id).input('exam_id', sql.BigInt, exam_id)
+        .input('score', sql.Int, score || 0).input('total_points', sql.Int, total_points || 0)
+        .input('percentage', sql.Decimal(5, 2), percentage || 0).input('passed', sql.Bit, passed || 0)
+        .input('answers', sql.NVarChar(sql.MAX), JSON.stringify(answers) || null)
+        .input('employee_full_name', sql.NVarChar(255), employeeFullName).input('course_title', sql.NVarChar(255), courseTitle)
+        .query(`INSERT INTO ExamResults (employee_id, exam_id, score, total_points, percentage, passed, answers, employee_full_name, course_title, submitted_at)
+                VALUES (@employee_id, @exam_id, @score, @total_points, @percentage, @passed, @answers, @employee_full_name, @course_title, GETDATE());
+                SELECT SCOPE_IDENTITY() as id`);
+      res.status(201).json({ success: true, id: result.recordset[0].id });
+    } catch (err2) {
+      res.status(500).json({ success: false, message: err2.message });
+    }
+  }
+}
+
+async function getExamResultById(req, res) {
+  try {
+    const result = await pool.request()
+      .input('id', sql.BigInt, req.params.id)
+      .query(`SELECT er.id, er.employee_id, er.exam_id, er.score, er.total_points, er.percentage,
+                     er.passed, er.submitted_at, er.employee_full_name, er.course_title,
+                     er.answers, er.question_details,
+                     ISNULL(er.admin_adjusted_score, er.score) as effective_score,
+                     ISNULL(er.admin_adjusted_percentage, er.percentage) as effective_percentage,
+                     er.admin_adjusted_score, er.admin_adjusted_percentage
+              FROM ExamResults er
+              WHERE er.id = @id`);
+    if (result.recordset.length === 0) return res.status(404).json({ success: false, message: 'Result not found' });
+    const row = result.recordset[0];
+    try { row.question_details = JSON.parse(row.question_details || '[]'); } catch(e) { row.question_details = []; }
+    try { row.answers = JSON.parse(row.answers || '{}'); } catch(e) { row.answers = {}; }
+    res.json({ success: true, data: row });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+async function overrideExamResult(req, res) {
+  try {
+    const { question_details } = req.body;
+    const resultId = req.params.id;
+
+    // Recalculate score from overridden details
+    let newScore = 0, totalPoints = 0;
+    (question_details || []).forEach(q => {
+      totalPoints += (q.points || 1);
+      const isCorrect = q.admin_override !== undefined ? q.admin_override : q.is_correct;
+      if (isCorrect) newScore += (q.points || 1);
+    });
+    const newPercentage = totalPoints > 0 ? Math.round((newScore / totalPoints) * 100) : 0;
+    const newPassed = newPercentage >= 70;
+
+    await pool.request()
+      .input('id', sql.BigInt, resultId)
+      .input('question_details', sql.NVarChar(sql.MAX), JSON.stringify(question_details || []))
+      .input('admin_adjusted_score', sql.Int, newScore)
+      .input('admin_adjusted_percentage', sql.Decimal(5, 2), newPercentage)
+      .input('passed', sql.Bit, newPassed)
+      .query(`UPDATE ExamResults 
+              SET question_details = @question_details,
+                  admin_adjusted_score = @admin_adjusted_score,
+                  admin_adjusted_percentage = @admin_adjusted_percentage,
+                  passed = @passed
+              WHERE id = @id`);
+
+    res.json({ success: true, new_score: newScore, new_percentage: newPercentage, passed: newPassed });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+async function getAllExamResults(req, res) {
+  try {
+    const result = await pool.request()
+      .query(`SELECT er.id, er.employee_id, er.exam_id, er.score, er.total_points, er.percentage,
+                     er.passed, er.submitted_at, er.employee_full_name, er.course_title,
+                     ISNULL(er.admin_adjusted_score, er.score) as effective_score,
+                     ISNULL(er.admin_adjusted_percentage, er.percentage) as effective_percentage,
+                     er.admin_adjusted_score, er.admin_adjusted_percentage
+              FROM ExamResults er
+              ORDER BY er.submitted_at DESC`);
+    res.json({ success: true, data: result.recordset });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -406,5 +481,8 @@ module.exports = {
   updateExam,
   deleteExam,
   saveExamResult,
-  getEmployeeExamResults
+  getEmployeeExamResults,
+  getExamResultById,
+  overrideExamResult,
+  getAllExamResults
 };

@@ -96,7 +96,7 @@ document.getElementById('loginFormElement').addEventListener('submit', async (e)
 
             showSuccess('login', 'Login successful! Redirecting...');
             setTimeout(() => {
-                window.location.href = '/dashboard/dashboard.html';
+                window.location.href = '/index.html';
             }, 1500);
         } else {
             showError('login', result.message || 'Login failed');
@@ -193,7 +193,7 @@ async function verifySession(sessionToken) {
 
         if (result.success) {
             // Already logged in, redirect to dashboard
-            window.location.href = '/dashboard/dashboard.html';
+            window.location.href = '/index.html';
         } else {
             // Session expired, clear storage
             localStorage.removeItem('sessionToken');

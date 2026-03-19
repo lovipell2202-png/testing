@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Exam Management - NSB Engineering</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%23000033'>📚</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/styles.css"/>
+  <link rel="stylesheet" href="/css/all-exams.css"/>
+</head>
+<body>
+
+<!-- Notification Container -->
+<div id="notificationContainer" style="position: fixed; top: 20px; right: 20px; z-index: 99999;"></div>
+
+<div class="layout">
+  
+    <aside id="sidebar">
+      <div style="padding: 20px; border-bottom: 2px solid var(--border);">
+        <h3 style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: var(--navy);">MENU</h3>
+      </div>
+      <a href="/index.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+        📊 Dashboard
+      </a>
+      <a href="/pages/all-employees.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+        👥 All Employees
+      </a>
+      <a href="/pages/training-records.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+        📚 Training Records
+      </a>
+      <a href="/pages/training-evaluation-form.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+        📋 Evaluation Form
+      </a>
+      <a href="/pages/upload-test-result.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+        📝 Test Management
+      </a>
+      <a href="all-exams.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--navy); background: rgba(0,0,51,0.05); border-bottom: 1px solid var(--border); border-left: 4px solid var(--navy);">
+        📚 Exam Management
+      </a>
+      <a href="teef-management.html" class="sidebar-menu-item" style="display: block; width: 100%; text-align: left; padding: 15px; text-decoration: none; font-size: 13px; font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border);">
+        📄 TEEF Management
+      </a>
+  </aside>
+  <main id="main">
+    <div class="exams-header">
+      <h2>📚 Exam Management</h2>
+      <p>Create, edit, delete, and manage all exams</p>
+    </div>
+    <div class="toolbar">
+      <input type="text" id="searchInput" class="filter-input" placeholder="🔍 Search exams by title or course...">
+      <button class="btn-create" onclick="openCreateModal()">➕ Create Exam</button>
+      <div class="exam-count">Total: <span id="examCount">0</span> exams</div>
+    </div>
+    <div class="exams-container">
+      <div id="successMsg" class="success-msg"></div>
+      <div id="errorMsg" class="error-msg"></div>
+      <div id="examsGrid" class="exams-grid">
+        <div class="loading">Loading exams from database...</div>
+      </div>
+    </div>
+  </main>
+</div>
+<!-- CREATE/EDIT EXAM MODAL -->
+<div id="examModalOverlay" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="examModalTitle">Create New Exam</h3>
+      <button class="modal-close" onclick="closeExamModal()">✕</button>
+    </div>
+    <!-- Tab Navigation -->
+    <div class="modal-tabs">
+      <button class="tab-btn active" onclick="switchTab('details')">📋 EXAM DETAILS</button>
+      <button class="tab-btn" onclick="switchTab('questions')">❓ ADD QUESTIONS</button>
+    </div>
+    <div class="modal-body" id="examModalBody">
+      <!-- TAB 1: EXAM DETAILS -->
+      <div id="tab-details" class="tab-content active">
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+          <h4 style="margin-top: 0; color: var(--navy);">📋 Exam Details</h4>
+          <div class="form-group">
+            <label>Exam Title * (Auto-filled from Course)</label>
+            <input type="text" id="examTitle" placeholder="Select a course to auto-fill" style="background: #f9f9f9;">
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="examDescription" placeholder="Enter exam description..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Passing Score (%)</label>
+            <input type="number" id="examPassingScore" placeholder="70" value="70" min="0" max="100">
+          </div>
+        </div>
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 6px;">
+          <h4 style="margin-top: 0; color: var(--navy);">📊 Questions Summary</h4>
+          <div id="questionsSummary" style="padding: 10px; background: white; border-radius: 4px; border-left: 4px solid #007bff;">
+            <p style="margin: 0; color: #666;">No questions added yet. Go to the "Add Questions" tab to add questions.</p>
+          </div>
+        </div>
+      </div>
+      <!-- TAB 2: ADD QUESTIONS -->
+      <div id="tab-questions" class="tab-content">
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h4 style="margin: 0; color: var(--navy);">❓ Questions</h4>
+            <button onclick="showQuestionTypeMenu()" style="padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">➕ Add Question</button>
+          </div>
+          <div id="questionsContainer" style="max-height: 400px; overflow-y: auto;"></div>
+        </div>
+        <div id="questionTypeMenu" style="display: none; background: white; border: 1px solid var(--border); border-radius: 6px; padding: 15px; margin-bottom: 20px;">
+          <h4 style="margin-top: 0; color: var(--navy);">Select Question Type</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <button onclick="addQuestionForm('multiple_choice')" style="padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">📝 Multiple Choice</button>
+            <button onclick="addQuestionForm('enumeration')" style="padding: 12px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">📋 Enumeration</button>
+            <button onclick="addQuestionForm('procedure')" style="padding: 12px; background: #6f42c1; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">📖 Procedure</button>
+            <button onclick="addQuestionForm('identification')" style="padding: 12px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">🖼️ Identification</button>
+          </div>
+        </div>
+        <div id="questionFormContainer" style="display: none; background: white; border: 2px solid var(--navy); border-radius: 6px; padding: 20px; margin-bottom: 20px;">
+          <h4 style="margin-top: 0; color: var(--navy);">Add New Question</h4>
+          <div id="questionFormContent"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary" onclick="closeExamModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveExam()">Save Exam</button>
+    </div>
+  </div>
+</div>
+<!-- VIEW EXAM MODAL -->
+<div id="viewModalOverlay" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-head" style="display: flex; justify-content: space-between; align-items: center;">
+      <h3 id="viewModalTitle">Exam Preview</h3>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <button class="btn btn-primary" onclick="editFromView()" style="padding: 10px 16px; font-size: 13px; min-width: auto;">✏️ Edit Questions</button>
+        <button class="modal-close" onclick="closeViewModal()">✕</button>
+      </div>
+    </div>
+    <div id="modalBody" class="modal-body"></div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeViewModal()">Close</button>
+    </div>
+  </div>
+</div>
+<!-- ── EDIT QUESTIONS MODAL ── -->
+<div id="eqModalOverlay" class="modal-overlay" style="z-index:10000;">
+  <div class="eq-modal">
+    <!-- MODAL HEADER -->
+    <div class="eq-modal-head">
+      <div class="eq-modal-head-left">
+        <span class="eq-modal-icon">✏️</span>
+        <div>
+          <h3 id="eqModalTitle">Edit Questions</h3>
+          <div id="eqModalMeta" class="eq-modal-meta"></div>
+        </div>
+      </div>
+      <div class="eq-modal-head-right">
+        <button class="eq-save-all-btn" onclick="eqSaveAll()">💾 Save All Changes</button>
+        <button class="modal-close" onclick="eqClose()">✕</button>
+      </div>
+    </div>
+    <!-- MODAL BODY: split layout -->
+    <div class="eq-modal-body">
+      <!-- LEFT: question list -->
+      <div class="eq-list-panel">
+        <div class="eq-list-toolbar">
+          <input type="text" id="eqSearch" class="eq-search-input" placeholder="🔍 Search questions..." oninput="eqFilterList()"/>
+          <div class="eq-type-tabs">
+            <button class="eq-tab active" data-t="all" onclick="eqSetTab('all',this)">All</button>
+            <button class="eq-tab" data-t="multiple_choice" onclick="eqSetTab('multiple_choice',this)">📝 MC</button>
+            <button class="eq-tab" data-t="enumeration" onclick="eqSetTab('enumeration',this)">📋 Enum</button>
+            <button class="eq-tab" data-t="procedure" onclick="eqSetTab('procedure',this)">📖 Proc</button>
+            <button class="eq-tab" data-t="identification" onclick="eqSetTab('identification',this)">🖼️ ID</button>
+          </div>
+        </div>
+        <div class="eq-q-list" id="eqQList"></div>
+        <div class="eq-list-footer">
+          <button class="eq-add-q-btn" onclick="eqShowTypePicker()">➕ Add Question</button>
+        </div>
+      </div>
+      <!-- RIGHT: editor -->
+      <div class="eq-editor-panel" id="eqEditorPanel">
+        <!-- Empty state -->
+        <div class="eq-empty" id="eqEmpty">
+          <div style="font-size:52px;margin-bottom:14px;">✏️</div>
+          <h4>Select a question to edit</h4>
+          <p>Pick one from the list, or click ➕ Add Question</p>
+        </div>
+        <!-- Type picker -->
+        <div class="eq-type-picker" id="eqTypePicker" style="display:none;">
+          <h4 class="eq-section-title">Choose Question Type</h4>
+          <div class="eq-type-grid">
+            <button class="eq-type-card eq-mc" onclick="eqStartNew('multiple_choice')"><span>📝</span><strong>Multiple Choice</strong><small>4 options, 1 correct answer</small></button>
+            <button class="eq-type-card eq-enum" onclick="eqStartNew('enumeration')"><span>📋</span><strong>Enumeration</strong><small>List items with answers</small></button>
+            <button class="eq-type-card eq-proc" onclick="eqStartNew('procedure')"><span>📖</span><strong>Procedure</strong><small>Step-by-step procedure</small></button>
+            <button class="eq-type-card eq-id" onclick="eqStartNew('identification')"><span>🖼️</span><strong>Identification</strong><small>Image-based identification</small></button>
+          </div>
+        </div>
+        <!-- Question form -->
+        <div class="eq-form-wrap" id="eqFormWrap" style="display:none;">
+          <div class="eq-form-header">
+            <span class="eq-form-badge" id="eqFormBadge"></span>
+            <h4 class="eq-form-title" id="eqFormTitle">Edit Question</h4>
+            <div class="eq-form-actions">
+              <button class="eq-btn eq-btn-danger" id="eqDeleteBtn" onclick="eqDeleteCurrent()" style="display:none;">🗑️ Delete</button>
+              <button class="eq-btn eq-btn-success" onclick="eqSaveCurrent()">✓ Save Question</button>
+              <button class="eq-btn eq-btn-secondary" onclick="eqCancelEdit()">✕ Cancel</button>
+            </div>
+          </div>
+          <div class="eq-form-body" id="eqFormBody"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/src/all-exams.js"></script>
+</body>
+</html>

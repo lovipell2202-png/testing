@@ -7,7 +7,7 @@ async function checkAuthentication() {
 
   if (!sessionToken || !user) {
     // Not logged in, redirect to login
-    window.location.href = '/login.html';
+    window.location.href = '/pages/login.html';
     return null;
   }
 
@@ -25,7 +25,7 @@ async function checkAuthentication() {
       // Session expired or invalid
       localStorage.removeItem('sessionToken');
       localStorage.removeItem('user');
-      window.location.href = '/login.html';
+      window.location.href = '/pages/login.html';
       return null;
     }
 
@@ -33,7 +33,7 @@ async function checkAuthentication() {
     return JSON.parse(user);
   } catch (err) {
     console.error('Authentication check failed:', err);
-    window.location.href = '/login.html';
+    window.location.href = '/pages/login.html';
     return null;
   }
 }
@@ -55,7 +55,7 @@ async function logout() {
   // Clear storage and redirect
   localStorage.removeItem('sessionToken');
   localStorage.removeItem('user');
-  window.location.href = '/login.html';
+  window.location.href = '/pages/login.html';
 }
 
 // Check role
@@ -99,7 +99,7 @@ async function authenticatedFetch(url, options = {}) {
     // Session expired
     localStorage.removeItem('sessionToken');
     localStorage.removeItem('user');
-    window.location.href = '/login.html';
+    window.location.href = '/pages/login.html';
     return null;
   }
 

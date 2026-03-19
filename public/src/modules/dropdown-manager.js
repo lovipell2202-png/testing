@@ -51,24 +51,36 @@ async function updateDatalistOptions() {
   if (courseList) {
     courseList.innerHTML = courses.map(c => `<option value="${c}">`).join('');
   }
-  
-  const providerList = document.getElementById('providerList');
-  if (providerList) {
-    const providers = loadDropdownOptions('providers');
-    providerList.innerHTML = providers.map(p => `<option value="${p}">`).join('');
+
+  // Helper: populate a <select> with options + "Other" entry
+  function populateSelect(id, items, otherId) {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = `<option value="">-- Select --</option>` +
+      items.map(v => `<option value="${v}">${v}</option>`).join('') +
+      `<option value="__other__">Other (type below)</option>`;
+    // Restore value if it was set
+    if (current) sel.value = current;
+    // Wire up "Other" toggle
+    if (otherId) {
+      sel.onchange = function() {
+        const otherInput = document.getElementById(otherId);
+        if (!otherInput) return;
+        if (this.value === '__other__') {
+          otherInput.style.display = 'block';
+          otherInput.focus();
+        } else {
+          otherInput.style.display = 'none';
+          otherInput.value = '';
+        }
+      };
+    }
   }
-  
-  const venueList = document.getElementById('venueList');
-  if (venueList) {
-    const venues = loadDropdownOptions('venues');
-    venueList.innerHTML = venues.map(v => `<option value="${v}">`).join('');
-  }
-  
-  const trainerList = document.getElementById('trainerList');
-  if (trainerList) {
-    const trainers = loadDropdownOptions('trainers');
-    trainerList.innerHTML = trainers.map(t => `<option value="${t}">`).join('');
-  }
+
+  populateSelect('t_training_provider', loadDropdownOptions('providers'), 't_training_provider_other');
+  populateSelect('t_venue', loadDropdownOptions('venues'), 't_venue_other');
+  populateSelect('t_trainer', loadDropdownOptions('trainers'), 't_trainer_other');
 }
 
 // Populate employee dropdown

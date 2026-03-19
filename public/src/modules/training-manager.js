@@ -11,9 +11,45 @@ let currentOverviewSelectedTrainId = null;
 function openAddTraining() {
   editTrainId = null;
   document.getElementById('trainModalTitle').textContent = 'Add Training Record';
-  ['date_from','date_to','duration','course_title','training_provider','venue','trainer']
+  ['date_from','date_to','duration','course_title']
     .forEach(k => document.getElementById(`t_${k}`).value = '');
   document.getElementById('t_type_tb').value = 'T';
+  // Reset provider/venue/trainer selects and hide "other" inputs
+  ['training_provider','venue','trainer'].forEach(k => {
+    const sel = document.getElementById(`t_${k}`);
+    if (sel) sel.value = '';
+    const other = document.getElementById(`t_${k}_other`);
+    if (other) { other.style.display = 'none'; other.value = ''; }
+  });
+  
+  // Reset effectiveness_form and add change listener for attachment check
+  const effectivenessForm = document.getElementById('t_effectiveness_form');
+  if (effectivenessForm) {
+    effectivenessForm.value = 'N/A';
+    
+    // Remove existing listener if any to avoid duplicates
+    effectivenessForm.onchange = null;
+    
+    // Add listener for attachment validation
+    effectivenessForm.onchange = async function() {
+      console.log('📝 Effectiveness form changed to:', this.value);
+      
+      if (this.value === 'W/EXAM_TEEF') {
+        // Show warning for W/EXAM_TEEF
+        console.log('⚠️ W/EXAM_TEEF selected - contains both EXAM and TEEF');
+        showEffectivenessFormWarning('⚠️ Warning: This training contains BOTH TEEF Form AND EXAM - Please ensure both attachments are uploaded');
+      } else if (this.value === 'W/TEEF') {
+        // Check for TEEF attachment - just show info message
+        console.log('🔎 W/TEEF selected - please upload TEEF attachment');
+        showEffectivenessFormWarning('ℹ️ Please upload the Training Effectiveness Evaluation Form (TEEF) for this training.');
+      } else if (this.value === 'W/EXAM') {
+        // Check for EXAM attachment - just show info message  
+        console.log('🔎 W/EXAM selected - please upload EXAM attachment');
+        showEffectivenessFormWarning('ℹ️ Please upload the EXAM attachment for this training.');
+      }
+    };
+  }
+  
   window.UIHelpers.openModal('train');
 }
 
@@ -234,7 +270,7 @@ function printEmployeeTraining() {
         <!-- Header -->
         <div class="header">
           <div class="logo-section">
-            <img src="NSB-LOGO.png" alt="NSB Logo" />
+            <img src="/images/NSB-LOGO.png" alt="NSB Logo" />
             <div class="company-info">
               <p class="company-name">NSB ENGINEERING</p>
               <p class="company-sub">DESIGN AND FABRICATION</p>
@@ -265,13 +301,30 @@ function printEmployeeTraining() {
         </div>
         
         <!-- Training Table -->
-        <table>
+        <!-- Sort Controls -->
+        <div class="sort-controls" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+          <button onclick="doPrint()" style="padding: 5px 15px; background: #000; color: #fff; border: none; cursor: pointer; font-size: 11px;">🖨️ Print</button>
+          <div>
+            <label style="font-size: 9px; margin-right: 5px;">Sort by:</label>
+            <select id="printSort" onchange="sortTable()" style="font-size: 9px; padding: 2px 5px;">
+              <option value="date_from">Date From (Oldest)</option>
+              <option value="date_from_desc">Date From (Newest)</option>
+              <option value="date_to">Date To (Oldest)</option>
+              <option value="date_to_desc">Date To (Newest)</option>
+              <option value="course_title">Course Title (A-Z)</option>
+              <option value="course_title_desc">Course Title (Z-A)</option>
+              <option value="provider">Provider (A-Z)</option>
+              <option value="type">Type (T/B)</option>
+            </select>
+          </div>
+        </div>
+        <table id="printTable">
           <thead>
             <tr>
-              <th>Date From</th>
-              <th>Date To</th>
+              <th onclick="sortBy('date_from')" style="cursor:pointer;">Date From ⬍</th>
+              <th onclick="sortBy('date_to')" style="cursor:pointer;">Date To ⬍</th>
               <th>Duration</th>
-              <th>Course Title</th>
+              <th onclick="sortBy('course_title')" style="cursor:pointer;">Course Title ⬍</th>
               <th>Provider</th>
               <th>Venue</th>
               <th>Trainer</th>
@@ -279,7 +332,7 @@ function printEmployeeTraining() {
               <th>Eff. Form</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="printTableBody">
             ${tableRows}
           </tbody>
         </table>
@@ -289,11 +342,79 @@ function printEmployeeTraining() {
       </div>
       
       <script>
-        window.addEventListener('load', function() {
-          setTimeout(function() {
-            window.print();
-          }, 300);
-        });
+        // Get training data from table rows for sorting
+        function getTableData() {
+          const rows = document.querySelectorAll('#printTableBody tr');
+          return Array.from(rows).map(row => {
+            const cells = row.querySelectorAll('td');
+            return {
+              date_from: cells[0].textContent,
+              date_to: cells[1].textContent,
+              duration: cells[2].textContent,
+              course_title: cells[3].textContent,
+              training_provider: cells[4].textContent,
+              venue: cells[5].textContent,
+              trainer: cells[6].textContent,
+              type_tb: cells[7].textContent,
+              effectiveness_form: cells[8].textContent
+            };
+          });
+        }
+        
+        function sortTable() {
+          const sortBy = document.getElementById('printSort').value;
+          const data = getTableData();
+          const sorted = data.sort((a, b) => {
+            switch(sortBy) {
+              case 'date_from': return a.date_from.localeCompare(b.date_from);
+              case 'date_from_desc': return b.date_from.localeCompare(a.date_from);
+              case 'date_to': return a.date_to.localeCompare(b.date_to);
+              case 'date_to_desc': return b.date_to.localeCompare(a.date_to);
+              case 'course_title': return a.course_title.localeCompare(b.course_title);
+              case 'course_title_desc': return b.course_title.localeCompare(a.course_title);
+              case 'provider': return a.training_provider.localeCompare(b.training_provider);
+              case 'type': return a.type_tb.localeCompare(b.type_tb);
+              default: return 0;
+            }
+          });
+          renderSorted(sorted);
+        }
+        
+        function renderSorted(sorted) {
+          const tbody = document.getElementById('printTableBody');
+          let html = '';
+          sorted.forEach(t => {
+            html += '<tr>' +
+              '<td>' + t.date_from + '</td>' +
+              '<td>' + t.date_to + '</td>' +
+              '<td>' + t.duration + '</td>' +
+              '<td>' + t.course_title + '</td>' +
+              '<td>' + t.training_provider + '</td>' +
+              '<td>' + t.venue + '</td>' +
+              '<td>' + t.trainer + '</td>' +
+              '<td>' + t.type_tb + '</td>' +
+              '<td>' + t.effectiveness_form + '</td>' +
+            '</tr>';
+          });
+          tbody.innerHTML = html;
+        }
+        
+        function sortBy(column) {
+          const select = document.getElementById('printSort');
+          if (column === 'date_from') {
+            select.value = select.value === 'date_from' ? 'date_from_desc' : 'date_from';
+          } else if (column === 'date_to') {
+            select.value = select.value === 'date_to' ? 'date_to_desc' : 'date_to';
+          } else if (column === 'course_title') {
+            select.value = select.value === 'course_title' ? 'course_title_desc' : 'course_title';
+          }
+          sortTable();
+        }
+        
+        // Add print button
+        function doPrint() {
+          window.print();
+        }
       </script>
     </body>
     </html>
@@ -332,9 +453,16 @@ function openAddTrainingForEmployee() {
     
     window.DropdownManager.populateEmployeeDropdown();
     
-    ['date_from', 'date_to', 'duration', 'course_title', 'training_provider', 'venue', 'trainer', 'type_tb', 'effectiveness_form'].forEach(k => {
+    ['date_from', 'date_to', 'duration', 'course_title', 'type_tb', 'effectiveness_form'].forEach(k => {
       const field = document.getElementById(`t_${k}`);
       if (field) field.value = '';
+    });
+    // Reset provider/venue/trainer selects and hide "other" inputs
+    ['training_provider','venue','trainer'].forEach(k => {
+      const sel = document.getElementById(`t_${k}`);
+      if (sel) sel.value = '';
+      const other = document.getElementById(`t_${k}_other`);
+      if (other) { other.style.display = 'none'; other.value = ''; }
     });
     
     const empSelect = document.getElementById('t_employee_id');
@@ -350,7 +478,23 @@ function openAddTrainingForEmployee() {
 async function openEditTraining(trainingId) {
   console.log('=== openEditTraining called with id:', trainingId);
   
-  let training = (window.trainings || []).find(t => t.id === trainingId);
+  // Load employees first if not available
+  if (!window.employees || window.employees.length === 0) {
+    console.log('⏳ Employees not loaded, loading from API...');
+    try {
+      const res = await fetch('/api/employees');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        window.employees = data.data;
+        console.log('✅ Loaded employees:', window.employees.length);
+      }
+    } catch (err) {
+      console.error('❌ Error loading employees:', err);
+    }
+  }
+  
+  // Use loose equality (==) to match both string and number IDs
+  let training = (window.trainings || []).find(t => t.id == trainingId);
   
   // If not found in memory, try to fetch from API
   if (!training) {
@@ -386,9 +530,25 @@ async function openEditTraining(trainingId) {
     document.getElementById('t_date_to').value = training.date_to?.split('T')[0] || '';
     document.getElementById('t_duration').value = training.duration || '';
     document.getElementById('t_course_title').value = training.course_title || '';
-    document.getElementById('t_training_provider').value = training.training_provider || '';
-    document.getElementById('t_venue').value = training.venue || '';
-    document.getElementById('t_trainer').value = training.trainer || '';
+    
+    // Helper: set select value, falling back to "Other" if value not in list
+    function setSelectOrOther(selId, otherId, val) {
+      const sel = document.getElementById(selId);
+      const otherInput = document.getElementById(otherId);
+      if (!sel || !val) return;
+      const exists = Array.from(sel.options).some(o => o.value === val);
+      if (exists) {
+        sel.value = val;
+        if (otherInput) { otherInput.style.display = 'none'; otherInput.value = ''; }
+      } else {
+        sel.value = '__other__';
+        if (otherInput) { otherInput.style.display = 'block'; otherInput.value = val; }
+      }
+    }
+    
+    setSelectOrOther('t_training_provider', 't_training_provider_other', training.training_provider || '');
+    setSelectOrOther('t_venue', 't_venue_other', training.venue || '');
+    setSelectOrOther('t_trainer', 't_trainer_other', training.trainer || '');
     document.getElementById('t_type_tb').value = training.type_tb || '';
     document.getElementById('t_effectiveness_form').value = training.effectiveness_form || '';
     
@@ -467,9 +627,24 @@ async function saveTraining() {
     date_to: document.getElementById('t_date_to').value,
     duration: document.getElementById('t_duration').value.trim(),
     course_title: document.getElementById('t_course_title').value.trim(),
-    training_provider: document.getElementById('t_training_provider').value.trim(),
-    venue: document.getElementById('t_venue').value.trim(),
-    trainer: document.getElementById('t_trainer').value.trim(),
+    training_provider: (() => {
+      const sel = document.getElementById('t_training_provider');
+      return sel?.value === '__other__'
+        ? (document.getElementById('t_training_provider_other')?.value.trim() || '')
+        : (sel?.value.trim() || '');
+    })(),
+    venue: (() => {
+      const sel = document.getElementById('t_venue');
+      return sel?.value === '__other__'
+        ? (document.getElementById('t_venue_other')?.value.trim() || '')
+        : (sel?.value.trim() || '');
+    })(),
+    trainer: (() => {
+      const sel = document.getElementById('t_trainer');
+      return sel?.value === '__other__'
+        ? (document.getElementById('t_trainer_other')?.value.trim() || '')
+        : (sel?.value.trim() || '');
+    })(),
     type_tb: document.getElementById('t_type_tb').value,
     effectiveness_form: document.getElementById('t_effectiveness_form').value.trim() || 'N/A',
   };
